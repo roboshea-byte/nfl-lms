@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NFL Last Man Standing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --navy:#132650; --navy-2:#1b3266; --navy-3:#24427f; --line:#3a5a9c; --deep:#10204a;
+  --red:#e8102e; --red-2:#ff4d5e; --gold:#ffc733; --green:#2fd97e; --grey:#aebbdc; --white:#ffffff;
+  --field:#0f5c2e;
+  --font-head:'Oswald', 'Arial Narrow', Impact, sans-serif; --font-body:'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--navy);color:var(--white);font-family:var(--font-body);font-size:14px;min-height:100%}
+body{zoom:1.2;background:
+  radial-gradient(1200px 500px at 50% -200px, #2f5cb8 0%, transparent 70%),
+  repeating-linear-gradient(90deg, transparent 0 79px, rgba(255,255,255,.035) 79px 80px),
+  var(--navy)}
+button,input,select,textarea{font-family:inherit;font-size:inherit}
+a{color:var(--gold)}
+h1,h2,h3,h4{font-family:var(--font-head);text-transform:uppercase;letter-spacing:.03em;margin:0}
+.hidden{display:none!important}
+
+/* header */
+header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#1a3068 0%,#132650 100%);border-bottom:3px solid var(--red);box-shadow:0 6px 24px rgba(0,0,0,.45)}
+.hdr-top{display:flex;align-items:center;gap:18px;padding:12px 22px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px}
+.brand .shield{width:46px;height:52px;background:linear-gradient(180deg,var(--red),#8a0000);clip-path:polygon(0 0,100% 0,100% 65%,50% 100%,0 65%);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-weight:700;font-size:20px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+.brand h1{font-size:30px;font-weight:700;line-height:1}
+.brand h1 small{display:block;font-size:12px;letter-spacing:.35em;color:var(--gold);font-weight:500}
+.hdr-stats{display:flex;gap:10px;margin-left:auto;flex-wrap:wrap}
+.stat{background:var(--navy-2);border:1px solid var(--line);border-radius:8px;padding:6px 14px;min-width:96px;text-align:center}
+.stat .v{font-family:var(--font-head);font-size:24px;font-weight:700;line-height:1.05}
+.stat .l{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--grey)}
+.stat.pub{cursor:pointer;border-color:var(--gold);background:rgba(255,199,51,.12)}
+.stat.pub .v{color:var(--gold);font-size:16px;padding-top:4px}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,199,51,.5)}50%{box-shadow:0 0 0 6px rgba(255,199,51,0)}}
+.stat.pub.dirty{animation:pulse 1.6s infinite}
+.stat.pot .v{color:var(--gold)}
+.stat.alive .v{color:var(--green)}
+nav{display:flex;gap:2px;padding:0 22px;overflow-x:auto;background:var(--deep)}
+nav button{background:transparent;border:0;color:var(--grey);padding:12px 18px;font-family:var(--font-head);font-size:15px;text-transform:uppercase;letter-spacing:.12em;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-3px;white-space:nowrap}
+nav button:hover{color:#fff}
+nav button.active{color:#fff;border-bottom-color:var(--gold)}
+
+main{max-width:1320px;margin:0 auto;padding:22px}
+.card{background:var(--navy-2);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:18px;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.card h2{font-size:20px;color:#fff;display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.card h2 .tag{margin-left:auto;font-family:var(--font-body);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--grey)}
+.grid{display:grid;gap:18px}
+.grid.two{grid-template-columns:1fr 1fr}
+.grid.three{grid-template-columns:repeat(3,1fr)}
+@media (max-width:900px){.grid.two,.grid.three{grid-template-columns:1fr}}
+
+.btn{background:var(--navy-3);color:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:.15s}
+.btn:hover{background:#2f54a0;border-color:#5b7fd0}
+.btn.primary{background:var(--red);border-color:var(--red)}
+.btn.primary:hover{background:var(--red-2)}
+.btn.gold{background:var(--gold);color:#1a1200;border-color:var(--gold)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:4px 10px;font-size:12px}
+.btn.danger{color:#ff8a8a;border-color:#5a2020}
+.btn.danger:hover{background:#3a1010}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+input[type=text],input[type=email],input[type=number],select,textarea{background:var(--deep);border:1px solid var(--line);color:#fff;border-radius:8px;padding:8px 10px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey)}
+.row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.muted{color:var(--grey)}
+.small{font-size:12px}
+
+table{width:100%;border-collapse:collapse}
+th{font-family:var(--font-head);font-weight:500;letter-spacing:.12em;text-transform:uppercase;font-size:12px;color:var(--grey);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line)}
+td{padding:8px 10px;border-bottom:1px solid #2c4680;vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,.04)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.pill.alive{background:rgba(31,191,106,.15);color:var(--green);border:1px solid rgba(31,191,106,.4)}
+.pill.out{background:rgba(213,10,10,.15);color:#ff7b7b;border:1px solid rgba(213,10,10,.4)}
+.pill.win{background:rgba(255,184,28,.18);color:var(--gold);border:1px solid rgba(255,184,28,.5)}
+.pill.paid{background:rgba(31,191,106,.15);color:var(--green)}
+.pill.unpaid{background:rgba(255,184,28,.15);color:var(--gold)}
+.pill.pending{background:rgba(139,155,184,.15);color:var(--grey)}
+
+.logo{width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.logo.lg{width:44px;height:44px}
+.logo.xl{width:64px;height:64px}
+.team{display:inline-flex;align-items:center;gap:8px;font-weight:600}
+.fallback{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-family:var(--font-head);font-weight:700;font-size:11px;color:#fff;width:28px;height:28px}
+
+/* week selector */
+.weeks{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px}
+.weeks button{background:var(--deep);border:1px solid var(--line);color:var(--grey);border-radius:6px;padding:6px 0;width:44px;font-family:var(--font-head);font-size:14px;cursor:pointer}
+.weeks button.active{background:var(--gold);color:#1a1200;border-color:var(--gold)}
+.weeks button.settled{border-color:var(--green);color:var(--green)}
+.weeks button.settled.active{color:#1a1200}
+.weeks button.live{border-color:var(--red)}
+.weeks button.outside{opacity:.35}
+
+/* pick picker */
+.overlay{position:fixed;inset:0;background:rgba(3,7,18,.78);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.modal{background:var(--navy-2);border:1px solid var(--line);border-radius:14px;width:min(1000px,100%);max-height:92vh;overflow:auto;padding:20px;box-shadow:0 20px 80px rgba(0,0,0,.6)}
+.modal h2{font-size:22px;margin-bottom:6px}
+.teamgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px}
+.tcard{background:var(--deep);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;text-align:center;position:relative;transition:.12s}
+.tcard:hover{border-color:var(--gold);transform:translateY(-2px)}
+.tcard .nm{font-family:var(--font-head);font-size:15px;margin-top:6px;letter-spacing:.04em;text-transform:uppercase}
+.tcard .opp{font-size:11px;color:var(--grey);margin-top:2px}
+.tcard.used,.tcard.bye,.tcard.final{opacity:.35;cursor:not-allowed;filter:grayscale(1)}
+.tcard.used:hover,.tcard.bye:hover,.tcard.final:hover{transform:none;border-color:var(--line)}
+.tcard .badge{position:absolute;top:6px;right:6px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:var(--red);color:#fff;font-weight:700}
+.tcard.bye .badge{background:#4a6096}
+.tcard.selected{border-color:var(--green);box-shadow:0 0 0 2px rgba(31,191,106,.5)}
+
+/* pick table cells */
+.pickcell{display:flex;align-items:center;gap:10px}
+.pickbtn{display:inline-flex;align-items:center;gap:8px;background:var(--deep);border:1px dashed var(--line);border-radius:8px;padding:5px 10px;cursor:pointer;color:#fff;min-width:170px;text-align:left}
+.pickbtn:hover{border-color:var(--gold)}
+.pickbtn.has{border-style:solid}
+.res{font-family:var(--font-head);font-weight:700;font-size:16px;width:26px;text-align:center}
+.res.W{color:var(--green)}.res.L{color:#ff6b6b}.res.T{color:var(--gold)}.res.P{color:var(--grey)}
+
+/* history grid */
+.histwrap{overflow:auto}
+.hist td,.hist th{padding:5px 6px;text-align:center}
+.hist td:first-child,.hist th:first-child{text-align:left;position:sticky;left:0;background:var(--navy-2);z-index:2}
+.hcell{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:8px;background:var(--deep)}
+.hcell.W{box-shadow:inset 0 0 0 2px var(--green)}
+.hcell.L{box-shadow:inset 0 0 0 2px var(--red)}
+.hcell.T{box-shadow:inset 0 0 0 2px var(--gold)}
+.hcell.NP{color:var(--grey);font-size:11px}
+.hcell.wipe{box-shadow:inset 0 0 0 2px #6d5cff}
+tr.out td{opacity:.55}
+
+/* results */
+.game{display:grid;grid-template-columns:1fr 60px 30px 60px 1fr auto;gap:10px;align-items:center;padding:10px;border-bottom:1px solid #2c4680}
+.game .t{display:flex;align-items:center;gap:10px}
+.game .t.home{justify-content:flex-end;text-align:right}
+.game input{width:60px;text-align:center;font-family:var(--font-head);font-size:20px;padding:4px}
+.game .vs{text-align:center;color:var(--grey);font-family:var(--font-head)}
+.game .meta{font-size:11px;color:var(--grey)}
+.game.final{background:rgba(31,191,106,.05)}
+.chk{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}
+
+/* dashboard */
+.hero{display:grid;grid-template-columns:1.2fr 1fr;gap:18px}
+@media (max-width:900px){.hero{grid-template-columns:1fr}}
+.bigpot{background:linear-gradient(135deg,#2a4a94,#1b3266);border:1px solid var(--line);border-radius:14px;padding:22px;position:relative;overflow:hidden}
+.bigpot:before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 22px,rgba(255,255,255,.04) 22px 24px);pointer-events:none}
+.bigpot .amt{font-family:var(--font-head);font-size:64px;font-weight:700;color:var(--gold);line-height:1;text-shadow:0 4px 0 rgba(0,0,0,.4)}
+.bigpot .lbl{letter-spacing:.3em;text-transform:uppercase;font-size:12px;color:var(--grey)}
+.avatars{display:flex;flex-wrap:wrap;gap:6px}
+.av{display:inline-flex;align-items:center;gap:6px;background:var(--deep);border:1px solid var(--line);border-radius:999px;padding:3px 10px 3px 4px;font-size:12px}
+.av.out{opacity:.4;text-decoration:line-through}
+.feed li{list-style:none;padding:8px 0;border-bottom:1px solid #2c4680;display:flex;gap:10px;align-items:center}
+.feed{margin:0;padding:0}
+.empty{padding:26px;text-align:center;color:var(--grey);border:1px dashed var(--line);border-radius:10px}
+.toast{position:fixed;bottom:22px;right:22px;background:#24427f;border:1px solid var(--gold);color:#fff;padding:12px 16px;border-radius:10px;z-index:99;box-shadow:0 10px 40px rgba(0,0,0,.6);max-width:360px}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:26px;text-align:center;color:var(--grey);cursor:pointer}
+.drop.over{border-color:var(--gold);color:#fff}
+.banner{background:linear-gradient(90deg,var(--red),#7a0000);padding:14px 18px;border-radius:12px;margin-bottom:18px;display:flex;align-items:center;gap:14px;font-family:var(--font-head);font-size:18px;text-transform:uppercase;letter-spacing:.06em}
+.banner.gold{background:linear-gradient(90deg,var(--gold),#b87d00);color:#1a1200}
+.banner .btn{margin-left:auto;font-family:var(--font-body);text-transform:none;letter-spacing:0}
+footer{text-align:center;color:var(--grey);font-size:11px;padding:20px}
+
+/* home */
+.homehero{position:relative;overflow:hidden;border-radius:16px;border:1px solid var(--line);background:linear-gradient(135deg,#2b4f9e 0%,#1b3266 55%,#22184a 100%);padding:34px 30px;margin-bottom:18px;box-shadow:0 14px 50px rgba(0,0,0,.35)}
+.homehero:before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 30px,rgba(255,255,255,.05) 30px 32px);pointer-events:none}
+.homehero .kick{letter-spacing:.35em;text-transform:uppercase;font-size:12px;color:var(--gold);font-weight:600}
+.homehero h1.big{font-size:64px;line-height:.95;font-weight:700;margin:6px 0 10px;text-shadow:0 4px 0 rgba(0,0,0,.35)}
+.homehero h1.big span{color:var(--gold)}
+.homehero p{max-width:640px;font-size:15px;color:#e6ecff;margin:0 0 18px}
+.herostats{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.herostat{background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:12px 18px;min-width:140px}
+.herostat .v{font-family:var(--font-head);font-size:34px;font-weight:700;line-height:1}
+.herostat .l{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--grey);margin-top:4px}
+.herostat.gold .v{color:var(--gold)}.herostat.green .v{color:var(--green)}
+.logowall{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px}
+.logowall .lw{background:var(--deep);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center;transition:.15s}
+.logowall .lw:hover{transform:translateY(-3px);border-color:var(--gold)}
+.logowall .lw .ab{font-family:var(--font-head);font-size:12px;letter-spacing:.1em;color:var(--grey);margin-top:6px}
+.logowall .fallback{width:52px;height:52px;font-size:15px}
+.heroflag{position:absolute;right:-40px;top:-40px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(255,199,51,.25),transparent 70%);pointer-events:none}
+.rules{margin:0;padding:0;list-style:none;counter-reset:r}
+.rules li{counter-increment:r;display:flex;gap:14px;padding:10px 0;border-bottom:1px solid #2c4680;line-height:1.45}
+.rules li:before{content:counter(r);flex:none;width:30px;height:30px;border-radius:8px;background:var(--red);color:#fff;font-family:var(--font-head);font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center}
+.rules li b{color:var(--gold)}
+.datebox{display:flex;gap:10px;flex-wrap:wrap}
+.date{flex:1;min-width:150px;background:var(--deep);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.date .d{font-family:var(--font-head);font-size:20px;font-weight:600}
+.date .l{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--grey)}
+.robar{background:linear-gradient(90deg,#24427f,#1b3266);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:12px;color:var(--grey);display:flex;gap:10px;align-items:center;margin-bottom:14px}
+body.ro .edit{display:none!important}
+body.ro .pickbtn{border-style:solid;cursor:default;pointer-events:none}
+body.ro nav button[data-v=entries],body.ro nav button[data-v=settings]{display:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="hdr-top">
+    <div class="brand">
+      <div class="shield">LMS</div>
+      <h1>Last Man Standing<small>NFL 2026 Season</small></h1>
+    </div>
+    <div class="hdr-stats" id="hdrStats"></div>
+  </div>
+  <nav id="nav">
+    <button data-v="home" class="active">Home</button>
+    <button data-v="dash">Dashboard</button>
+    <button data-v="picks">Picks</button>
+    <button data-v="results">Results</button>
+    <button data-v="history">Pick History</button>
+    <button data-v="entries">Entries</button>
+    <button data-v="settings">Settings</button>
+  </nav>
+</header>
+<main id="main"></main>
+<footer id="foot">Last Man Standing. Data is saved in this browser. Use Settings &rarr; Backup to export a copy.</footer>
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+const SCHEDULE = {"season":2026,"teams":{"SEA":{"abbr":"SEA","name":"Seattle Seahawks","short":"Seahawks","loc":"Seattle","color":"002a5c","alt":"69be28","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/sea.png"},"NE":{"abbr":"NE","name":"New England Patriots","short":"Patriots","loc":"New England","color":"002a5c","alt":"c60c30","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/ne.png"},"LAR":{"abbr":"LAR","name":"Los Angeles Rams","short":"Rams","loc":"Los Angeles","color":"003594","alt":"ffd100","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/lar.png"},"SF":{"abbr":"SF","name":"San Francisco 49ers","short":"49ers","loc":"San Francisco","color":"aa0000","alt":"b3995d","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/sf.png"},"CIN":{"abbr":"CIN","name":"Cincinnati Bengals","short":"Bengals","loc":"Cincinnati","color":"fb4f14","alt":"000000","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/cin.png"},"TB":{"abbr":"TB","name":"Tampa Bay Buccaneers","short":"Buccaneers","loc":"Tampa Bay","color":"bd1c36","alt":"3e3a35","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/tb.png"},"DET":{"abbr":"DET","name":"Detroit Lions","short":"Lions","loc":"Detroit","color":"0076b6","alt":"bbbbbb","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/det.png"},"NO":{"abbr":"NO","name":"New Orleans Saints","short":"Saints","loc":"New Orleans","color":"d3bc8d","alt":"000000","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/no.png"},"TEN":{"abbr":"TEN","name":"Tennessee Titans","short":"Titans","loc":"Tennessee","color":"4495d2","alt":"001532","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/ten.png"},"NYJ":{"abbr":"NYJ","name":"New York Jets","short":"Jets","loc":"New York","color":"115740","alt":"ffffff","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/nyj.png"},"IND":{"abbr":"IND","name":"Indianapolis Colts","short":"Colts","loc":"Indianapolis","color":"003b75","alt":"ffffff","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/ind.png"},"BAL":{"abbr":"BAL","name":"Baltimore Ravens","short":"Ravens","loc":"Baltimore","color":"29126f","alt":"000000","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/bal.png"},"PIT":{"abbr":"PIT","name":"Pittsburgh Steelers","short":"Steelers","loc":"Pittsburgh","color":"000000","alt":"ffb612","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/pit.png"},"ATL":{"abbr":"ATL","name":"Atlanta Falcons","short":"Falcons","loc":"Atlanta","color":"a71930","alt":"000000","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/atl.png"},"CAR":{"abbr":"CAR","name":"Carolina Panthers","short":"Panthers","loc":"Carolina","color":"0085ca","alt":"000000","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/car.png"},"CHI":{"abbr":"CHI","name":"Chicago Bears","short":"Bears","loc":"Chicago","color":"0b1c3a","alt":"e64100","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/chi.png"},"JAX":{"abbr":"JAX","name":"Jacksonville Jaguars","short":"Jaguars","loc":"Jacksonville","color":"007487","alt":"d7a22a","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/jax.png"},"CLE":{"abbr":"CLE","name":"Cleveland Browns","short":"Browns","loc":"Cleveland","color":"472a08","alt":"ff3c00","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/cle.png"},"HOU":{"abbr":"HOU","name":"Houston Texans","short":"Texans","loc":"Houston","color":"021018","alt":"eb0028","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/hou.png"},"BUF":{"abbr":"BUF","name":"Buffalo Bills","short":"Bills","loc":"Buffalo","color":"00338d","alt":"d50a0a","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/buf.png"},"LV":{"abbr":"LV","name":"Las Vegas Raiders","short":"Raiders","loc":"Las Vegas","color":"000000","alt":"a5acaf","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/lv.png"},"MIA":{"abbr":"MIA","name":"Miami Dolphins","short":"Dolphins","loc":"Miami","color":"008e97","alt":"fc4c02","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/mia.png"},"MIN":{"abbr":"MIN","name":"Minnesota Vikings","short":"Vikings","loc":"Minnesota","color":"4f2683","alt":"ffc62f","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/min.png"},"GB":{"abbr":"GB","name":"Green Bay Packers","short":"Packers","loc":"Green Bay","color":"204e32","alt":"ffb612","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/gb.png"},"PHI":{"abbr":"PHI","name":"Philadelphia Eagles","short":"Eagles","loc":"Philadelphia","color":"06424d","alt":"000000","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/phi.png"},"WSH":{"abbr":"WSH","name":"Washington Commanders","short":"Commanders","loc":"Washington","color":"5a1414","alt":"ffb612","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/wsh.png"},"LAC":{"abbr":"LAC","name":"Los Angeles Chargers","short":"Chargers","loc":"Los Angeles","color":"0080c6","alt":"ffc20e","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/lac.png"},"ARI":{"abbr":"ARI","name":"Arizona Cardinals","short":"Cardinals","loc":"Arizona","color":"a40227","alt":"ffffff","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/ari.png"},"NYG":{"abbr":"NYG","name":"New York Giants","short":"Giants","loc":"New York","color":"003c7f","alt":"c9243f","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/nyg.png"},"DAL":{"abbr":"DAL","name":"Dallas Cowboys","short":"Cowboys","loc":"Dallas","color":"002a5c","alt":"b0b7bc","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/dal.png"},"KC":{"abbr":"KC","name":"Kansas City Chiefs","short":"Chiefs","loc":"Kansas City","color":"e31837","alt":"ffb612","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/kc.png"},"DEN":{"abbr":"DEN","name":"Denver Broncos","short":"Broncos","loc":"Denver","color":"0a2343","alt":"fc4c02","logo":"https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/den.png"}},"games":[{"id":"401872656","week":1,"date":"2026-09-10T00:20Z","home":"SEA","away":"NE","venue":"Lumen Field"},{"id":"401872657","week":1,"date":"2026-09-11T00:35Z","home":"LAR","away":"SF","venue":"Melbourne Cricket Ground"},{"id":"401872925","week":1,"date":"2026-09-13T17:00Z","home":"CIN","away":"TB","venue":"Paycor Stadium"},{"id":"401872923","week":1,"date":"2026-09-13T17:00Z","home":"DET","away":"NO","venue":"Ford Field"},{"id":"401872924","week":1,"date":"2026-09-13T17:00Z","home":"TEN","away":"NYJ","venue":"Nissan Stadium"},{"id":"401872659","week":1,"date":"2026-09-13T17:00Z","home":"IND","away":"BAL","venue":"Lucas Oil Stadium"},{"id":"401872658","week":1,"date":"2026-09-13T17:00Z","home":"PIT","away":"ATL","venue":"Acrisure Stadium"},{"id":"401872661","week":1,"date":"2026-09-13T17:00Z","home":"CAR","away":"CHI","venue":"Bank of America Stadium"},{"id":"401872922","week":1,"date":"2026-09-13T17:00Z","home":"JAX","away":"CLE","venue":"EverBank Stadium"},{"id":"401872660","week":1,"date":"2026-09-13T17:00Z","home":"HOU","away":"BUF","venue":"Reliant Stadium"},{"id":"401872928","week":1,"date":"2026-09-13T20:25Z","home":"LV","away":"MIA","venue":"Allegiant Stadium"},{"id":"401872927","week":1,"date":"2026-09-13T20:25Z","home":"MIN","away":"GB","venue":"U.S. Bank Stadium"},{"id":"401872929","week":1,"date":"2026-09-13T20:25Z","home":"PHI","away":"WSH","venue":"Lincoln Financial Field"},{"id":"401872926","week":1,"date":"2026-09-13T20:25Z","home":"LAC","away":"ARI","venue":"SoFi Stadium"},{"id":"401872930","week":1,"date":"2026-09-14T00:20Z","home":"NYG","away":"DAL","venue":"MetLife Stadium"},{"id":"401872931","week":1,"date":"2026-09-15T00:15Z","home":"KC","away":"DEN","venue":"Arrowhead Stadium"},{"id":"401872932","week":2,"date":"2026-09-18T00:15Z","home":"BUF","away":"DET","venue":"Highmark Stadium"},{"id":"401872933","week":2,"date":"2026-09-20T17:00Z","home":"ATL","away":"CAR","venue":"Mercedes-Benz Stadium"},{"id":"401872937","week":2,"date":"2026-09-20T17:00Z","home":"CHI","away":"MIN","venue":"Soldier Field"},{"id":"401872939","week":2,"date":"2026-09-20T17:00Z","home":"TEN","away":"PHI","venue":"Nissan Stadium"},{"id":"401872946","week":2,"date":"2026-09-20T17:00Z","home":"NE","away":"PIT","venue":"Gillette Stadium"},{"id":"401872936","week":2,"date":"2026-09-20T17:00Z","home":"NYJ","away":"GB","venue":"MetLife Stadium"},{"id":"401872935","week":2,"date":"2026-09-20T17:00Z","home":"TB","away":"CLE","venue":"Raymond James Stadium"},{"id":"401872938","week":2,"date":"2026-09-20T17:00Z","home":"BAL","away":"NO","venue":"M&T Bank Stadium"},{"id":"401872934","week":2,"date":"2026-09-20T17:00Z","home":"HOU","away":"CIN","venue":"Reliant Stadium"},{"id":"401872940","week":2,"date":"2026-09-20T20:05Z","home":"DEN","away":"JAX","venue":"Empower Field at Mile High"},{"id":"401872941","week":2,"date":"2026-09-20T20:05Z","home":"LAC","away":"LV","venue":"SoFi Stadium"},{"id":"401872944","week":2,"date":"2026-09-20T20:25Z","home":"DAL","away":"WSH","venue":"AT&T Stadium"},{"id":"401872943","week":2,"date":"2026-09-20T20:25Z","home":"ARI","away":"SEA","venue":"State Farm Stadium"},{"id":"401872942","week":2,"date":"2026-09-20T20:25Z","home":"SF","away":"MIA","venue":"Levi's Stadium"},{"id":"401872945","week":2,"date":"2026-09-21T00:20Z","home":"KC","away":"IND","venue":"Arrowhead Stadium"},{"id":"401872947","week":2,"date":"2026-09-22T00:15Z","home":"LAR","away":"NYG","venue":"SoFi Stadium"},{"id":"401872948","week":3,"date":"2026-09-25T00:15Z","home":"GB","away":"ATL","venue":"Lambeau Field"},{"id":"401872953","week":3,"date":"2026-09-27T17:00Z","home":"BUF","away":"LAC","venue":"Highmark Stadium"},{"id":"401872949","week":3,"date":"2026-09-27T17:00Z","home":"CLE","away":"CAR","venue":"Huntington Bank Field"},{"id":"401872954","week":3,"date":"2026-09-27T17:00Z","home":"DET","away":"NYJ","venue":"Ford Field"},{"id":"401872951","week":3,"date":"2026-09-27T17:00Z","home":"IND","away":"HOU","venue":"Lucas Oil Stadium"},{"id":"401872952","week":3,"date":"2026-09-27T17:00Z","home":"MIA","away":"KC","venue":"Hard Rock Stadium"},{"id":"401872956","week":3,"date":"2026-09-27T17:00Z","home":"NYG","away":"TEN","venue":"MetLife Stadium"},{"id":"401872950","week":3,"date":"2026-09-27T17:00Z","home":"PIT","away":"CIN","venue":"Acrisure Stadium"},{"id":"401872955","week":3,"date":"2026-09-27T17:00Z","home":"WSH","away":"SEA","venue":"Northwest Stadium"},{"id":"401872957","week":3,"date":"2026-09-27T17:00Z","home":"JAX","away":"NE","venue":"EverBank Stadium"},{"id":"401872958","week":3,"date":"2026-09-27T20:05Z","home":"SF","away":"ARI","venue":"Levi's Stadium"},{"id":"401872959","week":3,"date":"2026-09-27T20:05Z","home":"TB","away":"MIN","venue":"Raymond James Stadium"},{"id":"401872960","week":3,"date":"2026-09-27T20:25Z","home":"DAL","away":"BAL","venue":"Maracan\u00e3 Stadium"},{"id":"401872961","week":3,"date":"2026-09-27T20:25Z","home":"NO","away":"LV","venue":"Caesars Superdome"},{"id":"401872962","week":3,"date":"2026-09-28T00:20Z","home":"DEN","away":"LAR","venue":"Empower Field at Mile High"},{"id":"401872963","week":3,"date":"2026-09-29T00:15Z","home":"CHI","away":"PHI","venue":"Soldier Field"},{"id":"401872964","week":4,"date":"2026-10-02T00:15Z","home":"CLE","away":"PIT","venue":"Huntington Bank Field"},{"id":"401872965","week":4,"date":"2026-10-04T13:30Z","home":"WSH","away":"IND","venue":"Tottenham Hotspur Stadium"},{"id":"401872971","week":4,"date":"2026-10-04T17:00Z","home":"BUF","away":"NE","venue":"Highmark Stadium"},{"id":"401872972","week":4,"date":"2026-10-04T17:00Z","home":"CHI","away":"NYJ","venue":"Soldier Field"},{"id":"401872969","week":4,"date":"2026-10-04T17:00Z","home":"CIN","away":"JAX","venue":"Paycor Stadium"},{"id":"401872966","week":4,"date":"2026-10-04T17:00Z","home":"NYG","away":"ARI","venue":"MetLife Stadium"},{"id":"401872970","week":4,"date":"2026-10-04T17:00Z","home":"PHI","away":"LAR","venue":"Lincoln Financial Field"},{"id":"401872968","week":4,"date":"2026-10-04T17:00Z","home":"TB","away":"GB","venue":"Raymond James Stadium"},{"id":"401872973","week":4,"date":"2026-10-04T17:00Z","home":"BAL","away":"TEN","venue":"M&T Bank Stadium"},{"id":"401872967","week":4,"date":"2026-10-04T17:00Z","home":"HOU","away":"DAL","venue":"Reliant Stadium"},{"id":"401872974","week":4,"date":"2026-10-04T20:05Z","home":"MIN","away":"MIA","venue":"U.S. Bank Stadium"},{"id":"401872976","week":4,"date":"2026-10-04T20:25Z","home":"LV","away":"KC","venue":"Allegiant Stadium"},{"id":"401872975","week":4,"date":"2026-10-04T20:25Z","home":"SF","away":"DEN","venue":"Levi's Stadium"},{"id":"401872977","week":4,"date":"2026-10-04T20:25Z","home":"SEA","away":"LAC","venue":"Lumen Field"},{"id":"401872978","week":4,"date":"2026-10-05T00:20Z","home":"CAR","away":"DET","venue":"Bank of America Stadium"},{"id":"401872979","week":4,"date":"2026-10-06T00:15Z","home":"NO","away":"ATL","venue":"Caesars Superdome"},{"id":"401872980","week":5,"date":"2026-10-09T00:15Z","home":"DAL","away":"TB","venue":"AT&T Stadium"},{"id":"401872981","week":5,"date":"2026-10-11T13:30Z","home":"JAX","away":"PHI","venue":"Tottenham Hotspur Stadium"},{"id":"401872984","week":5,"date":"2026-10-11T17:00Z","home":"TEN","away":"HOU","venue":"Nissan Stadium"},{"id":"401872982","week":5,"date":"2026-10-11T17:00Z","home":"MIA","away":"CIN","venue":"Hard Rock Stadium"},{"id":"401872986","week":5,"date":"2026-10-11T17:00Z","home":"NE","away":"LV","venue":"Gillette Stadium"},{"id":"401872987","week":5,"date":"2026-10-11T17:00Z","home":"NO","away":"MIN","venue":"Caesars Superdome"},{"id":"401872983","week":5,"date":"2026-10-11T17:00Z","home":"NYJ","away":"CLE","venue":"MetLife Stadium"},{"id":"401872985","week":5,"date":"2026-10-11T17:00Z","home":"PIT","away":"IND","venue":"Acrisure Stadium"},{"id":"401872988","week":5,"date":"2026-10-11T17:00Z","home":"WSH","away":"NYG","venue":"Northwest Stadium"},{"id":"401872989","week":5,"date":"2026-10-11T20:05Z","home":"LAC","away":"DEN","venue":"SoFi Stadium"},{"id":"401872990","week":5,"date":"2026-10-11T20:25Z","home":"GB","away":"CHI","venue":"Lambeau Field"},{"id":"401872991","week":5,"date":"2026-10-11T20:25Z","home":"ARI","away":"DET","venue":"State Farm Stadium"},{"id":"401872992","week":5,"date":"2026-10-11T20:25Z","home":"SEA","away":"SF","venue":"Lumen Field"},{"id":"401872993","week":5,"date":"2026-10-12T00:20Z","home":"ATL","away":"BAL","venue":"Mercedes-Benz Stadium"},{"id":"401872994","week":5,"date":"2026-10-13T00:15Z","home":"LAR","away":"BUF","venue":"SoFi Stadium"},{"id":"401872995","week":6,"date":"2026-10-16T00:15Z","home":"DEN","away":"SEA","venue":"Empower Field at Mile High"},{"id":"401872996","week":6,"date":"2026-10-18T13:30Z","home":"JAX","away":"HOU","venue":"Wembley Stadium"},{"id":"401872999","week":6,"date":"2026-10-18T17:00Z","home":"ATL","away":"CHI","venue":"Mercedes-Benz Stadium"},{"id":"401872997","week":6,"date":"2026-10-18T17:00Z","home":"CLE","away":"BAL","venue":"Huntington Bank Field"},{"id":"401873003","week":6,"date":"2026-10-18T17:00Z","home":"IND","away":"TEN","venue":"Lucas Oil Stadium"},{"id":"401873001","week":6,"date":"2026-10-18T17:00Z","home":"NE","away":"NYJ","venue":"Gillette Stadium"},{"id":"401873000","week":6,"date":"2026-10-18T17:00Z","home":"NYG","away":"NO","venue":"MetLife Stadium"},{"id":"401872998","week":6,"date":"2026-10-18T17:00Z","home":"PHI","away":"CAR","venue":"Lincoln Financial Field"},{"id":"401873002","week":6,"date":"2026-10-18T17:00Z","home":"TB","away":"PIT","venue":"Raymond James Stadium"},{"id":"401873004","week":6,"date":"2026-10-18T20:05Z","home":"LAR","away":"ARI","venue":"SoFi Stadium"},{"id":"401873006","week":6,"date":"2026-10-18T20:25Z","home":"KC","away":"LAC","venue":"Arrowhead Stadium"},{"id":"401873005","week":6,"date":"2026-10-18T20:25Z","home":"LV","away":"BUF","venue":"Allegiant Stadium"},{"id":"401873007","week":6,"date":"2026-10-19T00:20Z","home":"GB","away":"DAL","venue":"Lambeau Field"},{"id":"401873008","week":6,"date":"2026-10-20T00:15Z","home":"SF","away":"WSH","venue":"Levi's Stadium"},{"id":"401873010","week":7,"date":"2026-10-23T00:15Z","home":"CHI","away":"NE","venue":"Soldier Field"},{"id":"401873011","week":7,"date":"2026-10-25T13:30Z","home":"NO","away":"PIT","venue":"Stade de France"},{"id":"401873017","week":7,"date":"2026-10-25T17:00Z","home":"ATL","away":"SF","venue":"Mercedes-Benz Stadium"},{"id":"401873013","week":7,"date":"2026-10-25T17:00Z","home":"TEN","away":"CLE","venue":"Nissan Stadium"},{"id":"401873014","week":7,"date":"2026-10-25T17:00Z","home":"MIN","away":"IND","venue":"U.S. Bank Stadium"},{"id":"401873015","week":7,"date":"2026-10-25T17:00Z","home":"NYJ","away":"MIA","venue":"MetLife Stadium"},{"id":"401873018","week":7,"date":"2026-10-25T17:00Z","home":"CAR","away":"TB","venue":"Bank of America Stadium"},{"id":"401873012","week":7,"date":"2026-10-25T17:00Z","home":"BAL","away":"CIN","venue":"M&T Bank Stadium"},{"id":"401873016","week":7,"date":"2026-10-25T17:00Z","home":"HOU","away":"NYG","venue":"Reliant Stadium"},{"id":"401873019","week":7,"date":"2026-10-25T20:05Z","home":"ARI","away":"DEN","venue":"State Farm Stadium"},{"id":"401873020","week":7,"date":"2026-10-25T20:25Z","home":"DET","away":"GB","venue":"Ford Field"},{"id":"401873021","week":7,"date":"2026-10-25T20:25Z","home":"LV","away":"LAR","venue":"Allegiant Stadium"},{"id":"401873022","week":7,"date":"2026-10-26T00:20Z","home":"SEA","away":"KC","venue":"Lumen Field"},{"id":"401873009","week":7,"date":"2026-10-27T00:15Z","home":"PHI","away":"DAL","venue":"Lincoln Financial Field"},{"id":"401873023","week":8,"date":"2026-10-30T00:15Z","home":"GB","away":"CAR","venue":"Lambeau Field"},{"id":"401873026","week":8,"date":"2026-11-01T18:00Z","home":"BUF","away":"BAL","venue":"Highmark Stadium"},{"id":"401873031","week":8,"date":"2026-11-01T18:00Z","home":"CIN","away":"TEN","venue":"Paycor Stadium"},{"id":"401873024","week":8,"date":"2026-11-01T18:00Z","home":"DAL","away":"ARI","venue":"AT&T Stadium"},{"id":"401873030","week":8,"date":"2026-11-01T18:00Z","home":"DET","away":"MIN","venue":"Ford Field"},{"id":"401873029","week":8,"date":"2026-11-01T18:00Z","home":"NYJ","away":"LV","venue":"MetLife Stadium"},{"id":"401873027","week":8,"date":"2026-11-01T18:00Z","home":"PIT","away":"CLE","venue":"Acrisure Stadium"},{"id":"401873025","week":8,"date":"2026-11-01T18:00Z","home":"TB","away":"ATL","venue":"Raymond James Stadium"},{"id":"401873028","week":8,"date":"2026-11-01T18:00Z","home":"JAX","away":"IND","venue":"EverBank Stadium"},{"id":"401873032","week":8,"date":"2026-11-01T21:05Z","home":"LAR","away":"LAC","venue":"SoFi Stadium"},{"id":"401873033","week":8,"date":"2026-11-01T21:25Z","home":"DEN","away":"KC","venue":"Empower Field at Mile High"},{"id":"401873034","week":8,"date":"2026-11-01T21:25Z","home":"MIA","away":"NE","venue":"Hard Rock Stadium"},{"id":"401873035","week":8,"date":"2026-11-02T01:20Z","home":"WSH","away":"PHI","venue":"Northwest Stadium"},{"id":"401873036","week":8,"date":"2026-11-03T01:15Z","home":"SEA","away":"CHI","venue":"Lumen Field"},{"id":"401873037","week":9,"date":"2026-11-06T01:15Z","home":"BAL","away":"JAX","venue":"M&T Bank Stadium"},{"id":"401873038","week":9,"date":"2026-11-08T14:30Z","home":"ATL","away":"CIN","venue":"Santiago Bernab\u00e9u"},{"id":"401873040","week":9,"date":"2026-11-08T18:00Z","home":"IND","away":"DAL","venue":"Lucas Oil Stadium"},{"id":"401873045","week":9,"date":"2026-11-08T18:00Z","home":"KC","away":"NYJ","venue":"Arrowhead Stadium"},{"id":"401873042","week":9,"date":"2026-11-08T18:00Z","home":"MIA","away":"DET","venue":"Hard Rock Stadium"},{"id":"401873039","week":9,"date":"2026-11-08T18:00Z","home":"NO","away":"CLE","venue":"Caesars Superdome"},{"id":"401873044","week":9,"date":"2026-11-08T18:00Z","home":"PHI","away":"NYG","venue":"Lincoln Financial Field"},{"id":"401873043","week":9,"date":"2026-11-08T18:00Z","home":"WSH","away":"LAR","venue":"Northwest Stadium"},{"id":"401873041","week":9,"date":"2026-11-08T18:00Z","home":"CAR","away":"DEN","venue":"Bank of America Stadium"},{"id":"401873046","week":9,"date":"2026-11-08T21:05Z","home":"LAC","away":"HOU","venue":"SoFi Stadium"},{"id":"401873047","week":9,"date":"2026-11-08T21:05Z","home":"SF","away":"LV","venue":"Levi's Stadium"},{"id":"401873049","week":9,"date":"2026-11-08T21:25Z","home":"NE","away":"GB","venue":"Gillette Stadium"},{"id":"401873048","week":9,"date":"2026-11-08T21:25Z","home":"SEA","away":"ARI","venue":"Lumen Field"},{"id":"401873050","week":9,"date":"2026-11-09T01:20Z","home":"CHI","away":"TB","venue":"Soldier Field"},{"id":"401873051","week":9,"date":"2026-11-10T01:15Z","home":"MIN","away":"BUF","venue":"U.S. Bank Stadium"},{"id":"401873052","week":10,"date":"2026-11-13T01:15Z","home":"NYG","away":"WSH","venue":"MetLife Stadium"},{"id":"401873053","week":10,"date":"2026-11-15T14:30Z","home":"DET","away":"NE","venue":"FC Bayern Munich Stadium"},{"id":"401873058","week":10,"date":"2026-11-15T18:00Z","home":"ATL","away":"KC","venue":"Mercedes-Benz Stadium"},{"id":"401873056","week":10,"date":"2026-11-15T18:00Z","home":"CLE","away":"HOU","venue":"Huntington Bank Field"},{"id":"401873060","week":10,"date":"2026-11-15T18:00Z","home":"GB","away":"MIN","venue":"Lambeau Field"},{"id":"401873057","week":10,"date":"2026-11-15T18:00Z","home":"TEN","away":"JAX","venue":"Nissan Stadium"},{"id":"401873059","week":10,"date":"2026-11-15T18:00Z","home":"IND","away":"MIA","venue":"Lucas Oil Stadium"},{"id":"401873055","week":10,"date":"2026-11-15T18:00Z","home":"NO","away":"CAR","venue":"Caesars Superdome"},{"id":"401873054","week":10,"date":"2026-11-15T18:00Z","home":"NYJ","away":"BUF","venue":"MetLife Stadium"},{"id":"401873062","week":10,"date":"2026-11-15T21:05Z","home":"LV","away":"SEA","venue":"Allegiant Stadium"},{"id":"401873061","week":10,"date":"2026-11-15T21:05Z","home":"ARI","away":"LAR","venue":"State Farm Stadium"},{"id":"401873063","week":10,"date":"2026-11-15T21:25Z","home":"DAL","away":"SF","venue":"AT&T Stadium"},{"id":"401873064","week":10,"date":"2026-11-16T01:20Z","home":"CIN","away":"PIT","venue":"Paycor Stadium"},{"id":"401873065","week":10,"date":"2026-11-17T01:15Z","home":"BAL","away":"LAC","venue":"M&T Bank Stadium"},{"id":"401873066","week":11,"date":"2026-11-20T01:15Z","home":"HOU","away":"IND","venue":"Reliant Stadium"},{"id":"401873070","week":11,"date":"2026-11-22T18:00Z","home":"BUF","away":"MIA","venue":"Highmark Stadium"},{"id":"401873071","week":11,"date":"2026-11-22T18:00Z","home":"CHI","away":"NO","venue":"Soldier Field"},{"id":"401873073","week":11,"date":"2026-11-22T18:00Z","home":"DAL","away":"TEN","venue":"AT&T Stadium"},{"id":"401873072","week":11,"date":"2026-11-22T18:00Z","home":"DET","away":"TB","venue":"Ford Field"},{"id":"401873067","week":11,"date":"2026-11-22T18:00Z","home":"KC","away":"ARI","venue":"Arrowhead Stadium"},{"id":"401873069","week":11,"date":"2026-11-22T18:00Z","home":"NYG","away":"JAX","venue":"MetLife Stadium"},{"id":"401873068","week":11,"date":"2026-11-22T18:00Z","home":"CAR","away":"BAL","venue":"Bank of America Stadium"},{"id":"401873074","week":11,"date":"2026-11-22T21:05Z","home":"LAC","away":"NYJ","venue":"SoFi Stadium"},{"id":"401873075","week":11,"date":"2026-11-22T21:25Z","home":"DEN","away":"LV","venue":"Empower Field at Mile High"},{"id":"401873076","week":11,"date":"2026-11-22T21:25Z","home":"PHI","away":"PIT","venue":"Lincoln Financial Field"},{"id":"401873077","week":11,"date":"2026-11-23T01:20Z","home":"SF","away":"MIN","venue":"Estadio Banorte"},{"id":"401873078","week":11,"date":"2026-11-24T01:15Z","home":"WSH","away":"CIN","venue":"Northwest Stadium"},{"id":"401873079","week":12,"date":"2026-11-26T01:00Z","home":"LAR","away":"GB","venue":"SoFi Stadium"},{"id":"401873081","week":12,"date":"2026-11-26T18:00Z","home":"DET","away":"CHI","venue":"Ford Field"},{"id":"401873080","week":12,"date":"2026-11-26T21:30Z","home":"DAL","away":"PHI","venue":"AT&T Stadium"},{"id":"401873082","week":12,"date":"2026-11-27T01:20Z","home":"BUF","away":"KC","venue":"Highmark Stadium"},{"id":"401873083","week":12,"date":"2026-11-27T20:00Z","home":"PIT","away":"DEN","venue":"Acrisure Stadium"},{"id":"401873087","week":12,"date":"2026-11-29T18:00Z","home":"CIN","away":"NO","venue":"Paycor Stadium"},{"id":"401873086","week":12,"date":"2026-11-29T18:00Z","home":"CLE","away":"LV","venue":"Huntington Bank Field"},{"id":"401873088","week":12,"date":"2026-11-29T18:00Z","home":"IND","away":"NYG","venue":"Lucas Oil Stadium"},{"id":"401873089","week":12,"date":"2026-11-29T18:00Z","home":"MIA","away":"NYJ","venue":"Hard Rock Stadium"},{"id":"401873084","week":12,"date":"2026-11-29T18:00Z","home":"MIN","away":"ATL","venue":"U.S. Bank Stadium"},{"id":"401873085","week":12,"date":"2026-11-29T18:00Z","home":"HOU","away":"BAL","venue":"Reliant Stadium"},{"id":"401873090","week":12,"date":"2026-11-29T21:05Z","home":"JAX","away":"TEN","venue":"EverBank Stadium"},{"id":"401873092","week":12,"date":"2026-11-29T21:25Z","home":"ARI","away":"WSH","venue":"State Farm Stadium"},{"id":"401873091","week":12,"date":"2026-11-29T21:25Z","home":"SF","away":"SEA","venue":"Levi's Stadium"},{"id":"401873093","week":12,"date":"2026-11-30T01:20Z","home":"LAC","away":"NE","venue":"SoFi Stadium"},{"id":"401873094","week":12,"date":"2026-12-01T01:15Z","home":"TB","away":"CAR","venue":"Raymond James Stadium"},{"id":"401873096","week":13,"date":"2026-12-04T01:15Z","home":"LAR","away":"KC","venue":"SoFi Stadium"},{"id":"401873098","week":13,"date":"2026-12-06T18:00Z","home":"ATL","away":"DET","venue":"Mercedes-Benz Stadium"},{"id":"401873100","week":13,"date":"2026-12-06T18:00Z","home":"CHI","away":"JAX","venue":"Soldier Field"},{"id":"401873097","week":13,"date":"2026-12-06T18:00Z","home":"CLE","away":"CIN","venue":"Huntington Bank Field"},{"id":"401873102","week":13,"date":"2026-12-06T18:00Z","home":"TEN","away":"WSH","venue":"Nissan Stadium"},{"id":"401873099","week":13,"date":"2026-12-06T18:00Z","home":"NO","away":"GB","venue":"Caesars Superdome"},{"id":"401873095","week":13,"date":"2026-12-06T18:00Z","home":"NYG","away":"SF","venue":"MetLife Stadium"},{"id":"401873101","week":13,"date":"2026-12-06T18:00Z","home":"TB","away":"LAC","venue":"Raymond James Stadium"},{"id":"401873103","week":13,"date":"2026-12-06T21:05Z","home":"DEN","away":"MIA","venue":"Empower Field at Mile High"},{"id":"401873104","week":13,"date":"2026-12-06T21:05Z","home":"ARI","away":"PHI","venue":"State Farm Stadium"},{"id":"401873106","week":13,"date":"2026-12-06T21:25Z","home":"MIN","away":"CAR","venue":"U.S. Bank Stadium"},{"id":"401873105","week":13,"date":"2026-12-06T21:25Z","home":"NE","away":"BUF","venue":"Gillette Stadium"},{"id":"401873107","week":13,"date":"2026-12-07T01:20Z","home":"PIT","away":"HOU","venue":"Acrisure Stadium"},{"id":"401873108","week":13,"date":"2026-12-08T01:15Z","home":"SEA","away":"DAL","venue":"Lumen Field"},{"id":"401873109","week":14,"date":"2026-12-11T01:15Z","home":"NE","away":"MIN","venue":"Gillette Stadium"},{"id":"401873110","week":14,"date":"2026-12-13T18:00Z","home":"CLE","away":"ATL","venue":"Huntington Bank Field"},{"id":"401873117","week":14,"date":"2026-12-13T18:00Z","home":"DET","away":"TEN","venue":"Ford Field"},{"id":"401873111","week":14,"date":"2026-12-13T18:00Z","home":"MIA","away":"CHI","venue":"Hard Rock Stadium"},{"id":"401873112","week":14,"date":"2026-12-13T18:00Z","home":"NYJ","away":"DEN","venue":"MetLife Stadium"},{"id":"401873114","week":14,"date":"2026-12-13T18:00Z","home":"PHI","away":"IND","venue":"Lincoln Financial Field"},{"id":"401873113","week":14,"date":"2026-12-13T18:00Z","home":"WSH","away":"HOU","venue":"Northwest Stadium"},{"id":"401873115","week":14,"date":"2026-12-13T18:00Z","home":"CAR","away":"NO","venue":"Bank of America Stadium"},{"id":"401873116","week":14,"date":"2026-12-13T18:00Z","home":"BAL","away":"TB","venue":"M&T Bank Stadium"},{"id":"401873118","week":14,"date":"2026-12-13T21:05Z","home":"LV","away":"LAC","venue":"Allegiant Stadium"},{"id":"401873119","week":14,"date":"2026-12-13T21:25Z","home":"CIN","away":"KC","venue":"Paycor Stadium"},{"id":"401873120","week":14,"date":"2026-12-13T21:25Z","home":"SF","away":"LAR","venue":"Levi's Stadium"},{"id":"401873121","week":14,"date":"2026-12-13T21:25Z","home":"SEA","away":"NYG","venue":"Lumen Field"},{"id":"401873122","week":14,"date":"2026-12-14T01:20Z","home":"GB","away":"BUF","venue":"Lambeau Field"},{"id":"401873123","week":14,"date":"2026-12-15T01:15Z","home":"JAX","away":"PIT","venue":"EverBank Stadium"},{"id":"401873124","week":15,"date":"2026-12-18T01:15Z","home":"LAC","away":"SF","venue":"SoFi Stadium"},{"id":"401873125","week":15,"date":"2026-12-19T22:00Z","home":"PHI","away":"SEA","venue":"Lincoln Financial Field"},{"id":"401873126","week":15,"date":"2026-12-20T01:20Z","home":"BUF","away":"CHI","venue":"Highmark Stadium"},{"id":"401873133","week":15,"date":"2026-12-20T18:00Z","home":"GB","away":"MIA","venue":"Lambeau Field"},{"id":"401873131","week":15,"date":"2026-12-20T18:00Z","home":"TEN","away":"IND","venue":"Nissan Stadium"},{"id":"401873130","week":15,"date":"2026-12-20T18:00Z","home":"NYG","away":"CLE","venue":"MetLife Stadium"},{"id":"401873128","week":15,"date":"2026-12-20T18:00Z","home":"PIT","away":"BAL","venue":"Acrisure Stadium"},{"id":"401873134","week":15,"date":"2026-12-20T18:00Z","home":"TB","away":"NO","venue":"Raymond James Stadium"},{"id":"401873127","week":15,"date":"2026-12-20T18:00Z","home":"WSH","away":"ATL","venue":"Northwest Stadium"},{"id":"401873129","week":15,"date":"2026-12-20T18:00Z","home":"CAR","away":"CIN","venue":"Bank of America Stadium"},{"id":"401873132","week":15,"date":"2026-12-20T18:00Z","home":"HOU","away":"JAX","venue":"Reliant Stadium"},{"id":"401873135","week":15,"date":"2026-12-20T21:05Z","home":"ARI","away":"NYJ","venue":"State Farm Stadium"},{"id":"401873137","week":15,"date":"2026-12-20T21:25Z","home":"LV","away":"DEN","venue":"Allegiant Stadium"},{"id":"401873136","week":15,"date":"2026-12-20T21:25Z","home":"LAR","away":"DAL","venue":"SoFi Stadium"},{"id":"401873138","week":15,"date":"2026-12-21T01:20Z","home":"MIN","away":"DET","venue":"U.S. Bank Stadium"},{"id":"401873139","week":15,"date":"2026-12-22T01:15Z","home":"KC","away":"NE","venue":"Arrowhead Stadium"},{"id":"401873140","week":16,"date":"2026-12-25T01:15Z","home":"PHI","away":"HOU","venue":"Lincoln Financial Field"},{"id":"401873141","week":16,"date":"2026-12-25T18:00Z","home":"CHI","away":"GB","venue":"Soldier Field"},{"id":"401873142","week":16,"date":"2026-12-25T21:30Z","home":"DEN","away":"BUF","venue":"Empower Field at Mile High"},{"id":"401873143","week":16,"date":"2026-12-26T01:15Z","home":"SEA","away":"LAR","venue":"Lumen Field"},{"id":"401873146","week":16,"date":"2026-12-27T05:00Z","home":"ATL","away":"TB","venue":"Mercedes-Benz Stadium"},{"id":"401873145","week":16,"date":"2026-12-27T05:00Z","home":"IND","away":"CIN","venue":"Lucas Oil Stadium"},{"id":"401873147","week":16,"date":"2026-12-27T05:00Z","home":"MIN","away":"WSH","venue":"U.S. Bank Stadium"},{"id":"401873144","week":16,"date":"2026-12-27T05:00Z","home":"PIT","away":"CAR","venue":"Acrisure Stadium"},{"id":"401873150","week":16,"date":"2026-12-27T18:00Z","home":"MIA","away":"LAC","venue":"Hard Rock Stadium"},{"id":"401873148","week":16,"date":"2026-12-27T18:00Z","home":"NO","away":"ARI","venue":"Caesars Superdome"},{"id":"401873151","week":16,"date":"2026-12-27T18:00Z","home":"NYJ","away":"NE","venue":"MetLife Stadium"},{"id":"401873149","week":16,"date":"2026-12-27T18:00Z","home":"BAL","away":"CLE","venue":"M&T Bank Stadium"},{"id":"401873152","week":16,"date":"2026-12-27T21:05Z","home":"LV","away":"TEN","venue":"Allegiant Stadium"},{"id":"401873153","week":16,"date":"2026-12-27T21:25Z","home":"KC","away":"SF","venue":"Arrowhead Stadium"},{"id":"401873154","week":16,"date":"2026-12-28T01:20Z","home":"DAL","away":"JAX","venue":"AT&T Stadium"},{"id":"401873155","week":16,"date":"2026-12-29T01:15Z","home":"DET","away":"NYG","venue":"Ford Field"},{"id":"401873156","week":17,"date":"2027-01-01T01:15Z","home":"CIN","away":"BAL","venue":"Paycor Stadium"},{"id":"401873157","week":17,"date":"2027-01-03T05:00Z","home":"NE","away":"DEN","venue":"Gillette Stadium"},{"id":"401873158","week":17,"date":"2027-01-03T05:00Z","home":"LAC","away":"KC","venue":"SoFi Stadium"},{"id":"401873159","week":17,"date":"2027-01-03T05:00Z","home":"TB","away":"LAR","venue":"Raymond James Stadium"},{"id":"401873160","week":17,"date":"2027-01-03T05:00Z","home":"JAX","away":"WSH","venue":"EverBank Stadium"},{"id":"401873164","week":17,"date":"2027-01-03T18:00Z","home":"ATL","away":"NO","venue":"Mercedes-Benz Stadium"},{"id":"401873162","week":17,"date":"2027-01-03T18:00Z","home":"CLE","away":"IND","venue":"Huntington Bank Field"},{"id":"401873165","week":17,"date":"2027-01-03T18:00Z","home":"DAL","away":"NYG","venue":"AT&T Stadium"},{"id":"401873166","week":17,"date":"2027-01-03T18:00Z","home":"TEN","away":"PIT","venue":"Nissan Stadium"},{"id":"401873161","week":17,"date":"2027-01-03T18:00Z","home":"MIA","away":"BUF","venue":"Hard Rock Stadium"},{"id":"401873163","week":17,"date":"2027-01-03T18:00Z","home":"NYJ","away":"MIN","venue":"MetLife Stadium"},{"id":"401873167","week":17,"date":"2027-01-03T18:00Z","home":"CAR","away":"SEA","venue":"Bank of America Stadium"},{"id":"401873168","week":17,"date":"2027-01-03T21:05Z","home":"ARI","away":"LV","venue":"State Farm Stadium"},{"id":"401873169","week":17,"date":"2027-01-03T21:25Z","home":"CHI","away":"DET","venue":"Soldier Field"},{"id":"401873170","week":17,"date":"2027-01-04T01:20Z","home":"SF","away":"PHI","venue":"Levi's Stadium"},{"id":"401873171","week":17,"date":"2027-01-05T01:15Z","home":"GB","away":"HOU","venue":"Lambeau Field"},{"id":"401873181","week":18,"date":"2027-01-10T05:00Z","home":"BUF","away":"NYJ","venue":"Highmark Stadium"},{"id":"401873174","week":18,"date":"2027-01-10T05:00Z","home":"CIN","away":"CLE","venue":"Paycor Stadium"},{"id":"401873179","week":18,"date":"2027-01-10T05:00Z","home":"DEN","away":"LAC","venue":"Empower Field at Mile High"},{"id":"401873176","week":18,"date":"2027-01-10T05:00Z","home":"GB","away":"DET","venue":"Lambeau Field"},{"id":"401873177","week":18,"date":"2027-01-10T05:00Z","home":"IND","away":"JAX","venue":"Lucas Oil Stadium"},{"id":"401873178","week":18,"date":"2027-01-10T05:00Z","home":"KC","away":"LV","venue":"Arrowhead Stadium"},{"id":"401873185","week":18,"date":"2027-01-10T05:00Z","home":"LAR","away":"SEA","venue":"SoFi Stadium"},{"id":"401873173","week":18,"date":"2027-01-10T05:00Z","home":"MIN","away":"CHI","venue":"U.S. Bank Stadium"},{"id":"401873180","week":18,"date":"2027-01-10T05:00Z","home":"NE","away":"MIA","venue":"Gillette Stadium"},{"id":"401873186","week":18,"date":"2027-01-10T05:00Z","home":"NO","away":"TB","venue":"Caesars Superdome"},{"id":"401873182","week":18,"date":"2027-01-10T05:00Z","home":"NYG","away":"PHI","venue":"MetLife Stadium"},{"id":"401873184","week":18,"date":"2027-01-10T05:00Z","home":"ARI","away":"SF","venue":"State Farm Stadium"},{"id":"401873175","week":18,"date":"2027-01-10T05:00Z","home":"WSH","away":"DAL","venue":"Northwest Stadium"},{"id":"401873172","week":18,"date":"2027-01-10T05:00Z","home":"CAR","away":"ATL","venue":"Bank of America Stadium"},{"id":"401873183","week":18,"date":"2027-01-10T05:00Z","home":"BAL","away":"PIT","venue":"M&T Bank Stadium"},{"id":"401873187","week":18,"date":"2027-01-10T05:00Z","home":"HOU","away":"TEN","venue":"Reliant Stadium"}]};
+</script>
+<script id="lms-state" type="application/json">null</script>
+<script>
+/* ===================== BOOTSTRAP ===================== */
+// Capture the page source before anything renders, so the hosted version can republish itself with new state embedded.
+const SRC = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+const HOSTED = !!(window.claude && typeof window.claude.use === 'function');   // running inside the claude.ai artifact viewer
+const IMAGES_OK = !HOSTED;                                                   // the hosted viewer blocks external images, so use team badges there
+let ADMIN = false; try{ ADMIN = localStorage.getItem('lms-admin')==='1'; }catch(e){}
+let artifactNS = null; let PUBLISHED_AT = 0;
+function embeddedState(){ try{ const t=document.getElementById('lms-state')?.textContent?.trim(); if(t && t!=='null' && t!=='null') return JSON.parse(t); }catch(e){ console.warn('embedded state unreadable',e); } return null; }
+function embeddedHasData(){ const e=embeddedState(); return !!(e && (e.updatedAt||0)>0); }
+// A baked copy served from a normal web host (not file://, not the claude.ai viewer): viewers read-only, organiser downloads an updated copy to re-upload.
+const STATIC = !HOSTED && /^https?:$/.test(location.protocol) && embeddedHasData();
+const SHARED = HOSTED || STATIC;
+function isRO(){ return SHARED && !ADMIN; }
+// Read-only viewers only see a pick once that game has a score against it (so nobody copies picks before kick-off).
+function visiblePick(id,w){ const p=S.picks?.[id]?.[w]; if(!p) return null; if(!isRO()) return p; const g=teamGame(p,w); return (g && S.results[g.id]) ? p : 'HIDDEN'; }
+
+/* ===================== DATA ===================== */
+const TEAMS = SCHEDULE.teams;
+const GAMES = SCHEDULE.games;
+const WEEKS = 18;
+const TEAM_LIST = Object.values(TEAMS).sort((a,b)=>a.name.localeCompare(b.name));
+const gamesByWeek = w => GAMES.filter(g=>g.week===w).sort((a,b)=>a.date.localeCompare(b.date));
+const teamGame = (abbr,w) => GAMES.find(g=>g.week===w && (g.home===abbr||g.away===abbr));
+const STORE_KEY = 'lms-nfl-2026-v1';
+
+function defaultState(){
+  return {
+    v:1,
+    settings:{ fee:20, tieRule:'loss', wipeoutResetTeams:false, missedPick:'eliminate', title:'Last Man Standing' },
+    entries:[],          // {id,name,label,email,paid,notes,created}
+    picks:{},            // picks[entryId][week] = abbr
+    results:{},          // results[gameId] = {hs,as,final}
+    rounds:[{n:1,startWeek:1,endWeek:null,winnerIds:null}],
+    ui:{view:'home',week:null},
+    updatedAt:0
+  };
+}
+let S = load();
+function hydrate(s){ return Object.assign(defaultState(), s, {settings:Object.assign(defaultState().settings, s.settings||{})}); }
+function load(){
+  const E = embeddedState(); PUBLISHED_AT = E?.updatedAt||0;
+  let L=null; try{ const raw=localStorage.getItem(STORE_KEY); if(raw) L=JSON.parse(raw); }catch(e){ console.warn(e); }
+  if(SHARED){
+    // Viewers see the published state. The admin's own unpublished edits (newer local copy) win on their machine.
+    if(!ADMIN || !L || (L.updatedAt||0) <= (E?.updatedAt||0)) return hydrate(E||L||{});
+    return hydrate(L);
+  }
+  return hydrate(L||E||{});
+}
+function save(opts={}){
+  if(!opts.uiOnly) S.updatedAt=Date.now();
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){ toast('Could not save to browser storage: '+e.message); }
+}
+function isDirty(){ return SHARED && ADMIN && (S.updatedAt||0) > PUBLISHED_AT; }
+function stateForPublish(){ const c=JSON.parse(JSON.stringify(S)); c.ui={view:'home',week:null}; return c; }
+async function publishLive(){
+  if(!HOSTED) return toast('Publishing only works on the hosted version.');
+  if(!artifactNS){ artifactNS = await window.claude.use('artifact'); }
+  if(!artifactNS) return toast('Publishing is not available in this view.');
+  const html=bakedPage();
+  if(!html) return toast('Could not build the page for publishing.');
+  toast('Publishing…',2000);
+  try{
+    await artifactNS.publish(html);
+    PUBLISHED_AT=S.updatedAt; save({uiOnly:true}); render();
+    toast('Published. Everyone with the link now sees this version.');
+  }catch(e){
+    if(e?.code==='not_writer'||e?.code==='not_granted'){ ADMIN=false; try{localStorage.setItem('lms-admin','0');}catch(_){ } render(); toast('This link is view-only for you. Only the owner can publish changes.'); }
+    else if(e?.code==='conflict'){ toast('A newer version was just published; reloading.'); }
+    else toast('Publish failed: '+(e?.message||e));
+  }
+}
+function bakedPage(){
+  const json=JSON.stringify(stateForPublish()).replace(/<\//g,'<\\/');
+  const html=SRC.replace(/(<script id="lms-state" type="application\/json">)[\s\S]*?(<\/script>)/, (m,a,b)=>a+json+b);
+  return html.includes(json.slice(0,40)) ? html : null;
+}
+// Download a copy of this page with the current standings baked in, ready to upload to any web host.
+function exportLivePage(){ const html=bakedPage(); if(!html) return toast('Could not build the page.'); download('index.html', html, 'text/html'); toast('Upload index.html to your web host to update the shared page.'); }
+function toggleAdmin(){ ADMIN=!ADMIN; try{localStorage.setItem('lms-admin',ADMIN?'1':'0');}catch(e){} S=load(); render(); toast(ADMIN?'Admin mode on. Make your changes, then hit Publish.':'Admin mode off.'); }
+const uid = () => Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const gbp = n => '£'+Number(n||0).toLocaleString('en-GB',{minimumFractionDigits:0,maximumFractionDigits:2});
+const fmtDate = iso => new Date(iso).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/London'});
+const fmtDay = iso => new Date(iso).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'Europe/London'});
+
+/* ===================== LOGIC ===================== */
+function teamResult(abbr, w){
+  const g = teamGame(abbr,w);
+  if(!g) return {code:'BYE'};
+  const r = S.results[g.id];
+  if(!r || !r.final) return {code:'P', game:g, live:r&&(r.hs!=null||r.as!=null)};
+  const my = g.home===abbr? +r.hs : +r.as, opp = g.home===abbr? +r.as : +r.hs;
+  return {code: my>opp?'W': my<opp?'L':'T', game:g, my, opp};
+}
+function weekSettled(w){ const gs=gamesByWeek(w); return gs.length>0 && gs.every(g=>S.results[g.id]?.final); }
+function weekHasResults(w){ return gamesByWeek(w).some(g=>S.results[g.id]?.final); }
+function currentRound(){ return S.rounds[S.rounds.length-1]; }
+function roundEndWeek(r){ return r.endWeek || WEEKS; }
+function defaultWeek(){
+  const r=currentRound();
+  for(let w=r.startWeek; w<=roundEndWeek(r); w++){ if(!weekSettled(w)) return w; }
+  return roundEndWeek(r);
+}
+function isPickLost(code){ return code==='L' || code==='BYE' || (code==='T' && S.settings.tieRule==='loss'); }
+
+/* Compute the state of a round week by week.
+   Returns { weeks:{[w]:{aliveBefore,aliveAfter,losers,settled,wipeout}}, alive:Set, events:[], winnerIds, complete, resetWeek } */
+function computeRound(r){
+  const all = S.entries.map(e=>e.id);
+  let alive = new Set(all);
+  const out = {weeks:{}, events:[], winnerIds:null, complete:false, resetWeek:r.startWeek, finalWeek:null};
+  for(let w=r.startWeek; w<=roundEndWeek(r); w++){
+    const settled = weekSettled(w);
+    const aliveBefore=[...alive];
+    const losers=[];
+    for(const id of alive){
+      const pick = S.picks[id]?.[w];
+      if(!pick){ if(settled && S.settings.missedPick==='eliminate') losers.push({id,reason:'No pick made',pick:null}); continue; }
+      const res = teamResult(pick,w);
+      if(res.code==='BYE'){ if(settled) losers.push({id,reason:'Picked a team on a bye',pick}); continue; }
+      if(isPickLost(res.code)) losers.push({id,reason:(res.code==='T'?'Tied ':'Lost ')+res.my+'-'+res.opp,pick,res});
+    }
+    let wipeout=false;
+    if(settled && alive.size>0 && losers.length===alive.size){
+      wipeout=true;
+      alive = new Set(all);
+      if(S.settings.wipeoutResetTeams) out.resetWeek = w+1;
+      out.events.push({week:w,type:'wipeout',count:losers.length});
+    } else {
+      losers.forEach(l=>{ alive.delete(l.id); out.events.push({week:w,type:'out',...l}); });
+    }
+    out.weeks[w]={aliveBefore,aliveAfter:[...alive],losers,settled,wipeout};
+    if(settled && alive.size===1 && all.length>1){ out.winnerIds=[...alive]; out.complete=true; out.finalWeek=w; out.events.push({week:w,type:'winner',ids:[...alive]}); break; }
+    if(settled && w===WEEKS && alive.size>1){ out.winnerIds=[...alive]; out.complete=true; out.finalWeek=w; out.events.push({week:w,type:'split',ids:[...alive]}); }
+  }
+  out.alive=alive;
+  return out;
+}
+function usedTeams(entryId, r, comp, uptoWeek){
+  const used={};
+  const from = comp.resetWeek;
+  for(let w=from; w<=roundEndWeek(r); w++){
+    if(w===uptoWeek) continue;
+    const p=S.picks[entryId]?.[w]; if(p) used[p]=w;
+  }
+  return used;
+}
+function aliveAtWeek(comp, w){ // entries eligible to pick in week w
+  const prev = comp.weeks[w-1];
+  if(prev) return new Set(prev.aliveAfter);
+  return new Set(S.entries.map(e=>e.id));
+}
+function isAliveForWeek(comp,w,id){ return aliveAtWeek(comp,w).has(id); }
+
+/* ===================== UI HELPERS ===================== */
+function badge(abbr, cls='logo'){
+  const t=TEAMS[abbr]; const size=cls.includes('xl')?64:cls.includes('lg')?44:28; const fs=Math.round(size*0.36);
+  return `<span class="fallback" title="${esc(t.name)}" style="background:#${t.color||'333'};box-shadow:inset 0 0 0 3px #${t.alt||'fff'}55;width:${size}px;height:${size}px;font-size:${fs}px">${abbr}</span>`;
+}
+function logoImg(abbr, cls='logo'){
+  const t=TEAMS[abbr]; if(!t) return '';
+  if(!IMAGES_OK) return badge(abbr,cls);
+  return `<img class="${cls}" src="${t.logo}" alt="${esc(t.name)}" title="${esc(t.name)}" onerror="this.outerHTML='<span class=&quot;fallback&quot; style=&quot;background:#${t.color||'333'}&quot;>${abbr}</span>'">`;
+}
+function teamChip(abbr, cls='logo'){ const t=TEAMS[abbr]; return t? `<span class="team">${logoImg(abbr,cls)}<span>${esc(t.name)}</span></span>` : '<span class="muted">-</span>'; }
+function toast(msg, ms=3200){ const el=document.createElement('div'); el.className='toast'; el.innerHTML=msg; document.getElementById('toastRoot').appendChild(el); setTimeout(()=>el.remove(),ms); }
+function modal(html){ const root=document.getElementById('modalRoot'); root.innerHTML=`<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">${html}</div></div>`; }
+function closeModal(){ document.getElementById('modalRoot').innerHTML=''; }
+function setView(v){ S.ui.view=v; save({uiOnly:true}); render(); }
+function setWeek(w){ S.ui.week=w; save({uiOnly:true}); render(); }
+function entryName(id){ const e=S.entries.find(x=>x.id===id); return e? (e.label? `${e.name} (${e.label})`: e.name) : '?'; }
+function weekBar(r, comp, extraClass=''){
+  const cur=S.ui.week;
+  let h='<div class="weeks">';
+  for(let w=1;w<=WEEKS;w++){
+    const inR = w>=r.startWeek && w<=roundEndWeek(r);
+    const cls=[w===cur?'active':'', weekSettled(w)?'settled':(weekHasResults(w)?'live':''), inR?'':'outside'].join(' ');
+    h+=`<button class="${cls}" onclick="setWeek(${w})" title="Week ${w}">${w}</button>`;
+  }
+  return h+'</div>';
+}
+
+/* ===================== RENDER ===================== */
+function render(){
+  const r=currentRound(); const comp=computeRound(r);
+  if(!S.ui.week) S.ui.week=defaultWeek();
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===S.ui.view));
+  renderHeader(r,comp);
+  const main=document.getElementById('main');
+  document.body.classList.toggle('ro', isRO());
+  if(isRO() && (S.ui.view==='entries'||S.ui.view==='settings')) S.ui.view='home';
+  const views={home:renderHome,dash:renderDash,picks:renderPicks,results:renderResults,history:renderHistory,entries:renderEntries,settings:renderSettings};
+  main.innerHTML=(views[S.ui.view]||renderHome)(r,comp);
+  const foot=document.getElementById('foot'); if(foot) foot.innerHTML = SHARED ? (ADMIN?(HOSTED?'Admin mode. Changes are saved in this browser until you press Publish.':'Admin mode. Changes are saved in this browser; press Download and upload the new index.html to update the shared page.'):'Live standings. Updated by the organiser after each round of games.') : 'Last Man Standing. Data is saved in this browser. Use Settings &rarr; Backup to export a copy.';
+  if(S.ui.view==='entries') wireDrop();
+}
+function renderHeader(r,comp){
+  const pot=S.entries.length*S.settings.fee;
+  const paid=S.entries.filter(e=>e.paid).length;
+  document.getElementById('hdrStats').innerHTML=`
+    <div class="stat"><div class="v">R${r.n}</div><div class="l">Round</div></div>
+    <div class="stat"><div class="v">WK ${S.ui.week||defaultWeek()}</div><div class="l">Selected</div></div>
+    <div class="stat"><div class="v">${S.entries.length}</div><div class="l">Entries</div></div>
+    <div class="stat alive"><div class="v">${comp.alive.size}</div><div class="l">Still In</div></div>
+    <div class="stat pot"><div class="v">${gbp(pot)}</div><div class="l">Prize Pot</div></div>
+    <div class="stat"><div class="v">${paid}/${S.entries.length}</div><div class="l">Paid</div></div>
+    ${SHARED?(ADMIN?`<div class="stat pub ${isDirty()?'dirty':''}" onclick="${HOSTED?'publishLive()':'exportLivePage()'}" title="${HOSTED?'Publish the current state so everyone with the link sees it':'Download an updated index.html to upload to your web host'}"><div class="v">${HOSTED?(isDirty()?'⬆ Publish':'✓ Live'):'⬇ Download'}</div><div class="l">${isDirty()?'unpublished changes':'up to date'}</div></div><div class="stat pub" style="border-color:var(--line);background:transparent" onclick="toggleAdmin()"><div class="v" style="color:#fff">Admin</div><div class="l">exit</div></div>`:`<div class="stat pub" style="border-color:var(--line);background:transparent;opacity:.6" onclick="toggleAdmin()" title="Organiser only"><div class="v" style="color:#fff">🔒</div><div class="l">organiser</div></div>`):''}`;
+}
+
+/* ---- Home ---- */
+function renderHome(r,comp){
+  const pot=S.entries.length*S.settings.fee;
+  const w=defaultWeek();
+  const first=GAMES.slice().sort((a,b)=>a.date.localeCompare(b.date))[0];
+  const wk1=gamesByWeek(1); const wkCur=gamesByWeek(w);
+  const last=GAMES.slice().sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const aliveList=S.entries.filter(e=>comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  const winnerBanner = comp.complete&&comp.winnerIds ? `<div class="banner gold">🏆 Round ${r.n} ${comp.winnerIds.length===1?'winner':'shared by'}: ${esc(comp.winnerIds.map(entryName).join(', '))} - ${gbp(pot)}</div>` : '';
+  return `${winnerBanner}
+  <div class="homehero"><div class="heroflag"></div>
+    <div class="kick">NFL 2026 Season · ${S.entries.length?`${S.entries.length} entries`:'Entries open'}</div>
+    <h1 class="big">Last Man <span>Standing</span></h1>
+    <p>One pick a week. Pick an NFL team to win their game. Get it right and you're through to next week. Get it wrong and you're out. Every team can only be used once, so choose wisely - the last player standing takes the whole pot.</p>
+    <div class="herostats">
+      <div class="herostat gold"><div class="v">${gbp(S.settings.fee)}</div><div class="l">Per entry</div></div>
+      <div class="herostat gold"><div class="v">${gbp(pot)}</div><div class="l">Current pot</div></div>
+      <div class="herostat green"><div class="v">${comp.alive.size}</div><div class="l">Still standing</div></div>
+      <div class="herostat"><div class="v">Wk ${w}</div><div class="l">${weekSettled(w)?'Settled':weekHasResults(w)?'In progress':'Up next'}</div></div>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn gold" onclick="setView('dash')">View standings</button>
+      <button class="btn" onclick="setView('history')">Pick history</button>
+      <button class="btn primary edit" onclick="setWeek(${w});setView('picks')">Enter Week ${w} picks</button>
+    </div>
+  </div>
+  <div class="card"><h2>The 32 teams <span class="tag">pick each one only once per round</span></h2>
+    <div class="logowall">${TEAM_LIST.map(t=>`<div class="lw">${logoImg(t.abbr,'logo xl')}<div class="ab">${esc(t.short)}</div></div>`).join('')}</div>
+  </div>
+  <div class="grid two">
+    <div class="card" style="margin:0"><h2>How it works</h2>
+      <ol class="rules">
+        <li><div><b>${gbp(S.settings.fee)} per entry.</b> You can have as many entries as you like - each one is a separate £${S.settings.fee} stake and picks independently.</div></li>
+        <li><div><b>One pick per week.</b> Before the first game of the week, pick one NFL team to win their game. Point spreads don't matter, they just have to win.</div></li>
+        <li><div><b>Win and you're through.</b> If your team wins you progress to the next week. If they lose you're eliminated. ${S.settings.tieRule==='loss'?'A tie counts as a loss.':'A tie keeps you in.'}</div></li>
+        <li><div><b>Each team once per round.</b> Once you've picked a team you can't use them again in this round, so the longer you survive, the harder it gets.</div></li>
+        <li><div><b>${S.settings.missedPick==='eliminate'?'No pick, no progress.':'Missed picks.'}</b> ${S.settings.missedPick==='eliminate'?'If you fail to submit a pick before the deadline you are out.':'A missed pick is dealt with by the organiser.'}</div></li>
+        <li><div><b>Wipeout rule.</b> If every remaining player loses in the same week, nobody wins - everyone comes back in, including players knocked out earlier${S.settings.wipeoutResetTeams?', and used teams are reset':', but used teams still count'}.</div></li>
+        <li><div><b>Winner takes the pot.</b> The last player standing wins ${pot?gbp(pot):'the full pot'}. If more than one player is still in after Week 18, the pot is shared equally.</div></li>
+      </ol>
+    </div>
+    <div>
+      <div class="card" style="margin:0 0 18px"><h2>Key dates <span class="tag">UK time</span></h2>
+        <div class="datebox">
+          <div class="date"><div class="l">Season kick-off</div><div class="d">${fmtDate(first.date)}</div><div class="small muted">${TEAMS[first.away].short} @ ${TEAMS[first.home].short}</div></div>
+          <div class="date"><div class="l">Week ${w} first game</div><div class="d">${wkCur.length?fmtDate(wkCur[0].date):'-'}</div><div class="small muted">Picks in before this</div></div>
+          <div class="date"><div class="l">Final week</div><div class="d">${fmtDay(last.date)}</div><div class="small muted">Week 18</div></div>
+        </div>
+      </div>
+      <div class="card" style="margin:0"><h2>Still standing <span class="tag">${aliveList.length} of ${S.entries.length}</span></h2>
+        ${aliveList.length?`<div class="avatars">${aliveList.map(e=>{const vp=visiblePick(e.id,w); const p=vp==='HIDDEN'?null:vp; return `<span class="av">${p?logoImg(p):`<span class="fallback" style="background:#3a4a6a;width:22px;height:22px">${vp?'🔒':'?'}</span>`} ${esc(e.name)}${e.label?` <span class="muted">${esc(e.label)}</span>`:''}</span>`;}).join('')}</div>`:'<div class="empty">No entries yet</div>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---- Dashboard ---- */
+function renderDash(r,comp){
+  const pot=S.entries.length*S.settings.fee;
+  const w=defaultWeek();
+  let banner='';
+  if(comp.complete && comp.winnerIds){
+    const names=comp.winnerIds.map(entryName).join(', ');
+    banner=`<div class="banner gold">🏆 ${comp.winnerIds.length===1?'Winner':'Pot shared by'}: ${esc(names)} &mdash; ${gbp(pot)} ${comp.winnerIds.length>1?`(${gbp(pot/comp.winnerIds.length)} each)`:''}
+      ${comp.finalWeek<WEEKS?`<button class="btn" onclick="startNewRound(${comp.finalWeek+1})">Start Round ${r.n+1} from Week ${comp.finalWeek+1}</button>`:''}</div>`.replace(/&mdash;/g,'-');
+  }
+  const lastWipe=comp.events.filter(e=>e.type==='wipeout').slice(-1)[0];
+  if(lastWipe && !comp.complete) banner+=`<div class="banner">💥 Wipeout in Week ${lastWipe.week}: all ${lastWipe.count} remaining players lost, so everyone is back in.</div>`;
+  if(!S.entries.length) banner+=`<div class="banner">No entries yet <button class="btn gold" onclick="setView('entries')">Add or import entries</button></div>`;
+
+  const aliveList=S.entries.filter(e=>comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  const outList=S.entries.filter(e=>!comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  const missing=aliveList.filter(e=>!S.picks[e.id]?.[w] && !weekSettled(w) && isAliveForWeek(comp,w,e.id));
+  const feed=comp.events.slice().reverse().slice(0,25).map(ev=>{
+    if(ev.type==='out') return `<li><span class="pill out">OUT</span> <b>Wk ${ev.week}</b> ${esc(entryName(ev.id))} ${ev.pick?logoImg(ev.pick):''} <span class="muted">${esc(ev.reason)}</span></li>`;
+    if(ev.type==='wipeout') return `<li><span class="pill pending">WIPEOUT</span> <b>Wk ${ev.week}</b> All ${ev.count} remaining players lost - everyone back in</li>`;
+    if(ev.type==='winner') return `<li><span class="pill win">WINNER</span> <b>Wk ${ev.week}</b> ${esc(entryName(ev.ids[0]))} takes the pot</li>`;
+    if(ev.type==='split') return `<li><span class="pill win">SPLIT</span> <b>Wk ${ev.week}</b> Season over, pot shared by ${ev.ids.length}</li>`;
+  }).join('');
+  const games=gamesByWeek(w);
+  const pickCounts={}; aliveList.forEach(e=>{const p=visiblePick(e.id,w); if(p&&p!=='HIDDEN') pickCounts[p]=(pickCounts[p]||0)+1;});
+  const popular=Object.entries(pickCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  return `${banner}
+  <div class="hero">
+    <div class="bigpot">
+      <div class="lbl">Round ${r.n} prize pot</div>
+      <div class="amt">${gbp(pot)}</div>
+      <div class="muted small">${S.entries.length} entries × ${gbp(S.settings.fee)} &middot; ${S.entries.filter(e=>e.paid).length} paid, ${S.entries.filter(e=>!e.paid).length} unpaid</div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn primary edit" onclick="setWeek(${w});setView('picks')">Make Week ${w} picks</button>
+        <button class="btn edit" onclick="setWeek(${w});setView('results')">Enter results</button>
+        ${HOSTED?'':`<button class="btn edit" onclick="fetchWeekResults(${w})">⟳ Fetch Week ${w} scores</button>`}
+        <button class="btn" onclick="setView('history')">Pick history</button>
+      </div>
+    </div>
+    <div class="card" style="margin:0">
+      <h2>Week ${w} status <span class="tag">${weekSettled(w)?'Settled':(weekHasResults(w)?'In progress':'Upcoming')}</span></h2>
+      <div class="grid two" style="gap:10px">
+        <div><div class="muted small">Still in</div><div style="font-family:var(--font-head);font-size:34px;color:var(--green)">${comp.alive.size}</div></div>
+        <div><div class="muted small">Picks outstanding</div><div style="font-family:var(--font-head);font-size:34px;color:${missing.length?'var(--gold)':'var(--green)'}">${missing.length}</div></div>
+      </div>
+      ${missing.length?`<div class="small muted" style="margin-top:8px">Waiting on: ${missing.slice(0,12).map(e=>esc(e.name)).join(', ')}${missing.length>12?` +${missing.length-12} more`:''}</div>`:''}
+      <div style="margin-top:12px"><div class="muted small" style="margin-bottom:6px">Most picked this week</div>
+        ${popular.length? popular.map(([t,c])=>`<span class="av">${logoImg(t)} ${TEAMS[t].short} <b>${c}</b></span>`).join(' ') : '<span class="muted small">No picks yet</span>'}</div>
+    </div>
+  </div>
+  <div class="grid two" style="margin-top:18px">
+    <div class="card" style="margin:0">
+      <h2>Still standing <span class="tag">${aliveList.length}</span></h2>
+      ${aliveList.length? `<div class="avatars">${aliveList.map(e=>{const vp=visiblePick(e.id,w); const p=vp==='HIDDEN'?null:vp; return `<span class="av">${p?logoImg(p):`<span class="fallback" style="background:#3a4a6a;width:22px;height:22px">${vp?'🔒':'?'}</span>`} ${esc(e.name)}${e.label?` <span class="muted">${esc(e.label)}</span>`:''}</span>`;}).join('')}</div>`:'<div class="empty">Nobody left in this round</div>'}
+      ${outList.length?`<h2 style="margin-top:18px">Eliminated <span class="tag">${outList.length}</span></h2><div class="avatars">${outList.map(e=>`<span class="av out">${esc(e.name)}</span>`).join('')}</div>`:''}
+    </div>
+    <div class="card" style="margin:0">
+      <h2>Live feed</h2>
+      ${feed? `<ul class="feed">${feed}</ul>` : '<div class="empty">Nothing has happened yet. Once results are in, eliminations show here.</div>'}
+    </div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h2>Week ${w} fixtures <span class="tag">${games.length} games · UK time</span></h2>
+    <div class="grid three" style="gap:6px">
+    ${games.map(g=>{const r=S.results[g.id]; const fin=r?.final; const hw=fin&&+r.hs>+r.as, aw=fin&&+r.as>+r.hs;
+      return `<div class="small" style="display:flex;align-items:center;gap:8px;padding:6px;border:1px solid #1b2a4a;border-radius:8px">
+        ${logoImg(g.away)}<span style="${aw?'color:var(--green);font-weight:700':''}">${TEAMS[g.away].short}</span>
+        <span class="muted">${fin?`${r.as}-${r.hs}`:'@'}</span>
+        <span style="${hw?'color:var(--green);font-weight:700':''}">${TEAMS[g.home].short}</span>${logoImg(g.home)}
+        <span class="muted" style="margin-left:auto">${fin?'FINAL':fmtDate(g.date)}</span></div>`;}).join('')}
+    </div>
+  </div>`;
+}
+
+/* ---- Picks ---- */
+function renderPicks(r,comp){
+  const w=S.ui.week;
+  const inRound = w>=r.startWeek && w<=roundEndWeek(r);
+  const eligible=S.entries.filter(e=>isAliveForWeek(comp,w,e.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  const others=S.entries.filter(e=>!isAliveForWeek(comp,w,e.id));
+  const settled=weekSettled(w);
+  const done=eligible.filter(e=>S.picks[e.id]?.[w]).length;
+  const rows=eligible.map(e=>{
+    const vp=visiblePick(e.id,w); const hidden=vp==='HIDDEN'; const p=hidden?null:vp;
+    const res=p?teamResult(p,w):null;
+    const g=p?teamGame(p,w):null;
+    const opp=g?(g.home===p?`vs ${TEAMS[g.away].short}`:`@ ${TEAMS[g.home].short}`):'';
+    const used=usedTeams(e.id,r,comp,w);
+    const lost = res && (isPickLost(res.code));
+    return `<tr class="${lost?'out':''}">
+      <td><b>${esc(e.name)}</b>${e.label?`<div class="muted small">${esc(e.label)}</div>`:''}</td>
+      <td><div class="pickcell">
+        <button class="pickbtn ${p||hidden?'has':''}" ${isRO()?'':`onclick="openPicker('${e.id}',${w})"`}>${p?`${logoImg(p)}<span>${esc(TEAMS[p].name)}</span>`:hidden?'<span class="muted">🔒 Pick in, hidden until kick-off</span>':`<span class="muted">${isRO()?'No pick yet':'Choose team…'}</span>`}</button>
+        ${p?`<button class="btn sm ghost edit" title="Clear pick" onclick="clearPick('${e.id}',${w})">✕</button>`:''}
+      </div></td>
+      <td class="muted small">${opp}${g?`<div>${fmtDate(g.date)}</div>`:''}</td>
+      <td>${res?`<span class="res ${res.code==='BYE'?'L':res.code}">${res.code==='P'?'–':res.code==='BYE'?'BYE':res.code}</span>${res.my!=null?`<span class="muted small"> ${res.my}-${res.opp}</span>`:''}`:''}</td>
+      <td class="small">${Object.keys(used).length? Object.keys(used).sort((a,b)=>used[a]-used[b]).map(t=>logoImg(t)).join(' ') : '<span class="muted">none</span>'}</td>
+    </tr>`;
+  }).join('');
+  return `<div class="card">
+    <h2>Week ${w} picks <span class="tag">${done}/${eligible.length} picked ${settled?'· week settled':''}</span></h2>
+    ${weekBar(r,comp)}
+    ${!inRound?`<div class="empty">Week ${w} is outside Round ${r.n} (weeks ${r.startWeek} to ${roundEndWeek(r)}).</div>`:''}
+    <div class="row" style="margin-bottom:12px">
+      <span class="muted small">${isRO()?'Picks are locked once the first game of the week kicks off.':'Each player can use a team once per round. Greyed-out teams in the picker are already used, on a bye, or the game has finished.'}</span>
+      <span style="margin-left:auto"></span>
+      <button class="btn sm" onclick="printSheet(${w})">🖨 Print pick sheet</button>
+      <button class="btn sm edit" onclick="setView('results')">Go to results →</button>
+    </div>
+    ${eligible.length? `<table><thead><tr><th>Player</th><th>Pick</th><th>Fixture</th><th>Result</th><th>Already used this round</th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<div class="empty">${S.entries.length?'Nobody is eligible to pick in this week.':'No entries yet - add some on the Entries tab.'}</div>`}
+    ${others.length?`<div class="muted small" style="margin-top:12px">Eliminated before this week (${others.length}): ${others.map(e=>esc(e.name)).join(', ')}</div>`:''}
+  </div>`;
+}
+function openPicker(entryId, w){
+  const r=currentRound(); const comp=computeRound(r);
+  const e=S.entries.find(x=>x.id===entryId);
+  const used=usedTeams(entryId,r,comp,w);
+  const current=S.picks[entryId]?.[w];
+  const cards=TEAM_LIST.map(t=>{
+    const g=teamGame(t.abbr,w);
+    const bye=!g;
+    const fin=g && S.results[g.id]?.final;
+    const isUsed=used[t.abbr]!=null;
+    const opp=g?(g.home===t.abbr?`vs ${TEAMS[g.away].short}`:`@ ${TEAMS[g.home].short}`):'BYE WEEK';
+    const cls=['tcard', isUsed?'used':'', bye?'bye':'', fin&&!isUsed&&!bye?'final':'', current===t.abbr?'selected':''].join(' ');
+    const disabled=isUsed||bye;
+    const badge=isUsed?`<span class="badge">Used wk ${used[t.abbr]}</span>`:bye?'<span class="badge">Bye</span>':fin?'<span class="badge" style="background:#3a4a6a">Final</span>':'';
+    return `<div class="${cls}" ${disabled?'':`onclick="makePick('${entryId}',${w},'${t.abbr}')"`}>${badge}${logoImg(t.abbr,'logo xl')}<div class="nm">${esc(t.short)}</div><div class="opp">${opp}${g?` · ${fmtDay(g.date)}`:''}</div></div>`;
+  }).join('');
+  modal(`<div style="display:flex;align-items:center;gap:12px"><h2>${esc(e.name)} - Week ${w}</h2><button class="btn sm" style="margin-left:auto" onclick="closeModal()">Close</button></div>
+    <div class="muted small">Pick the team you think will win. ${Object.keys(used).length} team${Object.keys(used).length===1?'':'s'} already used this round.</div>
+    <div class="teamgrid">${cards}</div>`);
+}
+function makePick(entryId,w,abbr){
+  S.picks[entryId]=S.picks[entryId]||{};
+  S.picks[entryId][w]=abbr; save(); closeModal(); render();
+}
+function clearPick(entryId,w){ if(S.picks[entryId]){ delete S.picks[entryId][w]; save(); render(); } }
+function printSheet(w){
+  const r=currentRound(); const comp=computeRound(r);
+  const eligible=S.entries.filter(e=>isAliveForWeek(comp,w,e.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  const win=window.open('','_blank');
+  win.document.write(`<html><head><title>Week ${w} picks</title><style>body{font-family:Arial;padding:20px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:6px 8px;text-align:left}img{height:22px;vertical-align:middle;margin-right:6px}</style></head><body><h1>Last Man Standing - Round ${r.n}, Week ${w}</h1><table><tr><th>Player</th><th>Pick</th><th>Result</th></tr>${eligible.map(e=>{const p=S.picks[e.id]?.[w];const res=p?teamResult(p,w).code:'';return `<tr><td>${esc(e.name)}${e.label?` (${esc(e.label)})`:''}</td><td>${p?`<img src="${TEAMS[p].logo}">${TEAMS[p].name}`:'-'}</td><td>${res==='P'?'':res}</td></tr>`;}).join('')}</table></body></html>`);
+  win.document.close();
+}
+
+/* ---- Results ---- */
+function renderResults(r,comp){
+  const w=S.ui.week; const games=gamesByWeek(w);
+  const pickedTeams={}; S.entries.forEach(e=>{const p=S.picks[e.id]?.[w]; if(p) pickedTeams[p]=(pickedTeams[p]||0)+1;});
+  const rows=games.map(g=>{
+    const res=S.results[g.id]||{};
+    const fin=!!res.final;
+    const hw=fin&&+res.hs>+res.as, aw=fin&&+res.as>+res.hs;
+    const pk=t=>pickedTeams[t]?`<span class="pill pending" title="Picked by ${pickedTeams[t]}">${pickedTeams[t]} pick${pickedTeams[t]>1?'s':''}</span>`:'';
+    return `<div class="game ${fin?'final':''}">
+      <div class="t">${logoImg(g.away,'logo lg')}<div><div style="${aw?'color:var(--green)':''}"><b>${esc(TEAMS[g.away].name)}</b></div><div class="meta">Away ${pk(g.away)}</div></div></div>
+      ${isRO()?`<div class="vs" style="font-size:22px;color:#fff">${res.as??'-'}</div>`:`<input type="number" min="0" value="${res.as??''}" placeholder="0" onchange="setScore('${g.id}','as',this.value)">`}
+      <div class="vs">@</div>
+      ${isRO()?`<div class="vs" style="font-size:22px;color:#fff">${res.hs??'-'}</div>`:`<input type="number" min="0" value="${res.hs??''}" placeholder="0" onchange="setScore('${g.id}','hs',this.value)">`}
+      <div class="t home"><div><div style="${hw?'color:var(--green)':''}"><b>${esc(TEAMS[g.home].name)}</b></div><div class="meta">Home ${pk(g.home)}</div></div>${logoImg(g.home,'logo lg')}</div>
+      <div style="text-align:right">${isRO()?`<span class="pill ${fin?'alive':'pending'}">${fin?'Final':'Pending'}</span>`:`<label class="chk"><input type="checkbox" ${fin?'checked':''} onchange="setFinal('${g.id}',this.checked)"> Final</label>`}<div class="meta">${fmtDate(g.date)}</div></div>
+    </div>`;
+  }).join('');
+  return `<div class="card">
+    <h2>Week ${w} results <span class="tag">${games.filter(g=>S.results[g.id]?.final).length}/${games.length} final</span></h2>
+    ${weekBar(r,comp)}
+    <div class="row edit" style="margin-bottom:10px">
+      ${HOSTED?'':`<button class="btn primary" onclick="fetchWeekResults(${w})">⟳ Fetch live scores from ESPN</button>`}
+      <button class="btn" onclick="markAllFinal(${w})">Mark all entered scores final</button>
+      <button class="btn danger" onclick="clearWeekResults(${w})">Clear week</button>
+      <span class="muted small" style="margin-left:auto">Type scores (away @ home) and tick Final. A week counts as settled once every game is final; eliminations for no-picks and wipeout checks happen then.</span>
+    </div>
+    ${rows}
+  </div>`;
+}
+function setScore(gid,side,val){ const r=S.results[gid]||{hs:null,as:null,final:false}; r[side]=val===''?null:+val; S.results[gid]=r; save(); renderHeader(currentRound(),computeRound(currentRound())); }
+function setFinal(gid,on){ const r=S.results[gid]||{hs:null,as:null,final:false}; if(on&&(r.hs==null||r.as==null)){ toast('Enter both scores before marking final.'); render(); return;} r.final=on; S.results[gid]=r; save(); render(); }
+function markAllFinal(w){ gamesByWeek(w).forEach(g=>{const r=S.results[g.id]; if(r&&r.hs!=null&&r.as!=null) r.final=true;}); save(); render(); }
+function clearWeekResults(w){ if(!confirm(`Clear all Week ${w} scores?`)) return; gamesByWeek(w).forEach(g=>delete S.results[g.id]); save(); render(); }
+async function fetchWeekResults(w){
+  toast(`Fetching Week ${w} scores…`,1500);
+  try{
+    const res=await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=${w}&dates=${SCHEDULE.season}`);
+    const d=await res.json();
+    let n=0, fin=0;
+    for(const ev of d.events||[]){
+      const c=ev.competitions[0];
+      const home=c.competitors.find(x=>x.homeAway==='home'), away=c.competitors.find(x=>x.homeAway==='away');
+      const g=GAMES.find(x=>x.id===ev.id) || GAMES.find(x=>x.week===w && x.home===home.team.abbreviation && x.away===away.team.abbreviation);
+      if(!g) continue;
+      const started=ev.status?.type?.state!=='pre';
+      if(!started){ continue; }
+      const completed=!!ev.status?.type?.completed;
+      S.results[g.id]={hs:+home.score,as:+away.score,final:completed}; n++; if(completed) fin++;
+    }
+    save(); render();
+    toast(n?`Updated ${n} game${n>1?'s':''} (${fin} final).`:`No Week ${w} games have started yet.`);
+  }catch(e){ toast('Could not reach ESPN: '+e.message); }
+}
+
+/* ---- History ---- */
+function renderHistory(r,comp){
+  const weeks=[]; for(let w=r.startWeek; w<=(comp.finalWeek||roundEndWeek(r)); w++) weeks.push(w);
+  const entries=S.entries.slice().sort((a,b)=>{const aa=comp.alive.has(a.id),bb=comp.alive.has(b.id); return aa===bb? a.name.localeCompare(b.name) : (aa?-1:1);});
+  const outWeek={}; comp.events.filter(e=>e.type==='out').forEach(e=>{ outWeek[e.id]=e.week; });
+  // if wipeout later re-admitted them, ignore earlier outs
+  comp.events.filter(e=>e.type==='wipeout').forEach(e=>{ Object.keys(outWeek).forEach(id=>{ if(outWeek[id]<=e.week) delete outWeek[id]; }); });
+  const rows=entries.map(e=>{
+    const alive=comp.alive.has(e.id);
+    return `<tr class="${alive?'':'out'}"><td><b>${esc(e.name)}</b>${e.label?`<div class="muted small">${esc(e.label)}</div>`:''}</td>
+      <td>${comp.complete&&comp.winnerIds?.includes(e.id)?'<span class="pill win">Winner</span>':alive?'<span class="pill alive">In</span>':`<span class="pill out">Out wk ${outWeek[e.id]??'?'}</span>`}</td>
+      ${weeks.map(w=>{
+        const vp=visiblePick(e.id,w); const p=vp==='HIDDEN'?null:vp;
+        const wk=comp.weeks[w];
+        const eligible=isAliveForWeek(comp,w,e.id);
+        if(!eligible) return `<td><span class="hcell" style="opacity:.15"></span></td>`;
+        if(vp==='HIDDEN') return `<td><span class="hcell NP" title="Hidden until kick-off">🔒</span></td>`;
+        if(!p) return `<td><span class="hcell NP">${wk?.settled?'NP':'–'}</span></td>`;
+        const res=teamResult(p,w);
+        const cls=res.code==='BYE'?'L':res.code==='P'?'':res.code;
+        return `<td><span class="hcell ${cls} ${wk?.wipeout?'wipe':''}" title="${esc(TEAMS[p].name)} ${res.my!=null?res.my+'-'+res.opp:''}">${logoImg(p)}</span></td>`;
+      }).join('')}
+    </tr>`;
+  }).join('');
+  return `<div class="card"><h2>Round ${r.n} pick history <span class="tag">green = win · red = loss · gold = tie · purple = wipeout week</span></h2>
+    <div class="row" style="margin-bottom:10px"><button class="btn sm edit" onclick="exportPicksCSV()">⬇ Export picks CSV</button>
+    ${S.rounds.length>1?`<span class="muted small" style="margin-left:auto">Previous rounds: ${S.rounds.slice(0,-1).map(x=>`R${x.n} (wk ${x.startWeek}-${x.endWeek}) won by ${(x.winnerIds||[]).map(entryName).join(', ')}`).join(' · ')}</span>`:''}</div>
+    ${entries.length?`<div class="histwrap"><table class="hist"><thead><tr><th>Player</th><th>Status</th>${weeks.map(w=>`<th>W${w}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty">No entries yet.</div>'}
+  </div>`;
+}
+function exportPicksCSV(){
+  const r=currentRound();
+  const weeks=[]; for(let w=r.startWeek; w<=roundEndWeek(r); w++) weeks.push(w);
+  const lines=[['Name','Entry','Email','Paid',...weeks.map(w=>'Week '+w)].join(',')];
+  S.entries.forEach(e=>lines.push([e.name,e.label||'',e.email||'',e.paid?'Yes':'No',...weeks.map(w=>S.picks[e.id]?.[w]?TEAMS[S.picks[e.id][w]].name:'')].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')));
+  download(`lms-round${r.n}-picks.csv`, lines.join('\n'), 'text/csv');
+}
+async function download(name, content, type){
+  if(HOSTED){
+    const dl = await window.claude.use('downloads');
+    if(!dl) return toast('Downloads are not available in this view.');
+    try{ await dl.save({filename:name, data: content instanceof Blob||content instanceof ArrayBuffer ? content : new Blob([content],{type})}); }catch(e){ if(e?.code!=='cancelled'&&e?.code!=='rejected') toast('Download failed: '+(e?.message||e)); }
+    return;
+  }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([content],{type})); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+
+/* ---- Entries ---- */
+function renderEntries(r,comp){
+  const list=S.entries.slice().sort((a,b)=>a.name.localeCompare(b.name)||(a.label||'').localeCompare(b.label||''));
+  const rows=list.map(e=>`<tr>
+    <td><input type="text" value="${esc(e.name)}" onchange="updEntry('${e.id}','name',this.value)" style="width:100%"></td>
+    <td><input type="text" value="${esc(e.label||'')}" placeholder="e.g. Team 2" onchange="updEntry('${e.id}','label',this.value)" style="width:100%"></td>
+    <td><input type="email" value="${esc(e.email||'')}" placeholder="optional" onchange="updEntry('${e.id}','email',this.value)" style="width:100%"></td>
+    <td><button class="pill ${e.paid?'paid':'unpaid'}" style="border:0;cursor:pointer" onclick="updEntry('${e.id}','paid',${!e.paid})">${e.paid?'Paid':'Unpaid'}</button></td>
+    <td>${comp.alive.has(e.id)?'<span class="pill alive">In</span>':'<span class="pill out">Out</span>'}</td>
+    <td><button class="btn sm danger" onclick="delEntry('${e.id}')">Remove</button></td>
+  </tr>`).join('');
+  return `<div class="grid two">
+    <div class="card" style="margin:0">
+      <h2>Add entry</h2>
+      <div class="row">
+        <label class="f">Name<input type="text" id="newName" placeholder="Player name"></label>
+        <label class="f">Entry label<input type="text" id="newLabel" placeholder="optional, e.g. Team 2"></label>
+        <label class="f">Email<input type="email" id="newEmail" placeholder="optional"></label>
+        <label class="f">Paid<select id="newPaid"><option value="1">Yes</option><option value="0" selected>No</option></select></label>
+        <button class="btn primary" onclick="addEntryFromForm()">Add</button>
+      </div>
+      <div class="muted small" style="margin-top:8px">One person can have several entries (${gbp(S.settings.fee)} each). Give each a label so you can tell them apart.</div>
+      <h2 style="margin-top:18px">Quick paste</h2>
+      <textarea id="pasteBox" rows="4" style="width:100%" placeholder="One name per line, optionally: Name, Label, Email, Paid"></textarea>
+      <div style="margin-top:8px"><button class="btn" onclick="importPaste()">Add pasted names</button></div>
+    </div>
+    <div class="card" style="margin:0">
+      <h2>Import from spreadsheet</h2>
+      <div class="drop" id="drop">Drop an .xlsx / .xls / .csv file here or click to choose.<br><span class="small">Columns recognised: Name, Entry/Label/Team, Email, Paid. First row should be headers (or just a list of names).</span>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.txt" class="hidden"></div>
+      <div style="margin-top:10px" class="row"><button class="btn sm" onclick="downloadTemplate()">⬇ Download import template</button><button class="btn sm" onclick="exportEntriesCSV()">⬇ Export entries CSV</button></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h2>Entries <span class="tag">${S.entries.length} entries · ${S.entries.filter(e=>e.paid).length} paid · pot ${gbp(S.entries.length*S.settings.fee)}</span></h2>
+    ${rows?`<table><thead><tr><th>Name</th><th>Label</th><th>Email</th><th>Payment</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table>`:'<div class="empty">No entries yet.</div>'}
+    ${S.entries.length?`<div style="margin-top:10px"><button class="btn sm danger" onclick="clearEntries()">Remove all entries</button></div>`:''}
+  </div>`;
+}
+function addEntry(name,label='',email='',paid=false){ name=(name||'').trim(); if(!name) return false; S.entries.push({id:uid(),name,label:(label||'').trim(),email:(email||'').trim(),paid:!!paid,created:Date.now()}); return true; }
+function addEntryFromForm(){ const n=document.getElementById('newName').value; if(!n.trim()) return toast('Enter a name'); addEntry(n,document.getElementById('newLabel').value,document.getElementById('newEmail').value,document.getElementById('newPaid').value==='1'); save(); render(); toast(`Added ${esc(n)}`); }
+function updEntry(id,k,v){ const e=S.entries.find(x=>x.id===id); if(e){ e[k]=v; save(); render(); } }
+function delEntry(id){ const e=S.entries.find(x=>x.id===id); if(!confirm(`Remove ${e.name}${e.label?' ('+e.label+')':''}? Their picks will be deleted too.`)) return; S.entries=S.entries.filter(x=>x.id!==id); delete S.picks[id]; save(); render(); }
+function clearEntries(){ if(!confirm('Remove ALL entries and their picks?')) return; S.entries=[]; S.picks={}; save(); render(); }
+function importPaste(){
+  const txt=document.getElementById('pasteBox').value; let n=0;
+  txt.split(/\r?\n/).forEach(line=>{ if(!line.trim()) return; const parts=line.split(/[,\t;]/).map(s=>s.trim()); if(addEntry(parts[0],parts[1],parts[2],/^(y|yes|paid|true|1)$/i.test(parts[3]||''))) n++; });
+  save(); render(); toast(`Added ${n} entr${n===1?'y':'ies'}`);
+}
+function truthy(v){ return /^(y|yes|paid|true|1|✓|x)$/i.test(String(v??'').trim()); }
+function wireDrop(){
+  const drop=document.getElementById('drop'), inp=document.getElementById('fileInput'); if(!drop) return;
+  drop.onclick=()=>inp.click();
+  inp.onchange=()=>{ if(inp.files[0]) importFile(inp.files[0]); };
+  drop.ondragover=e=>{e.preventDefault();drop.classList.add('over');};
+  drop.ondragleave=()=>drop.classList.remove('over');
+  drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over'); if(e.dataTransfer.files[0]) importFile(e.dataTransfer.files[0]);};
+}
+function importFile(file){
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}).filter(r=>r.some(c=>String(c).trim()!==''));
+      if(!rows.length) return toast('That file looks empty.');
+      previewImport(rows,file.name);
+    }catch(e){ toast('Could not read file: '+e.message); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+function previewImport(rows,fname){
+  const hdr=rows[0].map(h=>String(h).toLowerCase().trim());
+  const find=(...keys)=>hdr.findIndex(h=>keys.some(k=>h===k||h.includes(k)));
+  let iName=find('name','player','entrant'), iLabel=find('label','entry','team name','team'), iEmail=find('email','e-mail'), iPaid=find('paid','payment','fee');
+  const hasHeader = iName>=0 || iEmail>=0 || iPaid>=0 || iLabel>=0;
+  if(!hasHeader){ iName=0; iLabel=1; iEmail=2; iPaid=3; }
+  const data=(hasHeader?rows.slice(1):rows).map(r=>({name:String(r[iName]??'').trim(),label:iLabel>=0?String(r[iLabel]??'').trim():'',email:iEmail>=0?String(r[iEmail]??'').trim():'',paid:iPaid>=0?truthy(r[iPaid]):false})).filter(x=>x.name);
+  if(!data.length) return toast('No names found. Make sure there is a Name column.');
+  window._importData=data;
+  modal(`<h2>Import ${data.length} entries <span class="muted small" style="font-family:var(--font-body);text-transform:none;letter-spacing:0">from ${esc(fname)}</span></h2>
+    <div class="muted small">Columns detected: ${hasHeader?`Name → "${esc(rows[0][iName])}"${iLabel>=0?`, Label → "${esc(rows[0][iLabel])}"`:''}${iEmail>=0?`, Email → "${esc(rows[0][iEmail])}"`:''}${iPaid>=0?`, Paid → "${esc(rows[0][iPaid])}"`:''}`:'no header row found, treating column A as names'}</div>
+    <div style="max-height:50vh;overflow:auto;margin:12px 0"><table><thead><tr><th>Name</th><th>Label</th><th>Email</th><th>Paid</th></tr></thead><tbody>
+    ${data.map(d=>`<tr><td>${esc(d.name)}</td><td>${esc(d.label)}</td><td>${esc(d.email)}</td><td>${d.paid?'Yes':'No'}</td></tr>`).join('')}</tbody></table></div>
+    <div class="row"><label class="chk"><input type="checkbox" id="impReplace"> Replace existing entries</label><span style="margin-left:auto"></span><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="confirmImport()">Import ${data.length}</button></div>`);
+}
+function confirmImport(){
+  const data=window._importData||[]; const replace=document.getElementById('impReplace').checked;
+  if(replace){ S.entries=[]; S.picks={}; }
+  let n=0; data.forEach(d=>{ if(addEntry(d.name,d.label,d.email,d.paid)) n++; });
+  save(); closeModal(); render(); toast(`Imported ${n} entries`);
+}
+function downloadTemplate(){
+  const ws=XLSX.utils.aoa_to_sheet([['Name','Entry','Email','Paid'],['Rob','Team 1','rob@example.com','Yes'],['Rob','Team 2','rob@example.com','No'],['Dave Smith','','dave@example.com','Yes']]);
+  ws['!cols']=[{wch:22},{wch:14},{wch:28},{wch:8}];
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Entries');
+  if(HOSTED){ const buf=XLSX.write(wb,{bookType:'xlsx',type:'array'}); download('lms-import-template.xlsx', buf, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); }
+  else XLSX.writeFile(wb,'lms-import-template.xlsx');
+}
+function exportEntriesCSV(){ const lines=[['Name','Entry','Email','Paid'].join(',')]; S.entries.forEach(e=>lines.push([e.name,e.label||'',e.email||'',e.paid?'Yes':'No'].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','))); download('lms-entries.csv',lines.join('\n'),'text/csv'); }
+
+/* ---- Settings ---- */
+function renderSettings(r,comp){
+  const s=S.settings;
+  return `<div class="grid two">
+  <div class="card" style="margin:0"><h2>Competition rules</h2>
+    <div class="row" style="margin-bottom:12px"><label class="f">Entry fee (£)<input type="number" min="0" step="1" value="${s.fee}" onchange="setSetting('fee',+this.value)"></label></div>
+    <div class="row" style="margin-bottom:12px"><label class="f">Tied game<select onchange="setSetting('tieRule',this.value)"><option value="loss" ${s.tieRule==='loss'?'selected':''}>Tie = eliminated (only a win survives)</option><option value="survive" ${s.tieRule==='survive'?'selected':''}>Tie = survive</option></select></label></div>
+    <div class="row" style="margin-bottom:12px"><label class="f">Missed pick<select onchange="setSetting('missedPick',this.value)"><option value="eliminate" ${s.missedPick==='eliminate'?'selected':''}>No pick = eliminated when week settles</option><option value="survive" ${s.missedPick==='survive'?'selected':''}>No pick = survive (admin decides)</option></select></label></div>
+    <div class="row" style="margin-bottom:12px"><label class="f">Wipeout (everyone left loses in same week)<select onchange="setSetting('wipeoutResetTeams',this.value==='1')"><option value="0" ${!s.wipeoutResetTeams?'selected':''}>Everyone back in, used teams still count</option><option value="1" ${s.wipeoutResetTeams?'selected':''}>Everyone back in, used teams reset</option></select></label></div>
+    <div class="muted small">Winner is declared when exactly one player survives a settled week. If more than one is still standing after Week 18, the pot is shared.</div>
+  </div>
+  <div class="card" style="margin:0"><h2>Rounds</h2>
+    ${S.rounds.map(x=>`<div style="padding:8px 0;border-bottom:1px solid #1b2a4a"><b>Round ${x.n}</b> · weeks ${x.startWeek} to ${x.endWeek||'…'} ${x.winnerIds?`· won by ${x.winnerIds.map(entryName).join(', ')}`:''}</div>`).join('')}
+    <div class="row" style="margin-top:12px">
+      <label class="f">Start a new round from week<select id="newRoundWeek">${Array.from({length:WEEKS},(_,i)=>i+1).filter(w=>w>r.startWeek).map(w=>`<option value="${w}" ${w===(comp.finalWeek?comp.finalWeek+1:defaultWeek())?'selected':''}>Week ${w}</option>`).join('')}</select></label>
+      <button class="btn" onclick="startNewRound(+document.getElementById('newRoundWeek').value)">Start round ${r.n+1}</button>
+      ${S.rounds.length>1?`<button class="btn danger sm" onclick="undoRound()">Undo last round</button>`:''}
+    </div>
+    <div class="muted small" style="margin-top:8px">A new round resets everyone to "in" and clears used-team restrictions. Use it after a winner is declared.</div>
+  </div>
+  </div>
+  <div class="card" style="margin-top:18px"><h2>Backup & data</h2>
+    <div class="row">
+      <button class="btn" onclick="exportBackup()">⬇ Export full backup (JSON)</button>
+      <button class="btn" onclick="document.getElementById('restoreInput').click()">⬆ Restore from backup</button><input type="file" id="restoreInput" accept=".json" class="hidden" onchange="restoreBackup(this.files[0])">
+      <button class="btn gold" onclick="exportLivePage()">⬇ Download live page (index.html)</button>
+      <button class="btn" onclick="loadDemo()">Load demo data</button>
+      <button class="btn danger" onclick="resetAll()">Reset everything</button>
+    </div>
+    <div class="muted small" style="margin-top:8px"><b>Download live page</b> gives you a copy of this app with the current entries, picks and results baked in. Upload it to any web host (a folder on one of your sites, Netlify, GitHub Pages) and share that address - visitors see the standings read-only. Re-upload after each week's results.</div>
+    <div class="muted small" style="margin-top:8px">${HOSTED?'On the hosted version your changes are saved in this browser until you press Publish, which bakes them into the live page for everyone with the link. Export a backup now and then as a safety net.':STATIC?'Your changes are saved in this browser. Press Download live page and upload the new index.html to your web host to update what everyone else sees. Export a backup now and then as a safety net.':'Everything is stored in this browser\'s local storage. Export a backup before clearing browser data or moving to another machine. When this is hosted with member logins, this will move to a shared database.'}</div>
+  </div>`;
+}
+function setSetting(k,v){ S.settings[k]=v; save(); render(); }
+function startNewRound(w){
+  const r=currentRound(); const comp=computeRound(r);
+  if(!confirm(`Start Round ${r.n+1} from Week ${w}? Round ${r.n} will be closed at Week ${w-1}.`)) return;
+  r.endWeek=w-1; r.winnerIds=comp.winnerIds||[...comp.alive];
+  S.rounds.push({n:r.n+1,startWeek:w,endWeek:null,winnerIds:null});
+  S.ui.week=w; save(); setView('dash');
+}
+function undoRound(){ if(S.rounds.length<2||!confirm('Undo the last round? Picks made in it are kept.')) return; S.rounds.pop(); const r=currentRound(); r.endWeek=null; r.winnerIds=null; S.ui.week=null; save(); render(); }
+function exportBackup(){ download(`lms-backup-${new Date().toISOString().slice(0,10)}.json`, JSON.stringify(S,null,2),'application/json'); }
+function restoreBackup(file){ if(!file) return; const rd=new FileReader(); rd.onload=e=>{ try{ const s=JSON.parse(e.target.result); if(!s.entries||!s.rounds) throw new Error('not a LMS backup'); S=Object.assign(defaultState(),s); save(); render(); toast('Backup restored'); }catch(err){ toast('Restore failed: '+err.message); } }; rd.readAsText(file); }
+function resetAll(){ if(!confirm('Delete ALL entries, picks and results?')) return; S=defaultState(); save(); render(); }
+function loadDemo(){
+  if(S.entries.length && !confirm('This replaces current entries and picks with demo data. Continue?')) return;
+  S=defaultState();
+  const names=['Rob','Rob','Dave Smith','Gary','Steve H','Mick','Paul T','Jonesy','Kev','Lee','Andy B','Chris','Tony','Big Sam','Nige','Darren'];
+  names.forEach((n,i)=>addEntry(n, n==='Rob'?`Team ${i+1}`:'', '', i%3!==0));
+  const w1=gamesByWeek(1);
+  // random-ish week 1 picks and results
+  w1.forEach((g,i)=>{ const hs=17+((i*7)%21), as=10+((i*11)%24); S.results[g.id]={hs,as,final:true}; });
+  const pool=w1.flatMap(g=>[g.home,g.away]);
+  S.entries.forEach((e,i)=>{ S.picks[e.id]={1:pool[(i*3)%pool.length]}; });
+  // make sure most survive
+  S.entries.forEach((e,i)=>{ if(i%4!==3){ const t=S.picks[e.id][1]; const r=teamResult(t,1); if(r.code!=='W'){ const g=teamGame(t,1); const other=g.home===t?g.away:g.home; S.picks[e.id][1]=other; } } });
+  // week 2 picks for survivors, no results
+  const comp=computeRound(currentRound()); const w2=gamesByWeek(2); const pool2=w2.flatMap(g=>[g.home,g.away]);
+  S.entries.forEach((e,i)=>{ if(comp.alive.has(e.id)){ let k=(i*5)%pool2.length; while(pool2[k]===S.picks[e.id][1]) k=(k+1)%pool2.length; S.picks[e.id][2]=pool2[k]; } });
+  S.ui.week=2; save(); setView('dash'); toast('Demo data loaded');
+}
+
+/* ===================== INIT ===================== */
+document.getElementById('nav').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) setView(b.dataset.v); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+render();
+
+</script>
+</body>
+</html>
