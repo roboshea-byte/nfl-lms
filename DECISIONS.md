@@ -2,6 +2,7 @@
 
 - Retain the existing Node, standalone HTML and Neon Postgres architecture.
 - Signup has no email confirmation. Email alone never claims an existing entry.
+- Signup requires separate first-name and last-name fields. The combined full name becomes the account and initial entry name.
 - Reserve roboshea@gmail.com for the owner. Initial owner registration requires a private, random setup token supplied in a URL fragment. The token never grants ownership after the owner has been created.
 - Passwords use salted scrypt (N=131072, r=8, p=1). Passwords must contain 7-256 characters. Sessions use opaque random cookies, HttpOnly, Secure in production, SameSite=Lax, and expire after 30 days. Store only session/reset token hashes.
 - Only the owner changes roles or disables accounts. Admins manage competition data and member recovery; admins cannot reset staff or owner passwords. Role/access changes revoke existing sessions.
@@ -11,3 +12,4 @@
 - Member picks, changes and clears all lock at the same weekly deadline: first fixture kickoff minus 60 minutes. Admin overrides remain possible and are audited.
 - Old organiser passphrases and personal-entry codes no longer authorise live API access.
 - Existing mobile CSS fixes are preserved. Physical iPhone clipping remains awaiting confirmation from Rob.
+- Home-screen installs use the short label `NFL LMS`, a standalone display mode and the original LMS football-shield icon in Apple and manifest sizes.

@@ -131,3 +131,10 @@ No production owner password was generated or requested. Rob completes owner reg
 - Owners and admins now receive unmasked team selections in their signed-in Picks history, matching their existing permission to manage every pick in the Admin area.
 - Ordinary members continue to see their own selection immediately as a team badge. Other members' selections remain locked until the relevant game kicks off.
 - The account/API regression test covers owner and admin visibility alongside member privacy. An isolated browser flow confirmed both team badges for the owner, the member's own badge, the other player's lock and zero browser errors.
+
+## Full-name standings and home-screen app identity - 6 September 2026
+
+- Standings now gives every active entry its own row. Each row shows the complete saved name and one badge for every revealed pick from the current round through the current week. Unstarted picks retain the existing privacy lock.
+- Signup requires separate first-name and last-name fields in the browser and API. The server stores the combined full name for the account and its initial entry.
+- Added an original LMS football-shield app icon, a manifest with the `NFL LMS` short label, Apple home-screen metadata, standalone display settings and 32, 180, 192, 512 and 1,024 pixel assets.
+- All 22 automated tests pass. An isolated two-account browser flow at 390 × 844 showed both complete names on separate lines, two historical team badges for each player, fixed bottom navigation, no horizontal overflow and no browser errors. The browser loaded the manifest and `NFL LMS` Apple title.

@@ -2,7 +2,7 @@
 
 ## User routes
 
-- `/signup`: name (optional), email, password. Immediate sign-in; no confirmation email.
+- `/signup`: first name, last name, email and password. Both name fields are required. Sign-in is immediate; there is no confirmation email.
 - `/login`: email/password login and organiser-assisted recovery instructions.
 - `/dashboard`: the member home page, with owned entries, payment status, weekly deadline, competition overview, rules, team directory and password changes. Its member navigation is Dashboard, Picks, Results and Standings.
 - `/admin`: dedicated Admin home with direct cards and persistent controls for Entries & payments, Members & roles, Manage picks, Results, Settings and Overview.

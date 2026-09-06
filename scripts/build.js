@@ -12,4 +12,8 @@ for (const [name, content] of [['SCHEDULE', 'const SCHEDULE = ' + JSON.stringify
 fs.writeFileSync(path.join(root, 'index.html'), html);
 fs.mkdirSync(path.join(root, 'public'), {recursive:true});
 fs.writeFileSync(path.join(root, 'public/index.html'), html);
+fs.copyFileSync(path.join(root, 'manifest.webmanifest'), path.join(root, 'public/manifest.webmanifest'));
+for (const name of ['app-icon-192.png','app-icon-512.png','apple-touch-icon.png','favicon-32.png']) {
+  fs.copyFileSync(path.join(root, 'assets', name), path.join(root, 'public', name));
+}
 console.log('Inlined shared rules and unchanged 2026 schedule into index.html.');

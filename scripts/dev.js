@@ -13,6 +13,8 @@ const routes={'/api/account':'account','/api/state':'state','/api/me':'me','/api
 http.createServer(async(req,res)=>{
   res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');
   const url=new URL(req.url,'http://localhost');
+  const staticType={'/manifest.webmanifest':'application/manifest+json','/app-icon-192.png':'image/png','/app-icon-512.png':'image/png','/apple-touch-icon.png':'image/png','/favicon-32.png':'image/png'}[url.pathname];
+  if(staticType){const file=path.join(__dirname,'../public',url.pathname.slice(1));if(fs.existsSync(file)){res.setHeader('Content-Type',staticType);res.end(fs.readFileSync(file));return;}}
   if(routes[url.pathname]){
     const chunks=[];let size=0;
     for await(const chunk of req){size+=chunk.length;if(size>4*1024*1024){res.writeHead(413);res.end(JSON.stringify({error:'too_large',serverTime:new Date().toISOString()}));return;}chunks.push(chunk);}

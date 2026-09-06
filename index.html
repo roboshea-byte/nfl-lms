@@ -4,7 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#132650">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NFL LMS">
 <title>NFL Last Man Standing</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -327,6 +335,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 /* Account screens keep touch inputs readable without changing page scale. */
 .auth-card{max-width:460px;margin:24px auto}.auth-card label,#passwordForm label{display:grid;gap:7px;margin:16px 0}.auth-card input,#passwordForm input{background:var(--navy-2);color:var(--white);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%;min-width:0;min-height:44px;font-size:16px}.account-bar{flex-wrap:wrap;margin-bottom:16px}.account-bar a{text-decoration:none}.deadline{padding:14px 18px}.deadline b{color:var(--gold)}.tablewrap{max-width:100%;overflow-x:auto}.card select{max-width:100%}#accountError,#passwordError{color:#ffb9bd}.auth-card button{min-height:44px}a{color:#ffcf48}
 .admin-nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}.admin-nav .btn{min-height:44px}.admin-intro h1{font-family:var(--font-head);font-size:clamp(26px,5vw,36px);margin:8px 0}.admin-intro .kick{color:var(--gold);text-transform:uppercase;letter-spacing:.15em;font-size:11px;font-weight:700}.admin-tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px}.admin-tool{display:flex;flex-direction:column;gap:12px;text-align:left;color:var(--white);font-family:var(--font-body);cursor:pointer;margin:0;min-width:0}.admin-tool strong{font-size:18px}.admin-tool>span{line-height:1.5;color:var(--grey)}.admin-tool .admin-tool-open{color:var(--gold);margin-top:auto;font-weight:700}.admin-tool:hover,.admin-tool:focus-visible{border-color:var(--gold);background:var(--navy-3)}@media(max-width:800px){.admin-tools{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.admin-tools{grid-template-columns:1fr}.admin-nav .btn{flex:1 1 42%;justify-content:center;font-size:12px}}
+.auth-name-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.auth-name-grid label{min-width:0}.standing-list{display:grid;gap:8px}.standing-row{display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,2fr);align-items:center;gap:14px;background:var(--deep);border:1px solid var(--line);border-radius:10px;padding:10px 12px}.standing-name{font-size:14px;min-width:0;overflow-wrap:anywhere}.standing-name .muted{font-weight:400;font-size:12px}.standing-picks{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap;min-width:0}.standing-pick,.standing-lock{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:var(--navy-2);border:1px solid #2c4680;flex:none}.standing-pick .logo{width:26px;height:26px}.standing-lock{color:var(--grey);font-size:14px}@media(max-width:600px){.auth-name-grid{grid-template-columns:1fr;gap:0}.standing-row{grid-template-columns:1fr;gap:8px}.standing-picks{justify-content:flex-start}}
 </style>
 </head>
 <body>
@@ -765,11 +774,20 @@ function renderStandings(r,comp){
   const aliveList=S.entries.filter(e=>comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
   const pendingList=S.entries.filter(e=>!entryPaid(e,r,comp)).sort((a,b)=>a.name.localeCompare(b.name));
   const outList=S.entries.filter(e=>!comp.alive.has(e.id)&&!pendingList.includes(e)).sort((a,b)=>a.name.localeCompare(b.name));
-  const list=(entries,cls='')=>entries.length?`<div class="avatars">${entries.map(e=>{const vp=visiblePick(e.id,w),p=vp==='HIDDEN'?null:vp;return `<span class="av ${cls}">${p?logoImg(p):''}${esc(e.name)}${e.label?` <span class="muted">${esc(e.label)}</span>`:''}</span>`;}).join('')}</div>`:'<div class="empty">Nobody in this group.</div>';
+  const simpleList=(entries,cls='')=>entries.length?`<div class="avatars">${entries.map(e=>`<span class="av ${cls}">${esc(e.name)}${e.label?` <span class="muted">${esc(e.label)}</span>`:''}</span>`).join('')}</div>`:'<div class="empty">Nobody in this group.</div>';
+  const activeList=aliveList.length?`<div class="standing-list">${aliveList.map(e=>{
+    const picks=[];
+    for(let week=r.startWeek;week<=Math.min(w,roundEndWeek(r));week++){
+      if(!S.picks?.[e.id]?.[week])continue;
+      const vp=visiblePick(e.id,week);
+      picks.push(vp==='HIDDEN'?`<span class="standing-lock" title="Week ${week}: pick hidden until kick-off" aria-label="Week ${week} pick hidden until kick-off">🔒</span>`:`<span class="standing-pick" title="Week ${week}: ${esc(TEAMS[vp]?.name||vp)}">${logoImg(vp)}</span>`);
+    }
+    return `<div class="standing-row"><div class="standing-name"><strong>${esc(e.name)}</strong>${e.label?` <span class="muted">${esc(e.label)}</span>`:''}</div><div class="standing-picks" aria-label="Teams picked by ${esc(e.name)}">${picks.join('')||'<span class="muted small">No picks yet</span>'}</div></div>`;
+  }).join('')}</div>`:'<div class="empty">Nobody in this group.</div>';
   return `<div class="card"><h1 style="font-family:var(--font-head);margin-top:0">Standings</h1><p class="muted">Round ${r.n}. Current Week ${w} picks stay hidden until kick-off.</p>
-    <h2>Still standing <span class="tag">${aliveList.length}</span></h2>${list(aliveList)}
-    ${pendingList.length?`<h2 style="margin-top:22px">Awaiting payment <span class="tag">${pendingList.length}</span></h2>${list(pendingList)}`:''}
-    <h2 style="margin-top:22px">Eliminated <span class="tag">${outList.length}</span></h2>${list(outList,'out')}
+    <h2>Still standing <span class="tag">${aliveList.length}</span></h2>${activeList}
+    ${pendingList.length?`<h2 style="margin-top:22px">Awaiting payment <span class="tag">${pendingList.length}</span></h2>${simpleList(pendingList)}`:''}
+    <h2 style="margin-top:22px">Eliminated <span class="tag">${outList.length}</span></h2>${simpleList(outList,'out')}
   </div>`;
 }
 
@@ -1327,7 +1345,7 @@ async function accountLogout(){try{await flushRemote();await remoteQueue;if(remo
 function authForm(){
  const signup=accountPage==='/signup',reset=accountPage==='/reset-password';
  document.body.classList.add('ro');document.getElementById('nav').classList.add('hidden');document.getElementById('hdrStats').innerHTML='';document.getElementById('foot').textContent='Manual payments. Play responsibly. 18+.';
- document.getElementById('main').innerHTML=accountBar()+`<div class="card auth-card"><h2>${reset?'Set a new password':signup?'Join Last Man Standing':'Welcome back'}</h2><p class="muted">${reset?'Your reset link works once and expires after one hour.':signup?'Create your account and you’re in. No confirmation email. The organiser will activate your entry once you have paid.':'Sign in to manage your weekly picks.'}</p><form id="accountForm">${reset?'':`${signup?'<label>Your name <span class="muted">(optional)</span><input type="text" name="name" autocomplete="name" maxlength="100"></label>':''}<label>Email address<input name="email" type="email" autocomplete="email" required maxlength="320" ${signup&&location.hash.startsWith('#setup=')?'value="roboshea@gmail.com"':''}></label>`}<label>Password<input name="password" type="password" autocomplete="${signup||reset?'new-password':'current-password'}" ${signup||reset?'minlength="7"':''} maxlength="256" required></label>${signup||reset?'<p class="small muted">At least 7 characters.</p>':''}<p id="accountError" role="alert"></p><button class="btn gold" type="submit">${reset?'Save password':signup?'Create account':'Sign in'}</button></form><p>${reset?'<a href="/login">Back to sign in</a>':signup?'Already registered? <a href="/login">Sign in</a>':'New here? <a href="/signup">Create an account</a>'}</p>${!signup&&!reset?'<details><summary>Forgotten your password?</summary><p>Contact the organiser for a private password reset link.</p></details>':''}</div>`;
+ document.getElementById('main').innerHTML=accountBar()+`<div class="card auth-card"><h2>${reset?'Set a new password':signup?'Join Last Man Standing':'Welcome back'}</h2><p class="muted">${reset?'Your reset link works once and expires after one hour.':signup?'Create your account and you’re in. No confirmation email. The organiser will activate your entry once you have paid.':'Sign in to manage your weekly picks.'}</p><form id="accountForm">${reset?'':`${signup?'<div class="auth-name-grid"><label>First name<input type="text" name="firstName" autocomplete="given-name" maxlength="50" required></label><label>Last name<input type="text" name="lastName" autocomplete="family-name" maxlength="50" required></label></div>':''}<label>Email address<input name="email" type="email" autocomplete="email" required maxlength="320" ${signup&&location.hash.startsWith('#setup=')?'value="roboshea@gmail.com"':''}></label>`}<label>Password<input name="password" type="password" autocomplete="${signup||reset?'new-password':'current-password'}" ${signup||reset?'minlength="7"':''} maxlength="256" required></label>${signup||reset?'<p class="small muted">At least 7 characters.</p>':''}<p id="accountError" role="alert"></p><button class="btn gold" type="submit">${reset?'Save password':signup?'Create account':'Sign in'}</button></form><p>${reset?'<a href="/login">Back to sign in</a>':signup?'Already registered? <a href="/login">Sign in</a>':'New here? <a href="/signup">Create an account</a>'}</p>${!signup&&!reset?'<details><summary>Forgotten your password?</summary><p>Contact the organiser for a private password reset link.</p></details>':''}</div>`;
  document.getElementById('accountForm').onsubmit=async event=>{
   event.preventDefault();const form=event.currentTarget,button=form.querySelector('button'),error=document.getElementById('accountError');button.disabled=true;error.textContent='';
   try{const body=Object.fromEntries(new FormData(form));if(signup)body.setupToken=new URLSearchParams(location.hash.slice(1)).get('setup');if(reset)body.token=new URLSearchParams(location.hash.slice(1)).get('token');await accountCall(reset?'reset':signup?'signup':'login',body);history.replaceState(null,'',location.pathname);location.href=reset?'/login':'/dashboard';}catch(e){error.textContent=e.message;button.disabled=false;}

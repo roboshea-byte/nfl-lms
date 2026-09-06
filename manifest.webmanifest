@@ -1,0 +1,25 @@
+{
+  "id": "/dashboard",
+  "name": "NFL Last Man Standing",
+  "short_name": "NFL LMS",
+  "description": "NFL Last Man Standing picks, results and standings.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#132650",
+  "theme_color": "#132650",
+  "icons": [
+    {
+      "src": "/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
