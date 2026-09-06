@@ -58,6 +58,7 @@ test('mobile navigation, refresh, help, privacy and announcements stay wired',()
   assert.match(current,/New player\?/);assert.match(current,/Register before you sign in/);assert.match(current,/Register and create account/);assert.match(current,/href="\/signup"/);
   assert.match(current,/function saveMemberName\(/);assert.match(current,/hidden member ID/);assert.match(current,/Last name required/);assert.match(current,/accountUser\?\.role==='owner'/);assert.match(current,/spreadsheet importer is kept in the owner area/);
   assert.match(current,/function noEntryBanner\(/);assert.match(current,/No competition entry yet/);assert.match(current,/Open Admin area/);assert.match(current,/Add first entry/);assert.doesNotMatch(current,/if\(!accountEntries\.length\).*return true/);
+  assert.match(current,/Admin pick override/);assert.match(current,/function confirmAdminPick\(/);assert.match(current,/Save admin pick/);assert.match(current,/managed=ADMIN\?S\.entries/);assert.match(current,/What if I cannot sign in before the deadline\?/);assert.match(fs.readFileSync('lib/api.js','utf8'),/deadlineOverridden/);
   assert.ok(current.indexOf('The 32 teams')<current.indexOf('${renderFixturesCard(w)}'));
   const config=JSON.parse(fs.readFileSync('vercel.json','utf8'));assert.ok(config.rewrites.some(route=>route.source==='/help'&&route.destination==='/index.html'));
   assert.ok(config.rewrites.some(route=>route.source==='/privacy'&&route.destination==='/index.html'));

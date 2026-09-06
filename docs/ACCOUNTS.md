@@ -30,7 +30,7 @@ Every registered account has an internal UUID that is never shown as a member-fa
 
 Staff enter the admin area from the Admin control in the top header. The same position becomes Exit admin inside `/admin`. Account and sign-out controls no longer appear as a separate toolbar above page content.
 
-Admins retain result fetching/manual scores, pick overrides, new rounds and rollover/payment controls. The owner can review the resulting audit trail in Members & roles.
+Admins retain result fetching/manual scores, pick overrides, new rounds and rollover/payment controls. Manage picks lists every entry, including owner/admin entries and entries that are unpaid or already eliminated. Staff can add, replace or clear a selection for any entry and week. The server accepts an authorised staff change after the normal member cut-off, records whether the deadline was overridden, and keeps bye teams and teams already used since the last reset invalid. The owner can review the resulting audit trail in Members & roles.
 
 Spreadsheet import is shown only to the owner. Admins can manage registered members and individual entries, but bulk spreadsheet import remains an owner-controlled legacy tool because imported rows do not create passwords; new members should register themselves.
 
@@ -38,7 +38,7 @@ The Admin home includes a searchable Admin guide for weekly operations and troub
 
 ## Deadlines and payments
 
-All member pick creation, changes and clears lock at the first kickoff of the selected week minus one hour. The server clock is authoritative. Public/member dashboards show the deadline in Europe/London time. Admin overrides bypass that lock.
+All member pick creation, changes and clears lock at the first kickoff of the selected week minus one hour. The server clock is authoritative. Public/member dashboards show the deadline in Europe/London time. Owner/admin overrides bypass that lock for a member who cannot sign in or for a genuine correction. Staff review the numbered entry, week, old selection and new selection before saving; the change is immediate and audited.
 
 A new account/entry starts unpaid. A member can create multiple entries from Account; each is numbered beneath their full name and keeps independent payment status, picks, history and available-team list. Admin must mark every entry paid separately before it can pick. Current-round and rollover payments remain separate. Each rollover requires a new payment, and unpaid entries cannot pick. Existing losing picks still eliminate paid members.
 

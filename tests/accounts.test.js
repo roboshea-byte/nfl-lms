@@ -23,6 +23,7 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  assert.equal((await request(auth.handler,'logout',{},member.cookie,{origin:'https://evil.test'})).status,403);
  assert.equal((await request(auth.handler,'logout',{},member.cookie,{'x-lms-request':''})).status,403);
  assert.equal((await request(h.adminState,{}, {},member.cookie)).status,401);
+ assert.equal((await request(h.adminPick,{}, {entryId:'manual-entry',week:1,team:L.gamesByWeek(1)[0].home},member.cookie)).status,401);
  assert.equal((await request(h.state,{},undefined,'',{'x-admin-key':'private-setup'})).data.admin,false);
  let me=(await request(auth.handler,'me',undefined,member.cookie)).data;assert.equal(me.entries.length,1);const id=me.entries[0].id;assert.equal(me.entries[0].label,'1');
  const extra=await post('entry',{},member.cookie);assert.equal(extra.status,200);me=(await request(auth.handler,'me',undefined,member.cookie)).data;assert.equal(me.entries.length,2);assert.deepEqual(me.entries.map(e=>e.label),['1','2']);const extraId=extra.data.entryId;
@@ -53,6 +54,9 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  assert.equal((await post('role',{userId:member.data.user.id,role:'admin'},owner.cookie)).status,200);
  assert.equal((await request(auth.handler,'me',undefined,member.cookie)).data.user,null);
  const admin=await post('login',{email:'player@example.test',password:pw});assert.equal(admin.status,200);
+ const adminLateTeam=L.gamesByWeek(1).flatMap(g=>[g.home,g.away]).find(team=>L.teamGame(team,2));const adminLatePick=await request(h.adminPick,{}, {entryId:'manual-entry',week:1,team:adminLateTeam},admin.cookie);assert.equal(adminLatePick.status,200);assert.equal((await db.read()).picks['manual-entry'][1],adminLateTeam);
+ assert.equal((await request(h.adminPick,{}, {entryId:'manual-entry',week:2,team:adminLateTeam},admin.cookie)).data.error,'used');
+ const allTeams=[...new Set(L.GAMES.flatMap(g=>[g.home,g.away]))],byeTeam=allTeams.find(team=>!L.teamGame(team,5));assert.ok(byeTeam);assert.equal((await request(h.adminPick,{}, {entryId:'manual-entry',week:5,team:byeTeam},admin.cookie)).data.error,'bye');
  assert.equal((await post('name',{userId:owner.data.user.id,firstName:'Wrong',lastName:'Owner'},admin.cookie)).status,403);
  assert.equal((await post('name',{userId:stranger.data.user.id,firstName:'Only',lastName:''},admin.cookie)).status,400);
  assert.equal((await post('name',{userId:stranger.data.user.id,firstName:'Jordan',lastName:'Smith'},admin.cookie)).status,200);
@@ -70,7 +74,7 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  assert.equal((await request(auth.handler,'me',undefined,relog.cookie)).data.user,null);
  assert.equal((await post('login',{email:'stranger@example.test',password:newpw})).status,401);
  const records=(await db.withClient(c=>c.query('SELECT password_hash FROM accounts'))).rows;assert.ok(records.every(a=>!a.password_hash.includes(pw)));
- const audit=(await request(auth.handler,'members',undefined,owner.cookie)).data.audit;assert.ok(audit.some(a=>a.action==='account.role'));assert.ok(audit.some(a=>a.action==='competition./api/test'));
+ const audit=(await request(auth.handler,'members',undefined,owner.cookie)).data.audit;assert.ok(audit.some(a=>a.action==='account.role'));assert.ok(audit.some(a=>a.action==='competition./api/test'));const overrideAudit=audit.find(a=>a.action==='competition.admin_pick'&&a.target_id==='manual-entry');assert.equal(overrideAudit.details.deadlineOverridden,true);assert.equal(overrideAudit.details.week,1);assert.equal(overrideAudit.details.team,adminLateTeam);
  const changed=await post('password',{currentPassword:pw,password:'new private owner password'},owner.cookie);assert.equal(changed.status,200);assert.equal((await request(auth.handler,'me',undefined,owner.cookie)).data.user,null);owner.cookie=changed.cookie;
  for(let i=0;i<12;i++)await post('login',{email:'missing@example.test',password:'wrong'});assert.equal((await post('login',{email:'missing@example.test',password:'wrong'})).status,429);
  await post('logout',{},owner.cookie);assert.equal((await request(auth.handler,'me',undefined,owner.cookie)).data.user,null);

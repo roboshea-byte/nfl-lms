@@ -150,6 +150,7 @@ No production owner password was generated or requested. Rob completes owner reg
 - Owner/admin name corrections require first and last name, preserve the hidden account UUID, and update every linked entry without changing payment or pick records. Admins cannot rename the owner.
 - A legacy account missing either name cannot submit or change a pick until an admin corrects it.
 - An authenticated account with no linked entry continues through shared-state loading and retains its full header, owner/admin access, sign-out control and an Add first entry action.
+- Manage picks lists every competition entry for owners/admins and confirms add, replace and clear actions. The staff API accepts an authorised change after the member deadline, including for an unpaid entry, records the override in the audit log, rejects ordinary members, and continues to reject bye or already-used teams.
 - Added an original LMS football-shield app icon, a manifest with the `NFL LMS` short label, Apple home-screen metadata, standalone display settings and 32, 180, 192, 512 and 1,024 pixel assets.
 - All 22 automated tests pass. An isolated two-account browser flow at 390 × 844 showed both complete names on separate lines, two historical team badges for each player, fixed bottom navigation, no horizontal overflow and no browser errors. The browser loaded the manifest and `NFL LMS` Apple title.
 

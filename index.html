@@ -620,6 +620,7 @@ function memberHelpItems(){
     ['Getting started','Can I enter more than once?',`<p>Yes. Open <strong>Account</strong> and choose <strong>Add another entry</strong>. Your entries are numbered under your full name for the current round, for example <strong>Rob O’Shea 1</strong> and <strong>Rob O’Shea 2</strong>.</p><p>Each entry costs ${fee} and is managed separately. A new entry starts unpaid, so Connor, Havo or another admin must approve its payment before it can make a pick. Use the named entry buttons in Account to switch between each entry’s status, current pick, history and remaining teams.</p>`],
     ['Picks','How do I make my weekly selection?',`<ol><li>Sign in and open <strong>Account</strong>. If you have more than one entry, select the numbered entry you want to manage.</li><li>Check that it is Active and choose <strong>Make your pick</strong>, or open <strong>Picks</strong> from the navigation.</li><li>Check that the correct week is selected.</li><li>Tap the team you want. The team card shows its opponent and game day.</li><li>Review the selected team and press <strong>Confirm pick</strong>.</li></ol><div class="help-callout">Your selection is saved only after you press Confirm pick. Repeat this separately for every paid entry. The Account and Picks pages then show the team badge in that entry’s history.</div>`],
     ['Picks','How do I change a pick?',`<p>Open <strong>Picks</strong>, choose the week and press <strong>Change pick</strong>. Select a different team, review it, then press <strong>Confirm pick</strong>.</p><p>You can change a selection as often as you like until that week’s deadline. The newest confirmed selection replaces the old one.</p>`],
+    ['Picks','What if I cannot sign in before the deadline?',`<p>Contact Connor, Havo or another administrator immediately. Tell them your full numbered entry name, the week and the team you want.</p><p>An administrator can record or update the pick for you, including after the normal member deadline when there is a genuine access problem. Ask them to confirm that it has been saved. The normal team-use and bye-week rules still apply.</p>`],
     ['Picks','Can I remove a pick completely?',`<p>Before the deadline, open that week in Picks, press <strong>Change pick</strong>, then use <strong>Clear pick</strong>. Make a new selection and confirm it before the deadline or you will have no pick for the week.</p>`],
     ['Picks','When is the weekly deadline?',`<p>The deadline is <strong>one hour before the first NFL kick-off of that week</strong>. The exact UK date and time appears on your Dashboard and at the top of Picks.</p><p>When the deadline passes, selections are locked. Later games in the same week do not extend the deadline.</p>`],
     ['Picks','Why can’t I select a team?',`<p>A team may be unavailable because you already used it since the last reset, it has a bye, its game is no longer available, the weekly deadline has passed, your entry is unpaid, or your entry has been eliminated.</p><p>The team picker labels unavailable teams where possible. Check your status and deadline at the top of the page.</p>`],
@@ -655,10 +656,10 @@ function adminHelpItems(){
     ['Members and accounts','How do I help someone who forgot their password?',`<p>Open <strong>Members & roles</strong> and press <strong>Reset password</strong> beside the member. Copy the private link and send it directly to them.</p><p>The link works once and expires after one hour. Never post it in a group chat.</p>`],
     ['Members and accounts','How do I disable or re-enable an account?',`<p>Owner only: use the Disable or Enable button in <strong>Members & roles</strong>. A disabled user cannot sign in.</p><p>Disabling account access does not delete the competition entry or its picks. Deal with its payment and playing status separately in Entries & payments.</p>`],
     ['Picks','How do I check who has not picked?',`<p>Open <strong>Manage picks</strong> and select the week. The summary shows how many eligible entries have picked, and the outstanding section lists missing selections.</p><p>Check this before the deadline so you can remind people in time.</p>`],
-    ['Picks','How do I add or change a member’s pick?',`<p>Open <strong>Manage picks</strong>, choose the week, find the entry and open its team picker. Select the team and save the change.</p><p>Admins can correct a member’s pick after the normal deadline when necessary. Confirm the requested team and entry before overriding it.</p>`],
+    ['Picks','How do I add or change a member’s pick?',`<ol><li>Open <strong>Manage picks</strong>.</li><li>Choose the correct week.</li><li>Find the member’s complete numbered entry, including unpaid or eliminated entries when relevant.</li><li>Open its team picker and choose the requested team.</li><li>Review the entry, week, old pick and new pick on the confirmation screen.</li><li>Press <strong>Save admin pick</strong>.</li></ol><p>The change is immediate and appears in that entry’s pick history. Use the same steps for your own owner/admin entry.</p>`],
     ['Picks','How do I clear an incorrect pick?',`<p>In Manage picks, find the entry and week, then use the clear control beside its current selection. Add the correct selection straight away if one is required.</p>`],
     ['Picks','Why is a team unavailable in the picker?',`<p>The entry may already have used it since the last reset, the team may have a bye, or the game may have finished. The picker labels used and unavailable teams.</p><p>During an exceptional correction, check the competition rules before overriding a normal restriction.</p>`],
-    ['Picks','When are members locked out?',`<p>Member picks and changes close one hour before the first kick-off of the NFL week. The exact UK deadline is shown on the Dashboard and Picks page.</p><p>Admin management remains available for genuine corrections, so use it carefully and keep changes transparent.</p>`],
+    ['Picks','When are members locked out?',`<p>Member picks and changes close one hour before the first kick-off of the NFL week. The exact UK deadline is shown on the Dashboard and Picks page.</p><p><strong>Manage picks remains available to owners and admins after that time.</strong> The confirmation screen clearly says when the deadline is being overridden, and the action is recorded in the owner’s admin activity log. Use it when a member cannot log in or a genuine correction is required.</p><p>The override does not make bye teams or teams already used since the last reset valid.</p>`],
     ['Results','How do I fetch live scores?',`<p>Open <strong>Results</strong>, select the week and use the fetch scores button. The app retrieves available NFL scores and updates completed games.</p><p>Check the imported scores against a trusted source before treating the week as settled.</p>`],
     ['Results','How do I enter a result manually?',`<p>Open Results, select the correct week, enter the away and home scores for the fixture and mark the game final when it has finished. Save the changes.</p><p>Final results drive wins, losses, eliminations, rollovers and winners, so verify the teams and scores first.</p>`],
     ['Results','How do I correct a score or final status?',`<p>Return to the fixture in Results, correct the score or clear its final status, then save. The standings recalculate from the corrected data.</p><p>Check the Dashboard and Standings afterwards to confirm the expected entries are active or eliminated.</p>`],
@@ -942,21 +943,25 @@ function renderPicks(r,comp){
   const w=S.ui.week;
   const inRound = w>=r.startWeek && w<=roundEndWeek(r);
   const eligible=S.entries.filter(e=>isAliveForWeek(comp,w,e.id)).sort((a,b)=>a.name.localeCompare(b.name));
-  const others=S.entries.filter(e=>!isAliveForWeek(comp,w,e.id));
+  const managed=ADMIN?S.entries.slice().sort((a,b)=>entryName(a.id).localeCompare(entryName(b.id))):eligible;
+  const others=ADMIN?[]:S.entries.filter(e=>!isAliveForWeek(comp,w,e.id));
   const settled=weekSettled(w);
-  const done=eligible.filter(e=>S.picks[e.id]?.[w]).length;
-  const rows=eligible.map(e=>{
+  const deadline=L.weekDeadline(w),deadlinePassed=deadline!==null&&serverNow()>=deadline;
+  const done=managed.filter(e=>S.picks[e.id]?.[w]).length;
+  const rows=managed.map(e=>{
     const vp=visiblePick(e.id,w); const hidden=vp==='HIDDEN'; const p=hidden?null:vp;
     const res=p?teamResult(p,w):null;
     const g=p?teamGame(p,w):null;
     const opp=g?(g.home===p?`vs ${TEAMS[g.away].short}`:`@ ${TEAMS[g.home].short}`):'';
     const used=usedTeams(e.id,r,comp,w);
     const lost = res && (isPickLost(res.code));
+    const status=!entryPaid(e,r,comp)?'<span class="pill pending">Unpaid</span>':isAliveForWeek(comp,w,e.id)?'<span class="pill alive">Eligible</span>':'<span class="pill out">Eliminated</span>';
     return `<tr class="${lost?'out':''}">
       <td><b>${esc(e.name)}</b>${e.label?`<div class="muted small">${esc(e.label)}</div>`:''}</td>
+      ${ADMIN?`<td>${status}</td>`:''}
       <td><div class="pickcell">
         <button class="pickbtn ${p||hidden?'has':''}" ${isRO()?'':`onclick="openPicker('${e.id}',${w})"`}>${p?`${logoImg(p)}<span>${esc(TEAMS[p].name)}</span>`:hidden?'<span class="muted">🔒 Pick in, hidden until kick-off</span>':`<span class="muted">${isRO()?'No pick yet':'Choose team…'}</span>`}</button>
-        ${p?`<button class="btn sm ghost edit" title="Clear pick" onclick="clearPick('${e.id}',${w})">✕</button>`:''}
+        ${p&&!isRO()?`<button class="btn sm ghost edit" title="Clear pick" onclick="clearPick('${e.id}',${w})">✕</button>`:''}
       </div></td>
       <td class="muted small">${opp}${g?`<div>${fmtDate(g.date)}</div>`:''}</td>
       <td>${res?`<span class="res ${res.code==='BYE'?'L':res.code}">${res.code==='P'?'–':res.code==='BYE'?'BYE':res.code}</span>${res.my!=null?`<span class="muted small"> ${res.my}-${res.opp}</span>`:''}`:''}</td>
@@ -964,17 +969,18 @@ function renderPicks(r,comp){
     </tr>`;
   }).join('');
   return `<div class="card">
-    <h2>Week ${w} picks <span class="tag">${done}/${eligible.length} picked ${settled?'· week settled':''}</span></h2>
+    <h2>${ADMIN?'Manage Week '+w+' picks':'Week '+w+' picks'} <span class="tag">${done}/${managed.length} recorded ${settled?'· week settled':''}</span></h2>
     ${weekBar(r,comp)}
     ${!inRound?`<div class="empty">Week ${w} is outside Round ${r.n} (weeks ${r.startWeek} to ${roundEndWeek(r)}).</div>`:''}
+    ${ADMIN?`<div class="help-callout"><strong>Admin pick override ${deadlinePassed?'· member deadline passed':'available'}</strong><br>You can add, replace or clear a pick for any entry, including your own. ${deadlinePassed?'Saving now overrides the normal member cut-off.':'This remains available after the member cut-off.'} Every change is applied immediately and recorded.</div>`:''}
     <div class="row" style="margin-bottom:12px">
-      <span class="muted small">${isRO()?'Picks are locked once the first game of the week kicks off.':'Each player can use a team once per round. Greyed-out teams in the picker are already used, on a bye, or the game has finished.'}</span>
+      <span class="muted small">${isRO()?'Picks are locked once the first game of the week kicks off.':ADMIN?'Choose any entry below. Used and bye teams remain unavailable; completed games can be recorded through the admin override.':'Each player can use a team once per round. Greyed-out teams in the picker are already used or on a bye.'}</span>
       <span style="margin-left:auto"></span>
       <button class="btn sm" onclick="printSheet(${w})">🖨 Print pick sheet</button>
       <button class="btn sm edit" onclick="setView('results')">Go to results →</button>
     </div>
     ${REMOTE && ADMIN?chaseStrip(w,r,comp):''}
-    ${eligible.length? `<div class="table-scroll" tabindex="0" role="region" aria-label="Weekly picks"><table><thead><tr><th>Player</th><th>Pick</th><th>Fixture</th><th>Result</th><th>Already used since the last reset</th></tr></thead><tbody>${rows}</tbody></table></div>`
+    ${managed.length? `<div class="table-scroll" tabindex="0" role="region" aria-label="Weekly picks"><table><thead><tr><th>Player</th>${ADMIN?'<th>Status</th>':''}<th>Pick</th><th>Fixture</th><th>Result</th><th>Already used since the last reset</th></tr></thead><tbody>${rows}</tbody></table></div>`
       : `<div class="empty">${S.entries.length?'Nobody is eligible to pick in this week.':'No entries yet - add some on the Entries tab.'}</div>`}
     ${others.length?`<div class="muted small" style="margin-top:12px">Eliminated before this week (${others.length}): ${others.map(e=>esc(e.name)).join(', ')}</div>`:''}
   </div>`;
@@ -992,21 +998,25 @@ function openPicker(entryId, w){
     const fin=g && S.results[g.id]?.final;
     const isUsed=used[t.abbr]!=null;
     const opp=g?(g.home===t.abbr?`vs ${TEAMS[g.away].short}`:`@ ${TEAMS[g.home].short}`):'BYE WEEK';
-    const cls=['tcard', isUsed?'used':'', bye?'bye':'', fin&&!isUsed&&!bye?'final':'', current===t.abbr?'selected':''].join(' ');
-    const disabled=REMOTE?false:isUsed||bye;
+    const cls=['tcard', isUsed?'used':'', bye?'bye':'', fin&&!isUsed&&!bye&&!(REMOTE&&ADMIN)?'final':'', current===t.abbr?'selected':''].join(' ');
+    const disabled=isUsed||bye;
     const badge=isUsed?`<span class="badge">Used wk ${used[t.abbr]}</span>`:bye?'<span class="badge">Bye</span>':fin?'<span class="badge" style="background:#3a4a6a">Final</span>':'';
-    return `<div class="${cls}" ${disabled?'':`onclick="makePick('${entryId}',${w},'${t.abbr}')"`}>${badge}${logoImg(t.abbr,'logo xl')}<div class="nm">${esc(t.short)}</div><div class="opp">${opp}${g?` · ${fmtDay(g.date)}`:''}</div></div>`;
+    return `<div class="${cls}" ${disabled?'':`onclick="${REMOTE&&ADMIN?'confirmAdminPick':'makePick'}('${entryId}',${w},'${t.abbr}')"`}>${badge}${logoImg(t.abbr,'logo xl')}<div class="nm">${esc(t.short)}</div><div class="opp">${opp}${g?` · ${fmtDay(g.date)}`:''}</div></div>`;
   }).join('');
   modal(`<div style="display:flex;align-items:center;gap:12px"><h2>${esc(e.name)} - Week ${w}</h2><button class="btn sm" style="margin-left:auto" onclick="closeModal()">Close</button></div>
-    <div class="muted small">Pick the team you think will win. ${Object.keys(used).length} team${Object.keys(used).length===1?'':'s'} already used this round.</div>
+    <div class="muted small">Select the team requested by ${esc(entryName(entryId))}. ${Object.keys(used).length} team${Object.keys(used).length===1?'':'s'} already used since the last reset.</div>${REMOTE&&ADMIN?'<div class="help-callout">Completed games remain selectable for a genuine late entry or correction. Used teams and bye teams remain unavailable.</div>':''}
     <div class="teamgrid">${cards}</div>`);
+}
+function confirmAdminPick(entryId,w,abbr){
+  const e=S.entries.find(x=>x.id===entryId),current=S.picks[entryId]?.[w],deadline=L.weekDeadline(w),late=deadline!==null&&serverNow()>=deadline;
+  modal(`<h2>${current?'Update':'Add'} admin pick</h2><p><strong>${esc(entryName(entryId))}</strong> · Week ${w}</p><div class="row">${current?teamChip(current):'<span class="muted">No current pick</span>'}<span>→</span>${teamChip(abbr)}</div>${late?'<div class="help-callout"><strong>Member deadline has passed.</strong><br>This save will use the admin deadline override.</div>':''}<p class="muted small">Check the member, numbered entry, week and team before saving. The change is immediate and recorded.</p><div class="row"><button class="btn" onclick="openPicker('${entryId}',${w})">Back</button><button class="btn gold" onclick="makePick('${entryId}',${w},'${abbr}')">Save admin pick</button></div>`);
 }
 function makePick(entryId,w,abbr){
   if(REMOTE) return remoteAdminPick(entryId,w,abbr);
   S.picks[entryId]=S.picks[entryId]||{};
   S.picks[entryId][w]=abbr; save(); closeModal(); render();
 }
-function clearPick(entryId,w){ if(REMOTE) return remoteAdminPick(entryId,w,null); if(S.picks[entryId]){ delete S.picks[entryId][w]; save(); render(); } }
+function clearPick(entryId,w){ if(REMOTE&&ADMIN){const current=S.picks[entryId]?.[w];return modal(`<h2>Clear admin pick</h2><p><strong>${esc(entryName(entryId))}</strong> · Week ${w}</p>${current?`<div class="row">${teamChip(current)}<span>→ No pick</span></div>`:''}<div class="help-callout">This change is immediate, can override the member deadline and is recorded.</div><div class="row"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="remoteAdminPick('${entryId}',${w},null)">Clear pick</button></div>`);} if(REMOTE) return remoteAdminPick(entryId,w,null); if(S.picks[entryId]){ delete S.picks[entryId][w]; save(); render(); } }
 function printSheet(w){
   const r=currentRound(); const comp=computeRound(r);
   const eligible=S.entries.filter(e=>isAliveForWeek(comp,w,e.id)).sort((a,b)=>a.name.localeCompare(b.name));
@@ -1374,7 +1384,7 @@ async function unlockRemote(){
   }catch(error){document.getElementById('adminError').textContent=error.message;button.disabled=false;}
 }
 async function remoteAdminPick(entryId,week,team){
-  try{await flushRemote();if(remoteDirty)return;await queueRemote(async()=>{const sequence=++remoteSequence;const data=await apiRequest('/api/admin/pick',{entryId,week,team});applyRemote(data,sequence);closeModal();render();});}catch{}
+  try{await flushRemote();if(remoteDirty)return;await queueRemote(async()=>{const sequence=++remoteSequence;const data=await apiRequest('/api/admin/pick',{entryId,week,team});applyRemote(data,sequence);closeModal();render();toast(team?'Admin pick saved.':'Admin pick cleared.');});}catch(error){toast(esc(error.message||'Could not save the admin pick.'));}
 }
 async function remoteResults(week){
   try{await flushRemote();if(remoteDirty)return;await queueRemote(async()=>{const sequence=++remoteSequence;const data=await apiRequest('/api/admin/results/fetch',{week});applyRemote(data,sequence);render();toast(data.fetched.count?`Updated ${data.fetched.count} games (${data.fetched.final} final).`:`No Week ${week} games have started yet.`);});}catch{}
@@ -1484,7 +1494,7 @@ const adminSections=[['adminhome','Admin home'],['entries','Entries & payments']
 function adminNavigation(){return accountPage==='/admin'&&ADMIN?`<div class="admin-nav" role="navigation" aria-label="Admin tools">${adminSections.map(([view,label])=>`<button class="btn ${S.ui.view===view?'gold':''}" aria-current="${S.ui.view===view?'page':'false'}" onclick="setView('${view}')">${view==='members'&&accountUser?.role!=='owner'?'Members':label}</button>`).join('')}</div>`:'';}
 function renderAdminHome(r,comp){
  const paid=S.entries.filter(e=>entryPaid(e,r,comp)).length;
- const tools=[['entries','Entries & payments',accountUser?.role==='owner'?'Mark payments, add people manually and use the owner-only spreadsheet importer.':'Mark payments and add individual entries. New members should register and set their own password.'],['members',accountUser?.role==='owner'?'Members & roles':'Members',accountUser?.role==='owner'?'Correct names, assign admins, manage access, link entries and reset passwords.':'Correct member names and reset member passwords.'],['picks','Manage picks','Add or change picks for any member, including corrections after the deadline.'],['results','Results','Fetch scores, enter results and settle the week.'],['settings','Competition settings','Manage rounds, rules, entry fees and backups.'],['dash','Competition overview','Check the prize pot, standings, missing picks and fixtures.'],['adminhelp','Admin how-to guide','Search the complete guide to payments, accounts, picks, results, rollovers and settings.']];
+ const tools=[['entries','Entries & payments',accountUser?.role==='owner'?'Mark payments, add people manually and use the owner-only spreadsheet importer.':'Mark payments and add individual entries. New members should register and set their own password.'],['members',accountUser?.role==='owner'?'Members & roles':'Members',accountUser?.role==='owner'?'Correct names, assign admins, manage access, link entries and reset passwords.':'Correct member names and reset member passwords.'],['picks','Manage picks','Add, replace or clear picks for any entry, including your own and deadline overrides.'],['results','Results','Fetch scores, enter results and settle the week.'],['settings','Competition settings','Manage rounds, rules, entry fees and backups.'],['dash','Competition overview','Check the prize pot, standings, missing picks and fixtures.'],['adminhelp','Admin how-to guide','Search the complete guide to payments, accounts, picks, results, rollovers and settings.']];
  return `<div class="card admin-intro"><div class="kick">${accountUser?.role==='owner'?'Owner':'Administrator'} access</div><h1>Admin area</h1><p>Manage your competition here. Your own entry and picks are in <a href="/dashboard">My dashboard</a>, with password and entry controls in <a href="/account">Account settings</a>.</p><div class="row"><span class="pill">Round ${r.n}</span><span class="pill paid">${paid} paid</span><span class="pill unpaid">${S.entries.length-paid} awaiting payment</span></div></div><div class="admin-tools">${tools.map(([view,label,description])=>`<button class="card admin-tool" onclick="setView('${view}')"><strong>${label}</strong><span>${description}</span><span class="admin-tool-open">Open →</span></button>`).join('')}</div>${deadlineBanner(defaultWeek())}`;
 }
 
