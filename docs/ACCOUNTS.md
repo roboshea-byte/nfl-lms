@@ -6,6 +6,7 @@
 - `/login`: email/password login and organiser-assisted recovery instructions.
 - `/dashboard`: the member home page, with owned entries, payment status, weekly deadline, competition overview, rules, team directory and password changes. Its member navigation is Dashboard, Picks, Results and Standings.
 - `/admin`: dedicated Admin home with direct cards and persistent controls for Entries & payments, Members & roles, Manage picks, Results, Settings and Overview.
+- `/help`: public searchable member guide with expandable answers for signup, payments, selections, deadlines, results, standings, rollovers, passwords and phone installation.
 - `/reset-password#token=...`: one-time password reset. Links last one hour.
 
 ## Owner setup
@@ -26,11 +27,17 @@ Staff enter the admin area from the Admin control in the top header. The same po
 
 Admins retain result fetching/manual scores, pick overrides, new rounds, rollover/payment controls and import/export tools. The owner can review the resulting audit trail in Members & roles.
 
+The Admin home includes a searchable Admin guide for weekly operations and troubleshooting. It covers the complete entries, payments, roles, accounts, picks, results, rollover, rounds, settings and backup workflow. Staff can open the separate member guide from the Admin guide when helping a player.
+
 ## Deadlines and payments
 
 All member pick creation, changes and clears lock at the first kickoff of the selected week minus one hour. The server clock is authoritative. Public/member dashboards show the deadline in Europe/London time. Admin overrides bypass that lock.
 
 A new account/entry starts unpaid. Current-round and rollover payments remain separate. Each rollover requires a new payment, and unpaid entries cannot pick. Existing losing picks still eliminate paid members.
+
+Account role and payment status are independent. Owner and admin entries appear in Entries & payments and use the same Paid/Unpaid control as member entries. Marking a staff entry paid never changes its account permissions.
+
+The global Refresh control appears on Mac/PC, tablet and phone. On small screens it sits above the four-tab bottom navigation. In the admin area it waits for pending changes to finish saving before it reloads the app.
 
 ## Runtime and verification
 

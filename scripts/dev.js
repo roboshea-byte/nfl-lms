@@ -22,7 +22,7 @@ http.createServer(async(req,res)=>{
     res.status=function(code){this.statusCode=code;return this;};res.json=function(data){this.end(JSON.stringify(data));};
     return handlers[routes[url.pathname]](req,res);
   }
-  if(['/login','/signup','/dashboard','/admin','/reset-password'].includes(url.pathname)||url.pathname==='/'||url.pathname==='/index.html'||/^\/play\/[^/]+\/?$/.test(url.pathname)){
+  if(['/login','/signup','/dashboard','/admin','/reset-password','/help'].includes(url.pathname)||url.pathname==='/'||url.pathname==='/index.html'||/^\/play\/[^/]+\/?$/.test(url.pathname)){
     res.setHeader('Content-Type','text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'../index.html')));return;
   }
   res.writeHead(404);res.end('Not found');

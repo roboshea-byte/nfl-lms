@@ -45,3 +45,9 @@ test('home-screen install metadata and icon files are complete',()=>{
  const current=fs.readFileSync('index.html','utf8');assert.match(current,/rel="manifest" href="\/manifest\.webmanifest"/);assert.match(current,/apple-mobile-web-app-title" content="NFL LMS"/);
  for(const [name,size] of [['app-icon-192.png',192],['app-icon-512.png',512],['apple-touch-icon.png',180],['favicon-32.png',32]]){const png=fs.readFileSync('assets/'+name);assert.equal(png.toString('ascii',1,4),'PNG');assert.equal(png.readUInt32BE(16),size);assert.equal(png.readUInt32BE(20),size);}
 });
+test('mobile navigation, refresh and searchable member/admin help stay wired',()=>{
+ const current=fs.readFileSync('index.html','utf8');
+ assert.match(current,/body\.player nav\{display:grid\}/);assert.match(current,/id="refreshApp"/);assert.match(current,/function refreshApp\(/);
+ assert.match(current,/How to use NFL LMS/);assert.match(current,/Admin how-to guide/);assert.match(current,/Connor or Havo/);assert.match(current,/function filterHelp\(/);
+ const config=JSON.parse(fs.readFileSync('vercel.json','utf8'));assert.ok(config.rewrites.some(route=>route.source==='/help'&&route.destination==='/index.html'));
+});

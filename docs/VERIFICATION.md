@@ -138,3 +138,12 @@ No production owner password was generated or requested. Rob completes owner reg
 - Signup requires separate first-name and last-name fields in the browser and API. The server stores the combined full name for the account and its initial entry.
 - Added an original LMS football-shield app icon, a manifest with the `NFL LMS` short label, Apple home-screen metadata, standalone display settings and 32, 180, 192, 512 and 1,024 pixel assets.
 - All 22 automated tests pass. An isolated two-account browser flow at 390 × 844 showed both complete names on separate lines, two historical team badges for each player, fixed bottom navigation, no horizontal overflow and no browser errors. The browser loaded the manifest and `NFL LMS` Apple title.
+
+## Searchable help, staff payments, refresh and mobile navigation repair - 6 September 2026
+
+- Added 19 searchable member questions and 30 searchable admin questions with category filters, expandable answers, open/close controls and mobile layouts. Member payment instructions direct players to Connor or Havo and explain active status, picks, changes, deadlines, results, standings and rollovers.
+- Added `/help` to the local and Vercel rewrites. The member guide is linked from Dashboard and the account screens; the Admin guide is a dedicated admin navigation item and tool card.
+- Payment controls continue to operate on entries rather than roles. An added API regression check confirms the owner can mark the owner entry paid while owner permissions remain intact.
+- Fixed the signed-in phone tab bar by overriding the higher-specificity player navigation rule at the phone breakpoint. Device emulation at 390 CSS pixels reports a 390px grid with four equal 90.5px columns at x 8, 103, 197 and 292.
+- Added a global Refresh control. It is labelled on desktop, compact on mobile and waits for pending remote admin saves before reloading.
+- The full automated suite passes with 23 tests. Browser checks confirm member search, admin search, all 30 admin questions, the staff payment control, no 390px horizontal overflow and the compact refresh control.

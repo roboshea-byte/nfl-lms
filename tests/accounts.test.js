@@ -34,7 +34,9 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  const latestPick=L.gamesByWeek(1).at(-1).home;assert.equal((await pick(latestPick)).status,200);
  const memberPickView=await request(h.me,{entryId:id},undefined,member.cookie);assert.equal(memberPickView.data.picks[1],latestPick);assert.equal(memberPickView.data.state.picks[id][1],'HIDDEN');
  const ownerEntry=(await request(auth.handler,'me',undefined,owner.cookie)).data.entries[0].id;
- const ownerPickView=await request(h.me,{entryId:ownerEntry},undefined,owner.cookie);assert.equal(ownerPickView.data.state.picks[id][1],latestPick);assert.equal(ownerPickView.data.state.admin,false);
+ state=(await request(h.state,{},undefined,owner.cookie)).data;state.entries.find(e=>e.id===ownerEntry).paid=true;
+ const ownerPaid=await request(h.adminState,{}, {...state,baseRevision:state.revision},owner.cookie);assert.equal(ownerPaid.status,200);
+ const ownerPickView=await request(h.me,{entryId:ownerEntry},undefined,owner.cookie);assert.equal(ownerPickView.data.entry.paid,true);assert.equal(ownerPickView.data.state.picks[id][1],latestPick);assert.equal(ownerPickView.data.state.admin,false);
  time=L.weekDeadline(1);assert.equal((await pick(null)).data.error,'locked');assert.equal((await pick(L.gamesByWeek(1).at(-1).away)).data.error,'locked');
  assert.equal((await request(h.adminPick,{}, {entryId:id,week:1,team:L.gamesByWeek(1)[0].home},owner.cookie)).status,200);
  assert.equal((await post('role',{userId:member.data.user.id,role:'admin'},member.cookie)).status,403);
