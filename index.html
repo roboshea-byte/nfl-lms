@@ -256,6 +256,10 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
 .herostat .v{font-size:26px;overflow-wrap:anywhere}
 .herostat .l{font-size:9px;letter-spacing:.12em}
 .hero-actions{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+.member-week-status{position:absolute;z-index:2;top:18px;right:18px;min-width:104px;border:1px solid currentColor;border-radius:10px;padding:9px 12px;color:#fff;text-align:center;cursor:pointer;box-shadow:0 5px 18px rgba(0,0,0,.28)}
+.member-week-status span,.member-week-status strong{display:block}.member-week-status span{font:600 13px var(--font-head);letter-spacing:.08em;text-transform:uppercase}.member-week-status strong{margin-top:3px;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.member-week-status.paid{background:#08783d;border-color:var(--green)}.member-week-status.unpaid{background:#a80f27;border-color:var(--red-2)}.member-week-status.sitting{background:var(--gold);border-color:var(--gold);color:#1a1200}
+.member-week-status:hover{filter:brightness(1.1)}
 @media(max-width:900px){
   body .hdr-top{padding:12px 16px;display:block}
   body .brand h1,body.player .brand h1{font-size:24px}
@@ -284,6 +288,8 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
   .nav-icon{display:block}
   main,body.player main{padding:12px}
   .homehero{padding:18px 16px;border-radius:12px;margin-bottom:14px}
+  .homehero.has-member-status .kick{min-height:36px;padding-right:90px}
+  .member-week-status{top:12px;right:12px;min-width:82px;padding:7px 8px;border-radius:8px}.member-week-status span{font-size:11px}.member-week-status strong{font-size:9px}
   .homehero .kick{font-size:9px;letter-spacing:.16em;line-height:1.5}
   .homehero h1.big{font-size:clamp(22px,7vw,32px);white-space:nowrap;margin:8px 0 10px}
   .homehero h1.big span{display:inline}
@@ -796,8 +802,9 @@ function renderHome(r,comp,afterHero=''){
   const wkCur=gamesByWeek(w);
   const last=GAMES.slice().sort((a,b)=>b.date.localeCompare(a.date))[0];
   const winnerBanner = comp.complete&&comp.winnerIds ? `<div class="banner gold">🏆 Round ${r.n} ${comp.winnerIds.length===1?'winner':'shared by'}: ${esc(comp.winnerIds.map(entryName).join(', '))} - ${gbp(pot)}</div>` : '';
+  const memberStatus=memberWeekStatus(r,comp);
   return `${winnerBanner}
-  <div class="homehero"><div class="heroflag"></div>
+  <div class="homehero ${memberStatus?'has-member-status':''}"><div class="heroflag"></div>${memberStatus}
     <div class="kick">NFL 2026 Season · ${confirmed.length?`${confirmed.length} round ${confirmed.length===1?'entry':'entries'}`:'Entries open'}</div>
     <h1 class="big">Last Man <span>Standing</span></h1>
     <p>Pick One team per week. Win to stay in, losers go out. Last man standing take the pot.</p>
@@ -1548,6 +1555,16 @@ function noEntryBanner(){
  const staff=['owner','admin'].includes(accountUser.role);
  const sittingOut=accountParticipation==='not_participating';return `<div class="card join-round"><div class="kick">Round ${currentRound().n}</div><h2>${sittingOut?'You are not participating':'Join this round'}</h2><p>${sittingOut?'You are currently marked as not participating. Add an entry whenever you decide to join.':'Your member account is ready. You are not counted as an entry until you choose to join this round.'}</p><div class="row"><button class="btn gold" onclick="addAccountEntry()">Add an entry</button>${!sittingOut?`<button class="btn" onclick="setAccountParticipation('not_participating')">I’m not participating</button>`:''}${sittingOut?`<button class="btn" onclick="setAccountParticipation('not_entered')">Clear this status</button>`:''}${staff?'<a class="btn" href="/admin">Open Admin area</a>':''}</div></div>`;
 }
+function memberWeekStatus(r,comp){
+ if(!accountUser)return '';
+ const week=defaultWeek();let state,label;
+ if(accountParticipation==='not_participating'){state='sitting';label='Sitting Out';}
+ else if(accountEntries.some(e=>entryPaid(e,r,comp))){state='paid';label='Paid';}
+ else if(accountEntries.length){state='unpaid';label='Not Paid';}
+ else return '';
+ return `<button type="button" class="member-week-status ${state}" onclick="focusRoundStatus()" aria-label="Week ${week}: ${label}"><span>Week ${week}</span><strong>${label}</strong></button>`;
+}
+function focusRoundStatus(){document.querySelector('.entry-controls,.join-round')?.scrollIntoView({behavior:'smooth',block:'center'});}
 function memberDashboardControls(e){const paid=e&&entryPaid(e),name=e?entryName(e.id):'',staff=['owner','admin'].includes(accountUser?.role);return `<div class="card entry-controls"><h2>Your round entries <span class="tag">${accountEntries.length} ${accountEntries.length===1?'entry':'entries'}</span></h2>${memberEntrySwitcher()}<div class="row"><button class="btn gold" onclick="addAccountEntry()">Add another entry</button>${e&&!paid?`<button class="btn danger" onclick="removeAccountEntry('${e.id}','${esc(name)}')">Remove this unpaid entry</button>`:''}<button class="btn" onclick="setAccountParticipation('not_participating')">Sit out this round</button>${staff?'<a class="btn" style="border-color:var(--green);background:rgba(31,191,106,.2)" href="/admin">Open Admin area</a>':''}</div><p class="small muted">Every entry must be approved and marked paid by an administrator before it can make a pick. Paid entries must be marked unpaid by an administrator before removal.</p></div>`;}
 function renderAccountPage(){
  document.body.classList.add('ro','player');document.getElementById('nav').classList.remove('hidden');const r=currentRound(),comp=computeRound(r),w=defaultWeek();renderHeader(r,comp);document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));

@@ -30,7 +30,7 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  assert.equal((await request(h.state,{},undefined,'',{'x-admin-key':'private-setup'})).data.admin,false);
  let me=(await request(auth.handler,'me',undefined,member.cookie)).data;assert.equal(me.entries.length,0);assert.equal(me.participation,'not_entered');
  const first=await post('entry',{},member.cookie);assert.equal(first.status,200);const id=first.data.entryId;
- const extra=await post('entry',{},member.cookie);assert.equal(extra.status,200);me=(await request(auth.handler,'me',undefined,member.cookie)).data;assert.equal(me.entries.length,2);assert.deepEqual(me.entries.map(e=>e.label),['1','2']);assert.equal(me.summary.participating,2);const extraId=extra.data.entryId;
+ const extra=await post('entry',{},member.cookie);assert.equal(extra.status,200);me=(await request(auth.handler,'me',undefined,member.cookie)).data;assert.equal(me.entries.length,2);assert.deepEqual(me.entries.map(e=>e.label),['1','2']);assert.deepEqual(me.entries.map(e=>e.rolloverPayments),[{},{}]);assert.equal(me.summary.participating,2);const extraId=extra.data.entryId;
  assert.equal((await request(h.pick,{}, {entryId:extraId,week:1,team:L.gamesByWeek(1)[0].home},member.cookie)).data.error,'unpaid');
  assert.equal((await post('remove-entry',{entryId:extraId},member.cookie)).status,200);assert.equal((await request(auth.handler,'me',undefined,member.cookie)).data.entries.length,1);
  const pick=team=>request(h.pick,{}, {entryId:id,week:1,team},member.cookie);
