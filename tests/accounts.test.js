@@ -35,6 +35,7 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  assert.equal((await post('role',{userId:member.data.user.id,role:'admin'},owner.cookie)).status,200);
  assert.equal((await request(auth.handler,'me',undefined,member.cookie)).data.user,null);
  const admin=await post('login',{email:'player@example.test',password:pw});assert.equal(admin.status,200);
+ const adminMembers=await request(auth.handler,'members',undefined,admin.cookie);assert.equal(adminMembers.status,200);assert.deepEqual(adminMembers.data.entries,[]);assert.deepEqual(adminMembers.data.audit,[]);
  assert.equal((await post('role',{userId:owner.data.user.id,role:'member'},owner.cookie)).status,403);
  assert.equal((await post('reset-link',{userId:owner.data.user.id},admin.cookie)).status,403);
  const reset=await post('reset-link',{userId:stranger.data.user.id},admin.cookie);assert.equal(reset.status,200);

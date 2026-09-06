@@ -18,9 +18,11 @@ Rob's private setup file is outside the repository at `/Users/Rob/.config/nfl-lm
 
 Use Entries to add/import people manually, record the current fee as paid/unpaid and remove entries. Use Members & roles to connect an entry to a registered account explicitly. An email match never automatically transfers an entry. A member's automatically created unpaid entry can be removed if an older manual entry is connected instead.
 
+The owner sees account-entry linking and the recent admin activity log. Admin accounts have a simpler Members page and do not see those owner controls; they retain member password resets and the day-to-day entries, payments, picks and results tools.
+
 The owner can promote/demote admins and disable/enable other accounts. These actions sign the affected user out. Admins can generate resets for members; only the owner can generate resets for admins. Neither can generate an owner reset through the website. Trusted database access is required for owner recovery. Users can change their own password by entering the existing one.
 
-Admins retain result fetching/manual scores, pick overrides, new rounds, rollover/payment controls and import/export tools. Changes have an audit trail in Members & roles.
+Admins retain result fetching/manual scores, pick overrides, new rounds, rollover/payment controls and import/export tools. The owner can review the resulting audit trail in Members & roles.
 
 ## Deadlines and payments
 
