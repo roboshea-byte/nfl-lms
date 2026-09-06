@@ -118,3 +118,10 @@ No production owner password was generated or requested. Rob completes owner reg
 - The account toolbar was removed. Staff use the header Admin control and the header shows Exit admin inside the admin area. The internal admin tools remain together on `/admin`.
 - Password signup, reset and change flows now enforce 7-256 characters in both browser forms and the server.
 - All 21 automated tests pass. Isolated Chromium checks passed at 390px for public Dashboard, Picks, member signup, unpaid and paid member Picks, owner admin entry/exit and persisted pick submission. No document overflow or browser errors were found.
+
+## Wider desktop and mobile tab bar - 6 September 2026
+
+- Wide desktop pages now use up to 1,650px instead of 1,320px. Signed-in member pages use up to 1,125px instead of 900px, an exact 25% increase.
+- Desktop navigation uses bordered button treatments with a stronger gold active state. At 600px and below, Dashboard, Picks, Results and Standings become a fixed four-icon bottom tab bar with safe-area padding.
+- Dashboard fixture cards use one 54px height. Team names fit at the supplied 920px Mac viewport, and every two-line UK kick-off time is aligned 9px from its card's right edge.
+- Chromium checks passed at 390, 920, 1,440 and 1,920px. All four mobile tabs remain interactive, the footer can scroll fully above the fixed bar, and no document overflow or browser errors were found. All 21 automated tests pass.

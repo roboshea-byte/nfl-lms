@@ -1,6 +1,6 @@
 # Accounts update (6 September 2026)
 
-The live app now uses owner, admin and member accounts. See [account setup and operations](docs/ACCOUNTS.md). Dashboard is the home page and includes the competition overview, rules and 32-team grid. Member navigation is Dashboard, Picks, Results and Standings; Picks also contains pick history. Staff enter and exit the separate admin area from the header. Passwords require at least seven characters. Account instructions supersede the legacy passphrase and personal-link workflow documented below.
+The live app now uses owner, admin and member accounts. See [account setup and operations](docs/ACCOUNTS.md). Dashboard is the home page and includes the competition overview, rules and 32-team grid. Member navigation is Dashboard, Picks, Results and Standings; Picks also contains pick history. On phones these four sections use a fixed icon tab bar at the bottom. Staff enter and exit the separate admin area from the header. Passwords require at least seven characters. Account instructions supersede the legacy passphrase and personal-link workflow documented below.
 
 # NFL Last Man Standing — 2026
 

@@ -205,12 +205,28 @@ body.ro nav button[data-v=entries],body.ro nav button[data-v=settings]{display:n
 .brand .nfl-logo{width:46px;height:52px;object-fit:contain;flex:none}
 input[type=password]{background:var(--deep);border:1px solid var(--line);color:#fff;border-radius:8px;padding:8px 10px}
 body.player nav{display:flex}
-body.player main{max-width:900px}
+main{max-width:1650px}
+body.player main{max-width:1125px}
 body.player .teamgrid button{color:var(--white);font:inherit}
 body.player .season{display:flex;flex-wrap:wrap;gap:10px}
 .personal-link{overflow-wrap:anywhere;min-width:180px}
 .personal-link.unpaid-link{opacity:.55}
 @media(max-width:900px){body.player .hdr-top{padding:12px;gap:12px}body.player .brand h1{font-size:25px}body.player .hdr-stats{margin-left:0;gap:6px}body.player .stat{min-width:76px;padding:6px 8px}body.player main{padding:14px}body.player .card{padding:16px}body.player .teamgrid{grid-template-columns:repeat(2,minmax(0,1fr))}body.player .card h2{flex-wrap:wrap}}
+
+.nav-icon{display:none;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fixture-card{display:grid;grid-template-columns:minmax(0,1fr) 68px;align-items:center;gap:6px;min-height:54px;height:100%;padding:8px;border:1px solid #1b2a4a;border-radius:8px;background:rgba(8,22,52,.18);font-size:11px}
+.fixture-matchup{display:flex;align-items:center;gap:4px;min-width:0}
+.fixture-matchup .logo{width:21px;height:21px;flex:none}
+.fixture-name{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.fixture-at{color:var(--grey);flex:none}
+.fixture-time{width:68px;justify-self:end;text-align:right;white-space:nowrap;line-height:1.3;font-variant-numeric:tabular-nums;color:var(--grey)}
+
+@media(min-width:601px){
+  nav{gap:8px;padding:8px 22px}
+  nav button{margin:0;padding:9px 18px;border:1px solid rgba(58,90,156,.65);border-radius:8px;background:rgba(36,66,127,.32);transition:background .15s,border-color .15s,color .15s,transform .15s}
+  nav button:hover{background:var(--navy-3);border-color:#5b7fd0;transform:translateY(-1px)}
+  nav button.active{background:var(--navy-3);border-color:var(--gold);box-shadow:inset 0 -3px 0 var(--gold),0 4px 14px rgba(0,0,0,.22)}
+}
 
 /* Compact branding and hero, with layouts sized for each viewport. */
 .brand{gap:10px;min-width:0}
@@ -247,6 +263,7 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
 }
 @media(max-width:600px){
   header{position:static}
+  body{padding-bottom:calc(68px + env(safe-area-inset-bottom))}
   body .hdr-top{padding:10px 12px}
   body .brand h1,body.player .brand h1{font-size:22px}
   .brand h1 small{font-size:9px;letter-spacing:.2em}
@@ -254,8 +271,10 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
   body .hdr-stats,body.player .hdr-stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:10px}
   .stat .v{font-size:18px}
   .stat .l{font-size:8px;letter-spacing:.08em}
-  nav{padding:0 6px}
-  nav button{padding:12px 11px;font-size:12px;letter-spacing:.08em}
+  nav{position:fixed;z-index:100;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:rgba(8,18,43,.97);border-top:1px solid var(--line);border-bottom:0;box-shadow:0 -8px 28px rgba(0,0,0,.45);overflow:visible}
+  nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;min-height:52px;margin:0;padding:5px 2px;border:0;border-radius:10px;background:transparent;color:var(--grey);font-family:var(--font-body);font-size:9px;font-weight:700;line-height:1;text-transform:none;letter-spacing:.01em}
+  nav button.active{color:var(--gold);border:0;background:rgba(255,199,51,.12)}
+  .nav-icon{display:block}
   main,body.player main{padding:12px}
   .homehero{padding:18px 16px;border-radius:12px;margin-bottom:14px}
   .homehero .kick{font-size:9px;letter-spacing:.16em;line-height:1.5}
@@ -320,10 +339,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <div class="hdr-stats" id="hdrStats"></div>
   </div>
   <nav id="nav">
-    <button data-v="dash" class="active">Dashboard</button>
-    <button data-v="picks">Picks</button>
-    <button data-v="results">Results</button>
-    <button data-v="standings">Standings</button>
+    <button data-v="dash" class="active"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg><span>Dashboard</span></button>
+    <button data-v="picks"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg><span>Picks</span></button>
+    <button data-v="results"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9"></path><path d="M10 19V5"></path><path d="M16 19v-7"></path><path d="M22 19H2"></path></svg><span>Results</span></button>
+    <button data-v="standings"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v4a5 5 0 0 1-10 0V4z"></path><path d="M7 6H4v1a4 4 0 0 0 4 4"></path><path d="M17 6h3v1a4 4 0 0 1-4 4"></path></svg><span>Standings</span></button>
   </nav>
 </header>
 <main id="main"></main>
@@ -732,11 +751,11 @@ function renderDash(r,comp){
     <h2>Week ${w} fixtures <span class="tag">${games.length} games · UK time</span></h2>
     <div class="grid three" style="gap:6px">
     ${games.map(g=>{const r=S.results[g.id]; const fin=r?.final; const hw=fin&&+r.hs>+r.as, aw=fin&&+r.as>+r.hs;
-      return `<div class="small" style="display:flex;align-items:center;gap:8px;padding:6px;border:1px solid #1b2a4a;border-radius:8px">
-        ${logoImg(g.away)}<span style="${aw?'color:var(--green);font-weight:700':''}">${TEAMS[g.away].short}</span>
-        <span class="muted">${fin?`${r.as}-${r.hs}`:'@'}</span>
-        <span style="${hw?'color:var(--green);font-weight:700':''}">${TEAMS[g.home].short}</span>${logoImg(g.home)}
-        <span class="muted" style="margin-left:auto">${fin?'FINAL':fmtDate(g.date)}</span></div>`;}).join('')}
+      return `<div class="fixture-card small"><div class="fixture-matchup">
+        ${logoImg(g.away)}<span class="fixture-name" style="${aw?'color:var(--green)':''}">${TEAMS[g.away].short}</span>
+        <span class="fixture-at">${fin?`${r.as}-${r.hs}`:'@'}</span>
+        <span class="fixture-name" style="${hw?'color:var(--green)':''}">${TEAMS[g.home].short}</span>${logoImg(g.home)}
+        </div><time class="fixture-time" datetime="${esc(g.date)}">${fin?'FINAL':fmtDate(g.date).replace(', ','<br>')}</time></div>`;}).join('')}
     </div>
   </div>`;
 }
