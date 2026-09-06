@@ -13,3 +13,5 @@ Production application commit: 44793c3. Deployment dpl_6yDKwwov4SdJHb9WcMxqYU8PH
 - Preview test accounts were removed. No test entrants were added to production.
 
 Remaining user step: Rob opens the private owner setup file and chooses his password on the website. His earlier physical-iPhone clipping report still needs device confirmation; browser checks show no document overflow at 320-1440 CSS pixels.
+
+Admin navigation follow-up: /admin now opens a dedicated management landing page. Every admin view includes direct controls for entries/payments, members/roles, picks, results, settings and overview. Initial unpaid entries display as awaiting payment/inactive, not eliminated. Chromium and WebKit navigation checks pass at 320-1440px; all 21 automated tests pass.

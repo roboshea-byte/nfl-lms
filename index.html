@@ -307,6 +307,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 }
 /* Account screens keep touch inputs readable without changing page scale. */
 .auth-card{max-width:460px;margin:24px auto}.auth-card label,#passwordForm label{display:grid;gap:7px;margin:16px 0}.auth-card input,#passwordForm input{background:var(--navy-2);color:var(--white);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%;min-width:0;min-height:44px;font-size:16px}.account-bar{flex-wrap:wrap;margin-bottom:16px}.account-bar a{text-decoration:none}.deadline{padding:14px 18px}.deadline b{color:var(--gold)}.tablewrap{max-width:100%;overflow-x:auto}.card select{max-width:100%}#accountError,#passwordError{color:#ffb9bd}.auth-card button{min-height:44px}a{color:#ffcf48}
+.admin-nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}.admin-nav .btn{min-height:44px}.admin-intro h1{font-family:var(--font-head);font-size:clamp(26px,5vw,36px);margin:8px 0}.admin-intro .kick{color:var(--gold);text-transform:uppercase;letter-spacing:.15em;font-size:11px;font-weight:700}.admin-tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px}.admin-tool{display:flex;flex-direction:column;gap:12px;text-align:left;color:var(--white);font-family:var(--font-body);cursor:pointer;margin:0;min-width:0}.admin-tool strong{font-size:18px}.admin-tool>span{line-height:1.5;color:var(--grey)}.admin-tool .admin-tool-open{color:var(--gold);margin-top:auto;font-weight:700}.admin-tool:hover,.admin-tool:focus-visible{border-color:var(--gold);background:var(--navy-3)}@media(max-width:800px){.admin-tools{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.admin-tools{grid-template-columns:1fr}.admin-nav .btn{flex:1 1 42%;justify-content:center;font-size:12px}}
 </style>
 </head>
 <body>
@@ -559,7 +560,7 @@ function teamChip(abbr, cls='logo'){ const t=TEAMS[abbr]; return t? `<span class
 function toast(msg, ms=3200){ const el=document.createElement('div'); el.className='toast'; el.innerHTML=msg; document.getElementById('toastRoot').appendChild(el); setTimeout(()=>el.remove(),ms); }
 function modal(html){ const root=document.getElementById('modalRoot'); root.innerHTML=`<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">${html}</div></div>`; }
 function closeModal(){ document.getElementById('modalRoot').innerHTML=''; }
-function setView(v){ S.ui.view=v; save({uiOnly:true}); render(); }
+function setView(v){ S.ui.view=v; save({uiOnly:true}); render(); if(accountPage==='/admin')window.scrollTo(0,0); }
 function setWeek(w){ S.ui.week=w; save({uiOnly:true}); render(); }
 function entryName(id){ const e=S.entries.find(x=>x.id===id); return e? (e.label? `${e.name} (${e.label})`: e.name) : '?'; }
 function weekBar(r, comp, extraClass=''){
@@ -585,7 +586,7 @@ function render(){
   const main=document.getElementById('main');
   document.body.classList.toggle('ro', isRO());
   if(isRO() && (S.ui.view==='entries'||S.ui.view==='settings')) S.ui.view='home';
-  const views={home:renderHome,dash:renderDash,picks:renderPicks,results:renderResults,history:renderHistory,entries:renderEntries,settings:renderSettings};
+  const views={adminhome:renderAdminHome,home:renderHome,dash:renderDash,picks:renderPicks,results:renderResults,history:renderHistory,entries:renderEntries,settings:renderSettings};
   main.innerHTML=accountBar()+(['home','dash'].includes(S.ui.view)?deadlineBanner(S.ui.view==='home'?defaultWeek():S.ui.week):'')+(views[S.ui.view]||renderHome)(r,comp);
   const foot=document.getElementById('foot'); if(foot) foot.innerHTML = SHARED ? (ADMIN?(HOSTED?'Admin mode. Changes are saved in this browser until you press Publish.':'Admin mode. Changes are saved in this browser; press Download and upload the new index.html to update the shared page.'):'Live standings. Updated by the organiser after each round of games.') : 'Last Man Standing. Data is saved in this browser. Use Settings &rarr; Backup to export a copy.';
   if(REMOTE && foot) foot.textContent=ADMIN?'Admin mode. Changes are saved to the shared competition.':'Live standings. Refreshes every 45 seconds.';
@@ -675,7 +676,8 @@ function renderDash(r,comp){
   if(!S.entries.length) banner+=`<div class="banner">No entries yet <button class="btn gold edit" onclick="setView('entries')">Add or import entries</button></div>`;
 
   const aliveList=S.entries.filter(e=>comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
-  const outList=S.entries.filter(e=>!comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  const pendingList=S.entries.filter(e=>comp.resetWeek===r.startWeek&&!entryPaid(e,r,comp));
+  const outList=S.entries.filter(e=>!comp.alive.has(e.id)&&!pendingList.includes(e)).sort((a,b)=>a.name.localeCompare(b.name));
   const missing=aliveList.filter(e=>!S.picks[e.id]?.[w] && !weekSettled(w) && isAliveForWeek(comp,w,e.id));
   const feed=comp.events.slice().reverse().slice(0,25).map(ev=>{
     if(ev.type==='out') return `<li><span class="pill out">OUT</span> <b>Wk ${ev.week}</b> ${esc(entryName(ev.id))} ${ev.pick?logoImg(ev.pick):''} <span class="muted">${esc(ev.reason)}</span></li>`;
@@ -714,7 +716,8 @@ function renderDash(r,comp){
   <div class="grid two" style="margin-top:18px">
     <div class="card" style="margin:0">
       <h2>Still standing <span class="tag">${aliveList.length}</span></h2>
-      ${aliveList.length? `<div class="avatars">${aliveList.map(e=>{const vp=visiblePick(e.id,w); const p=vp==='HIDDEN'?null:vp; return `<span class="av">${p?logoImg(p):`<span class="fallback" style="background:#3a4a6a;width:22px;height:22px">${vp?'🔒':'?'}</span>`} ${esc(e.name)}${e.label?` <span class="muted">${esc(e.label)}</span>`:''}</span>`;}).join('')}</div>`:'<div class="empty">Nobody left in this round</div>'}
+      ${aliveList.length? `<div class="avatars">${aliveList.map(e=>{const vp=visiblePick(e.id,w); const p=vp==='HIDDEN'?null:vp; return `<span class="av">${p?logoImg(p):`<span class="fallback" style="background:#3a4a6a;width:22px;height:22px">${vp?'🔒':'?'}</span>`} ${esc(e.name)}${e.label?` <span class="muted">${esc(e.label)}</span>`:''}</span>`;}).join('')}</div>`:'<div class="empty">No active entries at the moment</div>'}
+      ${pendingList.length?`<h2 style="margin-top:18px">Awaiting payment <span class="tag">${pendingList.length}</span></h2><div class="avatars">${pendingList.map(e=>`<span class="av">${esc(e.name)}</span>`).join('')}</div>`:''}
       ${outList.length?`<h2 style="margin-top:18px">Eliminated <span class="tag">${outList.length}</span></h2><div class="avatars">${outList.map(e=>`<span class="av out">${esc(e.name)}</span>`).join('')}</div>`:''}
     </div>
     <div class="card" style="margin:0">
@@ -809,6 +812,7 @@ function printSheet(w){
   const win=window.open('','_blank');
   win.document.write(`<html><head><title>Week ${w} picks</title><style>body{font-family:Arial;padding:20px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:6px 8px;text-align:left}img{height:22px;vertical-align:middle;margin-right:6px}/* Account screens keep touch inputs readable without changing page scale. */
 .auth-card{max-width:460px;margin:24px auto}.auth-card label,#passwordForm label{display:grid;gap:7px;margin:16px 0}.auth-card input,#passwordForm input{background:var(--navy-2);color:var(--white);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%;min-width:0;min-height:44px;font-size:16px}.account-bar{flex-wrap:wrap;margin-bottom:16px}.account-bar a{text-decoration:none}.deadline{padding:14px 18px}.deadline b{color:var(--gold)}.tablewrap{max-width:100%;overflow-x:auto}.card select{max-width:100%}#accountError,#passwordError{color:#ffb9bd}.auth-card button{min-height:44px}a{color:#ffcf48}
+.admin-nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}.admin-nav .btn{min-height:44px}.admin-intro h1{font-family:var(--font-head);font-size:clamp(26px,5vw,36px);margin:8px 0}.admin-intro .kick{color:var(--gold);text-transform:uppercase;letter-spacing:.15em;font-size:11px;font-weight:700}.admin-tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px}.admin-tool{display:flex;flex-direction:column;gap:12px;text-align:left;color:var(--white);font-family:var(--font-body);cursor:pointer;margin:0;min-width:0}.admin-tool strong{font-size:18px}.admin-tool>span{line-height:1.5;color:var(--grey)}.admin-tool .admin-tool-open{color:var(--gold);margin-top:auto;font-weight:700}.admin-tool:hover,.admin-tool:focus-visible{border-color:var(--gold);background:var(--navy-3)}@media(max-width:800px){.admin-tools{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.admin-tools{grid-template-columns:1fr}.admin-nav .btn{flex:1 1 42%;justify-content:center;font-size:12px}}
 </style></head><body><h1>Last Man Standing - Round ${r.n}, Week ${w}</h1><table><tr><th>Player</th><th>Pick</th><th>Result</th></tr>${eligible.map(e=>{const vp=visiblePick(e.id,w);const p=vp==='HIDDEN'?null:vp;const res=p?teamResult(p,w).code:'';return `<tr><td>${esc(e.name)}${e.label?` (${esc(e.label)})`:''}</td><td>${p?`<img src="${TEAMS[p].logo}">${TEAMS[p].name}`:vp==='HIDDEN'?'Hidden until kick-off':'-'}</td><td>${res==='P'?'':res}</td></tr>`;}).join('')}</table></body></html>`);
   win.document.close();
 }
@@ -924,7 +928,7 @@ function renderEntries(r,comp){
     <td><input type="text" value="${esc(e.label||'')}" placeholder="e.g. Team 2" onchange="updEntry('${e.id}','label',this.value)" style="width:100%"></td>
     <td><input type="email" value="${esc(e.email||'')}" placeholder="optional" onchange="updEntry('${e.id}','email',this.value)" style="width:100%"></td>
     <td><button class="pill ${entryPaid(e,r,comp)?'paid':'unpaid'}" style="border:0;cursor:pointer" onclick="setEntryPayment('${e.id}',${!entryPaid(e,r,comp)})">${entryPaid(e,r,comp)?'Paid':'Unpaid'}</button></td>
-    <td>${comp.alive.has(e.id)?'<span class="pill alive">In</span>':'<span class="pill out">Out</span>'}</td>
+    <td>${playerStatus(comp,e)}</td>
     ${REMOTE?personalLinkCell(e,r,comp):''}
     <td><button class="btn sm danger" onclick="delEntry('${e.id}')">Remove</button></td>
   </tr>`).join('');
@@ -1211,8 +1215,8 @@ async function bootRemote(){
       }
     }
   }
-  if(accountPage==='/admin'){S.ui.view='dash';const btn=document.createElement('button');btn.dataset.v='members';btn.textContent='Members & roles';document.getElementById('nav').appendChild(btn);}
-  if(!PLAYER_CODE)document.getElementById('nav').classList.remove('hidden');
+  if(accountPage==='/admin')S.ui.view='adminhome';
+  if(!PLAYER_CODE&&accountPage!=='/admin')document.getElementById('nav').classList.remove('hidden');
   render();if(REMOTE)setInterval(refreshRemote,45000);
 }
 window.addEventListener('beforeunload',event=>{if(REMOTE && (remoteDirty||remoteWrites)){event.preventDefault();event.returnValue='';}});
@@ -1221,7 +1225,7 @@ window.addEventListener('beforeunload',event=>{if(REMOTE && (remoteDirty||remote
 function acceptMe(data){const ui=S.ui;playerMe=data;S=hydrate(data.state);S.ui=ui;S.picks[data.entry.id]={...data.picks};ADMIN=false;playerError='';}
 function choosePlayerWeek(w){S.ui.week=w;playerSelected=null;playerChanging=false;renderPlayer();}
 function playerLock(w){return L.weekDeadline(w)===null||L.weekDeadline(w)<=serverNow();}
-function playerStatus(comp,e){const out=comp.events.filter(x=>x.type==='out'&&x.id===e.id).at(-1);return comp.winnerIds?.includes(e.id)?'<span class="pill win">Winner</span>':comp.alive.has(e.id)?'<span class="pill alive">In</span>':`<span class="pill out">Out wk ${out?.week||'?'}</span>`;}
+function playerStatus(comp,e){if(comp.resetWeek===currentRound().startWeek&&!entryPaid(e,currentRound(),comp))return '<span class="pill pending">Inactive</span>';const out=comp.events.filter(x=>x.type==='out'&&x.id===e.id).at(-1);return comp.winnerIds?.includes(e.id)?'<span class="pill win">Winner</span>':comp.alive.has(e.id)?'<span class="pill alive">In</span>':`<span class="pill out">Out wk ${out?.week||'?'}</span>`;}
 function renderPlayer(){
   document.body.classList.add('player');document.body.classList.remove('ro');document.getElementById('nav').classList.add('hidden');
   const main=document.getElementById('main');document.getElementById('foot').textContent='Your account. All deadlines and kick-off times are UK time.';
@@ -1262,7 +1266,15 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 /* ACCOUNT:START */
 let accountUser=null,accountEntries=[],accountPage=['/login','/signup','/dashboard','/admin','/reset-password'].includes(location.pathname)?location.pathname:null;
 const accountCall=(action,body)=>apiRequest('/api/account?action='+action,body);
-function accountBar(){if(location.protocol==='file:')return '';return `<div class="row account-bar"><a class="btn" href="/">Standings</a>${accountUser?`<a class="btn" href="/dashboard">My dashboard</a>${['owner','admin'].includes(accountUser.role)?'<a class="btn" href="/admin">Admin area</a>':''}<button class="btn" onclick="accountLogout()">Sign out</button>`:'<a class="btn" href="/login">Sign in</a><a class="btn gold" href="/signup">Join the competition</a>'}</div>`;}
+function accountBar(){if(location.protocol==='file:')return '';return `<div class="row account-bar"><a class="btn" href="/">Standings</a>${accountUser?`<a class="btn" href="/dashboard">My dashboard</a>${['owner','admin'].includes(accountUser.role)?'<a class="btn" href="/admin">Admin area</a>':''}<button class="btn" onclick="accountLogout()">Sign out</button>`:'<a class="btn" href="/login">Sign in</a><a class="btn gold" href="/signup">Join the competition</a>'}</div>`+adminNavigation();}
+const adminSections=[['adminhome','Admin home'],['entries','Entries & payments'],['members','Members & roles'],['picks','Manage picks'],['results','Results'],['settings','Settings'],['dash','Overview']];
+function adminNavigation(){return accountPage==='/admin'&&ADMIN?`<div class="admin-nav" role="navigation" aria-label="Admin tools">${adminSections.map(([view,label])=>`<button class="btn ${S.ui.view===view?'gold':''}" aria-current="${S.ui.view===view?'page':'false'}" onclick="setView('${view}')">${label}</button>`).join('')}</div>`:'';}
+function renderAdminHome(r,comp){
+ const paid=S.entries.filter(e=>entryPaid(e,r,comp)).length;
+ const tools=[['entries','Entries & payments','Mark fees as paid, add people manually and import entries.'],['members','Members & roles',accountUser?.role==='owner'?'Assign admins, manage access, link entries and reset passwords.':'Manage members, link entries and reset member passwords.'],['picks','Manage picks','Add or change picks for any member, including corrections after the deadline.'],['results','Results','Fetch scores, enter results and settle the week.'],['settings','Competition settings','Manage rounds, rules, entry fees and backups.'],['dash','Competition overview','Check the prize pot, standings, missing picks and fixtures.']];
+ return `<div class="card admin-intro"><div class="kick">${accountUser?.role==='owner'?'Owner':'Administrator'} access</div><h1>Admin area</h1><p>Manage your competition here. Your own entry and picks are in <a href="/dashboard">My dashboard</a>.</p><div class="row"><span class="pill">Round ${r.n}</span><span class="pill paid">${paid} paid</span><span class="pill unpaid">${S.entries.length-paid} awaiting payment</span></div></div><div class="admin-tools">${tools.map(([view,label,description])=>`<button class="card admin-tool" onclick="setView('${view}')"><strong>${label}</strong><span>${description}</span><span class="admin-tool-open">Open →</span></button>`).join('')}</div>${deadlineBanner(defaultWeek())}`;
+}
+
 function deadlineBanner(w){const d=L.weekDeadline(w);return `<div class="card deadline"><b>Week ${w} pick deadline: ${d?new Date(d).toLocaleString('en-GB',{weekday:'long',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/London'}):'Awaiting fixtures'} (UK time)</b><div class="small muted">All picks and changes close one hour before the first kick-off.${d&&d<=serverNow()?' This week is now locked.':''}</div></div>`;}
 function remoteHeader(){return `<div class="stat pub" onclick="location.href='${accountUser?'/dashboard':'/login'}'"><div class="v" style="font-size:18px">${accountUser?'Account':'Sign in'}</div><div class="l">${accountUser?esc(accountUser.role):'join / login'}</div></div>`;}
 async function remoteAdmin(){location.href=accountUser&&['admin','owner'].includes(accountUser.role)?'/admin':'/login';}

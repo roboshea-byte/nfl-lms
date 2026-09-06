@@ -5,7 +5,7 @@
 - `/signup`: name (optional), email, password. Immediate sign-in; no confirmation email.
 - `/login`: email/password login and organiser-assisted recovery instructions.
 - `/dashboard`: owned entries, payment status, team selection, saved picks and password changes.
-- `/admin`: competition dashboard, Entries, Picks, Results, Settings, Members & roles.
+- `/admin`: dedicated Admin home with direct cards and persistent controls for Entries & payments, Members & roles, Manage picks, Results, Settings and Overview.
 - `/reset-password#token=...`: one-time password reset. Links last one hour.
 
 ## Owner setup
