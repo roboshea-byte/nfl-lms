@@ -200,6 +200,8 @@ body.ro .edit{display:none!important}
 body.ro .pickbtn{border-style:solid;cursor:default;pointer-events:none}
 body.ro nav button[data-v=entries],body.ro nav button[data-v=settings]{display:none}
 /* Remote additions reuse the original palette and components. */
+.rules{font-size:80%}
+.rules li:before{font-size:12.8px}
 .brand .nfl-logo{width:46px;height:52px;object-fit:contain;flex:none}
 input[type=password]{background:var(--deep);border:1px solid var(--line);color:#fff;border-radius:8px;padding:8px 10px}
 body.player nav{display:none}
@@ -294,7 +296,8 @@ function createLMSLogic(SCHEDULE){
       if(settled && alive.size>0 && losers.length===alive.size){
         wipeout=true;
         alive = new Set(all);
-        if(S.settings.wipeoutResetTeams) out.resetWeek = w+1;
+        // Rollover always restores team availability, including for older saved states.
+        out.resetWeek = w+1;
         out.events.push({week:w,type:'wipeout',count:losers.length});
       } else {
         losers.forEach(l=>{ alive.delete(l.id); out.events.push({week:w,type:'out',...l}); });
@@ -358,7 +361,7 @@ const STORE_KEY = 'lms-nfl-2026-v1';
 function defaultState(){
   return {
     v:1,
-    settings:{ fee:20, tieRule:'loss', wipeoutResetTeams:false, missedPick:'eliminate', title:'Last Man Standing' },
+    settings:{ fee:20, tieRule:'loss', wipeoutResetTeams:true, missedPick:'eliminate', title:'Last Man Standing' },
     entries:[],          // {id,name,label,email,paid,notes,created}
     picks:{},            // picks[entryId][week] = abbr
     results:{},          // results[gameId] = {hs,as,final}
@@ -368,7 +371,7 @@ function defaultState(){
   };
 }
 let S = load();
-function hydrate(s){ return Object.assign(defaultState(), s, {settings:Object.assign(defaultState().settings, s.settings||{})}); }
+function hydrate(s){ return Object.assign(defaultState(), s, {settings:Object.assign(defaultState().settings, s.settings||{}, {wipeoutResetTeams:true})}); }
 function load(){
   const E = embeddedState(); PUBLISHED_AT = E?.updatedAt||0;
   let L=null; try{ const raw=localStorage.getItem(STORE_KEY); if(raw) L=JSON.parse(raw); }catch(e){ console.warn(e); }
@@ -502,7 +505,7 @@ function renderHome(r,comp){
   <div class="homehero"><div class="heroflag"></div>
     <div class="kick">NFL 2026 Season · ${S.entries.length?`${S.entries.length} entries`:'Entries open'}</div>
     <h1 class="big">Last Man <span>Standing</span></h1>
-    <p>One pick a week. Pick an NFL team to win their game. Get it right and you're through to next week. Get it wrong and you're out. Every team can only be used once, so choose wisely - the last player standing takes the whole pot.</p>
+    <p>One pick a week. Pick an NFL team to win their game. Get it right and you're through to next week. Get it wrong and you're out. Each team can only be used once between resets, so choose wisely - the last player standing takes the whole pot.</p>
     <div class="herostats">
       <div class="herostat gold"><div class="v">${gbp(S.settings.fee)}</div><div class="l">Per entry</div></div>
       <div class="herostat gold"><div class="v">${gbp(pot)}</div><div class="l">Current pot</div></div>
@@ -515,7 +518,7 @@ function renderHome(r,comp){
       <button class="btn primary edit" onclick="setWeek(${w});setView('picks')">Enter Week ${w} picks</button>
     </div>
   </div>
-  <div class="card"><h2>The 32 teams <span class="tag">pick each one only once per round</span></h2>
+  <div class="card"><h2>The 32 teams <span class="tag">each team once until a rollover or new round</span></h2>
     <div class="logowall">${TEAM_LIST.map(t=>`<div class="lw">${logoImg(t.abbr,'logo xl')}<div class="ab">${esc(t.short)}</div></div>`).join('')}</div>
   </div>
   <div class="grid two">
@@ -524,9 +527,9 @@ function renderHome(r,comp){
         <li><div><b>${gbp(S.settings.fee)} per entry.</b> You can have as many entries as you like - each one is a separate £${S.settings.fee} stake and picks independently.</div></li>
         <li><div><b>One pick per week.</b> Before the first game of the week, pick one NFL team to win their game. Point spreads don't matter, they just have to win.</div></li>
         <li><div><b>Win and you're through.</b> If your team wins you progress to the next week. If they lose you're eliminated. ${S.settings.tieRule==='loss'?'A tie counts as a loss.':'A tie keeps you in.'}</div></li>
-        <li><div><b>Each team once per round.</b> Once you've picked a team you can't use them again in this round, so the longer you survive, the harder it gets.</div></li>
+        <li><div><b>Each team once between resets.</b> Once you've picked a team you can't use them again until a rollover or a new round, so the longer you survive, the harder it gets.</div></li>
         <li><div><b>${S.settings.missedPick==='eliminate'?'No pick, no progress.':'Missed picks.'}</b> ${S.settings.missedPick==='eliminate'?'If you fail to submit a pick before the deadline you are out.':'A missed pick is dealt with by the organiser.'}</div></li>
-        <li><div><b>Wipeout rule.</b> If every remaining player loses in the same week, nobody wins - everyone comes back in, including players knocked out earlier${S.settings.wipeoutResetTeams?', and used teams are reset':', but used teams still count'}.</div></li>
+        <li><div><b>Rollover rule.</b> If every remaining player loses in the same week, nobody wins - everyone comes back in, including players knocked out earlier. It is a full reset: all teams are available to pick again from the following week.</div></li>
         <li><div><b>Winner takes the pot.</b> The last player standing wins ${pot?gbp(pot):'the full pot'}. If more than one player is still in after Week 18, the pot is shared equally.</div></li>
       </ol>
     </div>
@@ -556,7 +559,7 @@ function renderDash(r,comp){
       ${comp.finalWeek<WEEKS?`<button class="btn edit" onclick="startNewRound(${comp.finalWeek+1})">Start Round ${r.n+1} from Week ${comp.finalWeek+1}</button>`:''}</div>`.replace(/&mdash;/g,'-');
   }
   const lastWipe=comp.events.filter(e=>e.type==='wipeout').slice(-1)[0];
-  if(lastWipe && !comp.complete) banner+=`<div class="banner">💥 Wipeout in Week ${lastWipe.week}: all ${lastWipe.count} remaining players lost, so everyone is back in.</div>`;
+  if(lastWipe && !comp.complete) banner+=`<div class="banner">💥 Rollover in Week ${lastWipe.week}: all ${lastWipe.count} remaining players lost, so everyone is back in with all teams available again.</div>`;
   if(!S.entries.length) banner+=`<div class="banner">No entries yet <button class="btn gold edit" onclick="setView('entries')">Add or import entries</button></div>`;
 
   const aliveList=S.entries.filter(e=>comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
@@ -564,7 +567,7 @@ function renderDash(r,comp){
   const missing=aliveList.filter(e=>!S.picks[e.id]?.[w] && !weekSettled(w) && isAliveForWeek(comp,w,e.id));
   const feed=comp.events.slice().reverse().slice(0,25).map(ev=>{
     if(ev.type==='out') return `<li><span class="pill out">OUT</span> <b>Wk ${ev.week}</b> ${esc(entryName(ev.id))} ${ev.pick?logoImg(ev.pick):''} <span class="muted">${esc(ev.reason)}</span></li>`;
-    if(ev.type==='wipeout') return `<li><span class="pill pending">WIPEOUT</span> <b>Wk ${ev.week}</b> All ${ev.count} remaining players lost - everyone back in</li>`;
+    if(ev.type==='wipeout') return `<li><span class="pill pending">ROLLOVER</span> <b>Wk ${ev.week}</b> All ${ev.count} remaining players lost - everyone back in, all teams available again</li>`;
     if(ev.type==='winner') return `<li><span class="pill win">WINNER</span> <b>Wk ${ev.week}</b> ${esc(entryName(ev.ids[0]))} takes the pot</li>`;
     if(ev.type==='split') return `<li><span class="pill win">SPLIT</span> <b>Wk ${ev.week}</b> Season over, pot shared by ${ev.ids.length}</li>`;
   }).join('');
@@ -721,7 +724,7 @@ function renderResults(r,comp){
       ${HOSTED?'':`<button class="btn primary" onclick="fetchWeekResults(${w})">⟳ Fetch live scores from ESPN</button>`}
       <button class="btn" onclick="markAllFinal(${w})">Mark all entered scores final</button>
       <button class="btn danger" onclick="clearWeekResults(${w})">Clear week</button>
-      <span class="muted small" style="margin-left:auto">Type scores (away @ home) and tick Final. A week counts as settled once every game is final; eliminations for no-picks and wipeout checks happen then.</span>
+      <span class="muted small" style="margin-left:auto">Type scores (away @ home) and tick Final. A week counts as settled once every game is final; eliminations for no-picks and rollover checks happen then.</span>
     </div>
     ${rows}
   </div>`;
@@ -776,7 +779,7 @@ function renderHistory(r,comp){
       }).join('')}
     </tr>`;
   }).join('');
-  return `<div class="card"><h2>Round ${r.n} pick history <span class="tag">green = win · red = loss · gold = tie · purple = wipeout week</span></h2>
+  return `<div class="card"><h2>Round ${r.n} pick history <span class="tag">green = win · red = loss · gold = tie · purple = rollover week</span></h2>
     <div class="row" style="margin-bottom:10px"><button class="btn sm edit" onclick="exportPicksCSV()">⬇ Export picks CSV</button>
     ${S.rounds.length>1?`<span class="muted small" style="margin-left:auto">Previous rounds: ${S.rounds.slice(0,-1).map(x=>`R${x.n} (wk ${x.startWeek}-${x.endWeek}) won by ${(x.winnerIds||[]).map(entryName).join(', ')}`).join(' · ')}</span>`:''}</div>
     ${entries.length?`<div class="histwrap"><table class="hist"><thead><tr><th>Player</th><th>Status</th>${weeks.map(w=>`<th>W${w}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty">No entries yet.</div>'}
@@ -909,7 +912,7 @@ function renderSettings(r,comp){
     <div class="row" style="margin-bottom:12px"><label class="f">Entry fee (£)<input type="number" min="0" step="1" value="${s.fee}" onchange="setSetting('fee',+this.value)"></label></div>
     <div class="row" style="margin-bottom:12px"><label class="f">Tied game<select onchange="setSetting('tieRule',this.value)"><option value="loss" ${s.tieRule==='loss'?'selected':''}>Tie = eliminated (only a win survives)</option><option value="survive" ${s.tieRule==='survive'?'selected':''}>Tie = survive</option></select></label></div>
     <div class="row" style="margin-bottom:12px"><label class="f">Missed pick<select onchange="setSetting('missedPick',this.value)"><option value="eliminate" ${s.missedPick==='eliminate'?'selected':''}>No pick = eliminated when week settles</option><option value="survive" ${s.missedPick==='survive'?'selected':''}>No pick = survive (admin decides)</option></select></label></div>
-    <div class="row" style="margin-bottom:12px"><label class="f">Wipeout (everyone left loses in same week)<select onchange="setSetting('wipeoutResetTeams',this.value==='1')"><option value="0" ${!s.wipeoutResetTeams?'selected':''}>Everyone back in, used teams still count</option><option value="1" ${s.wipeoutResetTeams?'selected':''}>Everyone back in, used teams reset</option></select></label></div>
+    <div class="muted small" style="margin-bottom:12px"><b>Rollover rule:</b> If everyone left loses in the same week, all players return, including earlier eliminations, and all teams are available again from the following week.</div>
     <div class="muted small">Winner is declared when exactly one player survives a settled week. If more than one is still standing after Week 18, the pot is shared.</div>
   </div>
   <div class="card" style="margin:0"><h2>Rounds</h2>

@@ -32,5 +32,5 @@ CREATE TABLE IF NOT EXISTS results (
   final boolean DEFAULT false,
   updated_at timestamptz DEFAULT now()
 );
-INSERT INTO settings(id, data) VALUES (1, '{"fee":20,"tieRule":"loss","wipeoutResetTeams":false,"missedPick":"eliminate","title":"Last Man Standing"}') ON CONFLICT (id) DO NOTHING;
+INSERT INTO settings(id, data) VALUES (1, '{"fee":20,"tieRule":"loss","wipeoutResetTeams":true,"missedPick":"eliminate","title":"Last Man Standing"}') ON CONFLICT (id) DO NOTHING;
 INSERT INTO rounds(n, start_week) SELECT 1, 1 WHERE NOT EXISTS (SELECT 1 FROM rounds) ON CONFLICT (n) DO NOTHING;

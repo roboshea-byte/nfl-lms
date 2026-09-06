@@ -5,7 +5,7 @@
 - Original source: GitHub `roboshea-byte/nfl-lms`, commit `328aa91ce7c09b609807e03bb9fc70a9fc4f96f1`.
 - Automated comparison confirms the complete original stylesheet is retained verbatim, with only additional remote/player styles appended.
 - All 32 teams, 272 games, dates, ESPN IDs and logo URLs are unchanged.
-- The extracted rules function matches the original text exactly. The build inlines the shared sources into `index.html` and publishes only the generated page in `public/`.
+- The shared rules function retains the original behaviour except for the requested mandatory rollover team reset. The build inlines the shared sources into `index.html` and publishes only the generated page in `public/`.
 
 ## Automated checks
 
@@ -57,3 +57,11 @@ The Documents workspace is backed by iCloud. During verification, iCloud offload
 - Production 5xx log scan over the preceding 15 minutes completed with zero records. No recurring monitor or external log drain was added.
 
 An initial direct database probe exposed an idle Neon connection closing unexpectedly. The pool now handles idle errors without crashing or dumping connection objects into logs, and explicit SSL certificate verification is retained.
+
+## Rollover change — 6 September 2026
+
+- Renamed public rules, dashboard events, results help, pick-history legend and organiser settings to Rollover. All players return and prior used teams become available from the following week. Prior picks remain in history.
+- Existing false settings cannot disable the reset; API responses, saves and local hydration use the new rule. Legacy identifiers remain compatible with saved data.
+- Rules list text and numbered badge text reduced by 20%.
+- All 18 automated tests pass, covering earlier eliminations, old saved settings, renewed team availability, reuse rejection after the reset, and a subsequent rollover.
+- Browser checked at 758 × 890: rules text computes to 11.2px versus the original 14px; updated rollover copy is visible, with no horizontal overflow.

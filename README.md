@@ -1,6 +1,6 @@
 # NFL Last Man Standing — 2026
 
-The original competition app, with its original layout, fonts, colours, 32 teams, 272 fixtures and shared rules engine. Vercel serves the page and six Node.js API endpoints; Postgres holds the competition. Paid players pick through private `/play/<code>` links, with no accounts or login system.
+The original competition app, with its original layout, fonts, colours, 32 teams, 272 fixtures and a shared rules engine. The rollover rule restores every player and makes all teams available again from the following week. Vercel serves the page and six Node.js API endpoints; Postgres holds the competition. Paid players pick through private `/play/<code>` links, with no accounts or login system.
 
 ## Vercel and Postgres setup
 
@@ -21,7 +21,7 @@ Live competition: https://nfl-lms.vercel.app. Vercel is connected to this reposi
 - `node scripts/dev.js --demo` starts an isolated local preview with fictional entries at `http://localhost:3000`. Its public sample organiser passphrase is `preview-only`, and the sample player link is `/play/alice12345`. The sample data exists only in memory and resets on restart. This mode is never used by Vercel.
 - `npm run dev` uses real Postgres; it does not fall back to demo data. The local server binds to `127.0.0.1`.
 
-Node 24 is selected in `package.json`: the first live build warned that Node 20 deployments will stop building on 1 October 2026, during this competition. The unchanged application and rules are tested on the supported runtime. The API uses the permitted `pg` driver with a small connection pool, parameterised queries and transactions.
+Node 24 is selected in `package.json`: the first live build warned that Node 20 deployments will stop building on 1 October 2026, during this competition. The application and rules are tested on the supported runtime. The API uses the permitted `pg` driver with a small connection pool, parameterised queries and transactions.
 
 ## How the modes work
 
@@ -62,8 +62,10 @@ ESPN scores update only when the organiser presses **Fetch live scores from ESPN
 
 ## Verification
 
-Automated checks cover the original schedule and rules function byte-for-byte, player validation and deadlines, private data masking and timed reveal, admin authentication, code generation, removal and cascading picks, backup replacement, ESPN mapping, concurrent submissions, and schema/upsert/read-back through PostgreSQL emulation.
+Automated checks cover the original schedule byte-for-byte, rollover player/team resets (including older saved states and repeated rollovers), player validation and deadlines, private data masking and timed reveal, admin authentication, code generation, removal and cascading picks, backup replacement, ESPN mapping, concurrent submissions, and schema/upsert/read-back through PostgreSQL emulation.
 
 Browser acceptance uses an isolated local competition. The production setup and live verification are recorded in `docs/VERIFICATION.md`.
 
 Official references: [Vercel Node.js versions](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions), [Vercel Postgres integrations](https://vercel.com/docs/postgres), [node-postgres transactions](https://node-postgres.com/features/transactions).
+
+The legacy `wipeoutResetTeams` setting and internal `wipeout` event identifiers remain compatible with saved data. Rollover resets are now mandatory; older false settings cannot disable them. Previous picks remain visible in history.

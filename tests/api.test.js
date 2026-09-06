@@ -65,6 +65,22 @@ test('ESPN results are mapped by fixture, skip pre-game events, and visible publ
   const response=await post(handlers.fetchResults,{week:1},'test-admin');assert.equal(response.status,200);assert.equal(response.body.fetched.count,1);assert.ok(requested.endsWith('week=1&dates=2026'));assert.deepEqual((await call(handlers.state)).body.results[first.id],{hs:27,as:20,final:true});
 });
 test('serialised concurrent picks cannot reuse a team',async()=>{const c=setup();const team=Object.keys(schedule.teams).find(t=>L.teamGame(t,1)&&L.teamGame(t,2));const responses=await Promise.all([pick(c,1,team),pick(c,2,team)]);assert.deepEqual(responses.map(r=>r.status).sort(),[200,400]);assert.equal(responses.find(r=>r.status===400).body.error,'used');});
+test('rollover permits old teams again, blocks reuse afterwards, and resets again on a later rollover',async()=>{
+ const S=defaults(),g1=L.gamesByWeek(1)[0],g2=L.gamesByWeek(2)[0];
+ S.settings.wipeoutResetTeams=false; // Existing saved competitions must adopt the new rule.
+ S.picks={alice:{1:g1.away},bob:{1:g1.home,2:g2.away},charlie:{1:g1.home,2:g2.away}};
+ for(const g of L.gamesByWeek(1))S.results[g.id]={hs:24,as:10,final:true};
+ const c=setup(S,L.weekFirstKickoff(3)-3600000);
+ assert.equal((await pick(c,3,g1.away)).body.error,'eliminated');
+ await c.db.mutate(s=>{for(const g of L.gamesByWeek(2))s.results[g.id]={hs:24,as:10,final:true};});
+ assert.equal((await pick(c,3,g1.away)).status,200);
+ assert.equal((await pick(c,3,g1.home,'bob1234567')).status,200);
+ assert.equal((await pick(c,4,g1.away)).body.error,'used');
+ await c.db.mutate(s=>{for(const g of L.gamesByWeek(3))s.results[g.id]={hs:g.home===g1.away||g.home===g1.home?0:24,as:g.away===g1.away||g.away===g1.home?0:24,final:true};});
+ assert.equal((await pick(c,4,g1.away)).status,200);
+ const state=(await call(c.handlers.state)).body;assert.equal(state.settings.wipeoutResetTeams,true);
+ const saved=await post(c.handlers.adminState,{...await c.db.read()},'test-admin');assert.equal(saved.status,200);assert.equal((await c.db.read()).settings.wipeoutResetTeams,true);
+});
 test('public content revisions remain stable across database key order',async()=>{
  const {statePayload,revision}=require('../lib/api');const a=defaults(),b=defaults();const [g1,g2]=L.gamesByWeek(1);const score={hs:10,as:0,final:true};a.results={[g1.id]:score,[g2.id]:score};b.results={[g2.id]:score,[g1.id]:score};assert.equal(revision(a),revision(b));assert.equal(statePayload(a,false,before).updatedAt,statePayload(b,false,before).updatedAt);
 });
