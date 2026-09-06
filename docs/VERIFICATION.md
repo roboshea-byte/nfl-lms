@@ -125,3 +125,9 @@ No production owner password was generated or requested. Rob completes owner reg
 - Desktop navigation uses bordered button treatments with a stronger gold active state. At 600px and below, Dashboard, Picks, Results and Standings become a fixed four-icon bottom tab bar with safe-area padding.
 - Dashboard fixture cards use one 54px height. Team names fit at the supplied 920px Mac viewport, and every two-line UK kick-off time is aligned 9px from its card's right edge.
 - Chromium checks passed at 390, 920, 1,440 and 1,920px. All four mobile tabs remain interactive, the footer can scroll fully above the fixed bar, and no document overflow or browser errors were found. All 21 automated tests pass.
+
+## Pick history team badges - 6 September 2026
+
+- Owners and admins now receive unmasked team selections in their signed-in Picks history, matching their existing permission to manage every pick in the Admin area.
+- Ordinary members continue to see their own selection immediately as a team badge. Other members' selections remain locked until the relevant game kicks off.
+- The account/API regression test covers owner and admin visibility alongside member privacy. An isolated browser flow confirmed both team badges for the owner, the member's own badge, the other player's lock and zero browser errors.

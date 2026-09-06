@@ -30,13 +30,17 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  let state=(await request(h.state,{},undefined,owner.cookie)).data;state.entries.find(e=>e.id===id).paid=true;
  let paid=await request(h.adminState,{}, {...state,baseRevision:state.revision},owner.cookie);assert.equal(paid.status,200,JSON.stringify(paid.data));
  assert.equal((await pick(L.gamesByWeek(1)[0].home)).status,200);
- assert.equal((await pick(L.gamesByWeek(1).at(-1).home)).status,200);
+ const latestPick=L.gamesByWeek(1).at(-1).home;assert.equal((await pick(latestPick)).status,200);
+ const memberPickView=await request(h.me,{entryId:id},undefined,member.cookie);assert.equal(memberPickView.data.picks[1],latestPick);assert.equal(memberPickView.data.state.picks[id][1],'HIDDEN');
+ const ownerEntry=(await request(auth.handler,'me',undefined,owner.cookie)).data.entries[0].id;
+ const ownerPickView=await request(h.me,{entryId:ownerEntry},undefined,owner.cookie);assert.equal(ownerPickView.data.state.picks[id][1],latestPick);assert.equal(ownerPickView.data.state.admin,false);
  time=L.weekDeadline(1);assert.equal((await pick(null)).data.error,'locked');assert.equal((await pick(L.gamesByWeek(1).at(-1).away)).data.error,'locked');
  assert.equal((await request(h.adminPick,{}, {entryId:id,week:1,team:L.gamesByWeek(1)[0].home},owner.cookie)).status,200);
  assert.equal((await post('role',{userId:member.data.user.id,role:'admin'},member.cookie)).status,403);
  assert.equal((await post('role',{userId:member.data.user.id,role:'admin'},owner.cookie)).status,200);
  assert.equal((await request(auth.handler,'me',undefined,member.cookie)).data.user,null);
  const admin=await post('login',{email:'player@example.test',password:pw});assert.equal(admin.status,200);
+ const adminPickView=await request(h.me,{entryId:id},undefined,admin.cookie);assert.equal(adminPickView.data.state.picks[id][1],L.gamesByWeek(1)[0].home);
  const adminMembers=await request(auth.handler,'members',undefined,admin.cookie);assert.equal(adminMembers.status,200);assert.deepEqual(adminMembers.data.entries,[]);assert.deepEqual(adminMembers.data.audit,[]);
  assert.equal((await post('role',{userId:owner.data.user.id,role:'member'},owner.cookie)).status,403);
  assert.equal((await post('reset-link',{userId:owner.data.user.id},admin.cookie)).status,403);
