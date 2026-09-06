@@ -22,7 +22,7 @@ Rob's private setup file is outside the repository at `/Users/Rob/.config/nfl-lm
 
 Use Entries to add people individually, record the current fee as paid/unpaid and remove entries. The owner alone can use the legacy spreadsheet importer. Use Members & roles to connect an entry to a registered account explicitly. An email match never automatically transfers an entry. A member's automatically created unpaid entry can be removed if an older manual entry is connected instead.
 
-The owner sees account-entry linking and the recent admin activity log. Admin accounts have a simpler Members page and do not see those owner controls; they retain member password resets and the day-to-day entries, payments, picks and results tools.
+The owner sees account-entry linking. Admin accounts have a simpler Members page and do not see that owner control; they retain member password resets and the day-to-day entries, payments, picks and results tools. The Members page does not display an admin activity history.
 
 The owner can promote/demote admins and disable/enable other accounts. These actions sign the affected user out. Admins can generate resets for members; only the owner can generate resets for admins. Neither can generate an owner reset through the website. Trusted database access is required for owner recovery. Users can change their own password by entering the existing one.
 
@@ -30,7 +30,7 @@ Every registered account has an internal UUID that is never shown as a member-fa
 
 Staff enter the admin area from the Admin control in the top header. The same position becomes Exit admin inside `/admin`. Account and sign-out controls no longer appear as a separate toolbar above page content.
 
-Admins retain result fetching/manual scores, pick overrides, new rounds and rollover/payment controls. Manage picks lists every entry, including owner/admin entries and entries that are unpaid or already eliminated. Staff can add, replace or clear a selection for any entry and week. The server accepts an authorised staff change after the normal member cut-off, records whether the deadline was overridden, and keeps bye teams and teams already used since the last reset invalid. The owner can review the resulting audit trail in Members & roles.
+Admins retain result fetching/manual scores, pick overrides, new rounds and rollover/payment controls. Manage picks lists every entry, including owner/admin entries and entries that are unpaid or already eliminated. An unpaid row has a Mark paid button which records the correct current-round or rollover payment without leaving the pick screen. Staff can then add, replace or clear a selection for any entry and week. The server accepts an authorised staff change after the normal member cut-off, records whether the deadline was overridden, and keeps bye teams and teams already used since the last reset invalid.
 
 Spreadsheet import is shown only to the owner. Admins can manage registered members and individual entries, but bulk spreadsheet import remains an owner-controlled legacy tool because imported rows do not create passwords; new members should register themselves.
 

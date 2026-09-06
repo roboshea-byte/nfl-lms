@@ -57,6 +57,7 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  const adminLateTeam=L.gamesByWeek(1).flatMap(g=>[g.home,g.away]).find(team=>L.teamGame(team,2));const adminLatePick=await request(h.adminPick,{}, {entryId:'manual-entry',week:1,team:adminLateTeam},admin.cookie);assert.equal(adminLatePick.status,200);assert.equal((await db.read()).picks['manual-entry'][1],adminLateTeam);
  assert.equal((await request(h.adminPick,{}, {entryId:'manual-entry',week:2,team:adminLateTeam},admin.cookie)).data.error,'used');
  const allTeams=[...new Set(L.GAMES.flatMap(g=>[g.home,g.away]))],byeTeam=allTeams.find(team=>!L.teamGame(team,5));assert.ok(byeTeam);assert.equal((await request(h.adminPick,{}, {entryId:'manual-entry',week:5,team:byeTeam},admin.cookie)).data.error,'bye');
+ state=(await request(h.state,{},undefined,admin.cookie)).data;state.entries.find(e=>e.id==='manual-entry').paid=true;const adminPaidEntry=await request(h.adminState,{}, {...state,baseRevision:state.revision},admin.cookie);assert.equal(adminPaidEntry.status,200);assert.equal((await db.read()).entries.find(e=>e.id==='manual-entry').paid,true);
  assert.equal((await post('name',{userId:owner.data.user.id,firstName:'Wrong',lastName:'Owner'},admin.cookie)).status,403);
  assert.equal((await post('name',{userId:stranger.data.user.id,firstName:'Only',lastName:''},admin.cookie)).status,400);
  assert.equal((await post('name',{userId:stranger.data.user.id,firstName:'Jordan',lastName:'Smith'},admin.cookie)).status,200);
