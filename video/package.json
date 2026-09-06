@@ -3,14 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "capture": "node scripts/capture-site.mjs",
     "studio": "remotion studio src/index.jsx --public-dir=public",
-    "render": "remotion render src/index.jsx AdminExplainer output/nfl-lms-admin-guide.mp4 --public-dir=public --codec=h264 --crf=18"
+    "render": "remotion render src/index.jsx AdminExplainer output/nfl-lms-admin-guide.mp4 --public-dir=public --codec=h264 --crf=18 --muted --concurrency=2 --log=error"
   },
   "dependencies": {
     "@remotion/cli": "4.0.521",
-    "@remotion/media": "4.0.521",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "remotion": "4.0.521"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.10.0"
   }
 }
