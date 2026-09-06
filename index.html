@@ -1192,6 +1192,7 @@ async function refreshRemote(){
   }catch(error){if(PLAYER_CODE && error.code==='unknown_code'){playerMe=null;playerError=error.message;render();}}
 }
 async function bootRemote(){
+  document.getElementById('nav').classList.add('hidden');
   try{if(/^https?:$/.test(location.protocol)&&await accountBoot())return;}catch{document.getElementById('main').innerHTML='<div class="card"><h2>Account service unavailable</h2><p>Please try again shortly.</p><button class="btn" onclick="location.reload()">Retry</button></div>';return;}
   if(PLAYER_CODE){document.body.classList.add('player');document.getElementById('main').innerHTML='<div class="card"><h2>Your competition</h2><p class="muted">Loading your personal link…</p></div>';}
   else if(/^https?:$/.test(location.protocol)){document.body.classList.add('ro');document.getElementById('main').innerHTML='<div class="card"><h2>Last Man Standing</h2><p class="muted">Loading standings…</p></div>';}
@@ -1211,6 +1212,7 @@ async function bootRemote(){
     }
   }
   if(accountPage==='/admin'){S.ui.view='dash';const btn=document.createElement('button');btn.dataset.v='members';btn.textContent='Members & roles';document.getElementById('nav').appendChild(btn);}
+  if(!PLAYER_CODE)document.getElementById('nav').classList.remove('hidden');
   render();if(REMOTE)setInterval(refreshRemote,45000);
 }
 window.addEventListener('beforeunload',event=>{if(REMOTE && (remoteDirty||remoteWrites)){event.preventDefault();event.returnValue='';}});
