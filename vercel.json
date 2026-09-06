@@ -29,6 +29,10 @@
     {
       "source": "/help",
       "destination": "/index.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/index.html"
     }
   ],
   "headers": [

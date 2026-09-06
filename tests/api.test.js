@@ -99,3 +99,10 @@ test('rollover payments require organiser authority, validate their shape and su
  for(const bad of [[],null,{'2':'yes'},{'19':true}]){state.entries[0].rolloverPayments=bad;assert.equal((await post(c.handlers.adminState,state,'test-admin')).body.error,'bad_state');}
  const me=await call(c.handlers.me,{code:'alice12345'});assert.deepEqual(me.body.entry.rolloverPayments,{2:true});assert.equal(me.body.entry.code,undefined);
 });
+test('admin announcements are validated, saved and included in public state',async()=>{
+ const c=setup(),state=await c.db.read();state.settings.announcement='Pay Connor or Havo before Thursday.';state.settings.announcementEnabled=true;state.settings.announcementType='payment';
+ const saved=await post(c.handlers.adminState,state,'test-admin');assert.equal(saved.status,200);assert.equal(saved.body.settings.announcementType,'payment');
+ const publicState=await call(c.handlers.state);assert.equal(publicState.body.settings.announcement,'Pay Connor or Havo before Thursday.');assert.equal(publicState.body.settings.announcementEnabled,true);
+ state.settings.announcementType='unsafe';assert.equal((await post(c.handlers.adminState,state,'test-admin')).body.error,'bad_state');
+ state.settings.announcementType='update';state.settings.announcement='x'.repeat(1001);assert.equal((await post(c.handlers.adminState,state,'test-admin')).body.error,'bad_state');
+});

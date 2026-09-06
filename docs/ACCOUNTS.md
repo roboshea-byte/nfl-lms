@@ -4,9 +4,10 @@
 
 - `/signup`: first name, last name, email and password. Both name fields are required. Sign-in is immediate; there is no confirmation email.
 - `/login`: email/password login and organiser-assisted recovery instructions.
-- `/dashboard`: the member home page, with owned entries, payment status, weekly deadline, competition overview, rules, team directory and password changes. Its member navigation is Dashboard, Picks, Results and Standings.
+- `/dashboard`: the member home page, with owned entries, payment status, weekly deadline, rules, team directory, current fixtures and password changes. Its member navigation is Dashboard, Picks, Results and Standings.
 - `/admin`: dedicated Admin home with direct cards and persistent controls for Entries & payments, Members & roles, Manage picks, Results, Settings and Overview.
 - `/help`: public searchable member guide with expandable answers for signup, payments, selections, deadlines, results, standings, rollovers, passwords and phone installation.
+- `/privacy`: public privacy information covering member names, email addresses, password storage, competition records and access.
 - `/reset-password#token=...`: one-time password reset. Links last one hour.
 
 ## Owner setup
@@ -27,7 +28,7 @@ Staff enter the admin area from the Admin control in the top header. The same po
 
 Admins retain result fetching/manual scores, pick overrides, new rounds, rollover/payment controls and import/export tools. The owner can review the resulting audit trail in Members & roles.
 
-The Admin home includes a searchable Admin guide for weekly operations and troubleshooting. It covers the complete entries, payments, roles, accounts, picks, results, rollover, rounds, settings and backup workflow. Staff can open the separate member guide from the Admin guide when helping a player.
+The Admin home includes a searchable Admin guide for weekly operations and troubleshooting. It covers the complete entries, payments, roles, accounts, picks, results, rollover, rounds, announcements, settings and backup workflow. Staff can open the separate member guide from the Admin guide when helping a player. Member announcement settings publish a highlighted shared notice for payment reminders, deadline changes, important messages or general competition updates.
 
 ## Deadlines and payments
 

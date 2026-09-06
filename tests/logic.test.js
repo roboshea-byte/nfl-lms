@@ -45,10 +45,14 @@ test('home-screen install metadata and icon files are complete',()=>{
  const current=fs.readFileSync('index.html','utf8');assert.match(current,/rel="manifest" href="\/manifest\.webmanifest"/);assert.match(current,/apple-mobile-web-app-title" content="NFL LMS"/);
  for(const [name,size] of [['app-icon-192.png',192],['app-icon-512.png',512],['apple-touch-icon.png',180],['favicon-32.png',32]]){const png=fs.readFileSync('assets/'+name);assert.equal(png.toString('ascii',1,4),'PNG');assert.equal(png.readUInt32BE(16),size);assert.equal(png.readUInt32BE(20),size);}
 });
-test('mobile navigation, refresh and searchable member/admin help stay wired',()=>{
+test('mobile navigation, refresh, help, privacy and announcements stay wired',()=>{
  const current=fs.readFileSync('index.html','utf8');
  assert.match(current,/body\.player nav\{display:grid\}/);assert.match(current,/id="refreshApp"/);assert.match(current,/function refreshApp\(/);
  assert.match(current,/<a class="brand" id="homeBrand" href="\/"/);assert.match(current,/\.refresh-app\{position:absolute/);assert.doesNotMatch(current,/\.refresh-app\{position:fixed/);
- assert.match(current,/How to use NFL LMS/);assert.match(current,/Admin how-to guide/);assert.match(current,/Connor or Havo/);assert.match(current,/function filterHelp\(/);
- const config=JSON.parse(fs.readFileSync('vercel.json','utf8'));assert.ok(config.rewrites.some(route=>route.source==='/help'&&route.destination==='/index.html'));
+  assert.match(current,/How to use NFL LMS/);assert.match(current,/Admin how-to guide/);assert.match(current,/Connor or Havo/);assert.match(current,/function filterHelp\(/);
+  assert.match(current,/function renderPrivacyPage\(/);assert.match(current,/function announcementBanner\(/);assert.match(current,/Member announcement/);
+  assert.match(current,/function renderDashboard\(r,comp\)\{return renderHome\(r,comp\);\}/);
+  assert.ok(current.indexOf('The 32 teams')<current.indexOf('${renderFixturesCard(w)}'));
+  const config=JSON.parse(fs.readFileSync('vercel.json','utf8'));assert.ok(config.rewrites.some(route=>route.source==='/help'&&route.destination==='/index.html'));
+  assert.ok(config.rewrites.some(route=>route.source==='/privacy'&&route.destination==='/index.html'));
 });

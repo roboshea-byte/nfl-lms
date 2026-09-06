@@ -6,8 +6,10 @@ test('Postgres schema, bootstrap, upserts, deletion cascade and read-back throug
  const alice=response.body.entries.find(e=>e.id==='alice');const g=L.gamesByWeek(1)[0];response=await call(handlers.pick,{method:'POST',body:{code:alice.code,week:1,team:g.home}});assert.equal(response.status,200,JSON.stringify(response.body));
  const read=await db.read();assert.equal(read.picks.alice[1],g.home);assert.equal(read.entries.find(e=>e.id==='alice').code,alice.code);
  read.entries.find(e=>e.id==='alice').rolloverPayments={2:true,5:false};
+ read.settings.announcement='Week 1 deadline changed.';read.settings.announcementEnabled=true;read.settings.announcementType='deadline';
  response=await call(handlers.adminState,{method:'POST',key:'test-admin',body:read});assert.equal(response.status,200);
  assert.deepEqual((await db.read()).entries.find(e=>e.id==='alice').rolloverPayments,{2:true,5:false});
+ assert.equal((await db.read()).settings.announcementType,'deadline');
  response=await call(handlers.adminState,{method:'POST',key:'test-admin',body:{...read,entries:read.entries.filter(e=>e.id!=='alice')}});assert.equal(response.status,200,JSON.stringify(response.body));assert.equal((await db.read()).picks.alice,undefined);
  await pool.end();
 });

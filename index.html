@@ -222,12 +222,12 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
 @media(max-width:900px){body.player .hdr-top{padding:12px;gap:12px}body.player .brand h1{font-size:25px}body.player .hdr-stats{margin-left:0;gap:6px}body.player .stat{min-width:76px;padding:6px 8px}body.player main{padding:14px}body.player .card{padding:16px}body.player .teamgrid{grid-template-columns:repeat(2,minmax(0,1fr))}body.player .card h2{flex-wrap:wrap}}
 
 .nav-icon{display:none;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.fixture-card{display:grid;grid-template-columns:minmax(0,1fr) 68px;align-items:center;gap:6px;min-height:54px;height:100%;padding:8px;border:1px solid #1b2a4a;border-radius:8px;background:rgba(8,22,52,.18);font-size:11px}
+.fixture-card{display:grid;grid-template-columns:minmax(0,1fr) 78px;align-items:center;gap:8px;min-width:0;min-height:54px;height:100%;padding:8px;border:1px solid #1b2a4a;border-radius:8px;background:rgba(8,22,52,.18);font-size:11px;overflow:hidden}
 .fixture-matchup{display:flex;align-items:center;gap:4px;min-width:0}
 .fixture-matchup .logo{width:21px;height:21px;flex:none}
 .fixture-name{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
 .fixture-at{color:var(--grey);flex:none}
-.fixture-time{width:68px;justify-self:end;text-align:right;white-space:nowrap;line-height:1.3;font-variant-numeric:tabular-nums;color:var(--grey)}
+.fixture-time{width:78px;max-width:100%;justify-self:end;text-align:right;white-space:normal;line-height:1.3;font-variant-numeric:tabular-nums;color:var(--grey);overflow-wrap:normal}
 
 @media(min-width:601px){
   nav{gap:8px;padding:8px 22px}
@@ -302,6 +302,8 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
   .logowall .logo.xl{width:46px;height:46px}
   .logowall .lw .ab{font-size:10px}
   .banner{font-size:15px;flex-wrap:wrap}
+  .fixture-card{grid-template-columns:minmax(0,1fr) minmax(82px,28%);width:100%;gap:8px}
+  .fixture-time{width:auto;min-width:0;max-width:100%}
 }
 
 .table-scroll{max-width:100%;overflow-x:auto}
@@ -337,6 +339,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .admin-nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}.admin-nav .btn{min-height:44px}.admin-intro h1{font-family:var(--font-head);font-size:clamp(26px,5vw,36px);margin:8px 0}.admin-intro .kick{color:var(--gold);text-transform:uppercase;letter-spacing:.15em;font-size:11px;font-weight:700}.admin-tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px}.admin-tool{display:flex;flex-direction:column;gap:12px;text-align:left;color:var(--white);font-family:var(--font-body);cursor:pointer;margin:0;min-width:0}.admin-tool strong{font-size:18px}.admin-tool>span{line-height:1.5;color:var(--grey)}.admin-tool .admin-tool-open{color:var(--gold);margin-top:auto;font-weight:700}.admin-tool:hover,.admin-tool:focus-visible{border-color:var(--gold);background:var(--navy-3)}@media(max-width:800px){.admin-tools{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.admin-tools{grid-template-columns:1fr}.admin-nav .btn{flex:1 1 42%;justify-content:center;font-size:12px}}
 .auth-name-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.auth-name-grid label{min-width:0}.standing-list{display:grid;gap:8px}.standing-row{display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,2fr);align-items:center;gap:14px;background:var(--deep);border:1px solid var(--line);border-radius:10px;padding:10px 12px}.standing-name{font-size:14px;min-width:0;overflow-wrap:anywhere}.standing-name .muted{font-weight:400;font-size:12px}.standing-picks{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap;min-width:0}.standing-pick,.standing-lock{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:var(--navy-2);border:1px solid #2c4680;flex:none}.standing-pick .logo{width:26px;height:26px}.standing-lock{color:var(--grey);font-size:14px}@media(max-width:600px){.auth-name-grid{grid-template-columns:1fr;gap:0}.standing-row{grid-template-columns:1fr;gap:8px}.standing-picks{justify-content:flex-start}}
 .help-hero{padding:24px;background:linear-gradient(135deg,#27488d,#172d5d 58%,#211844);border:1px solid var(--line);border-radius:16px;margin-bottom:18px}.help-hero h1{font-family:var(--font-head);font-size:clamp(32px,6vw,54px);line-height:1;margin:8px 0 12px}.help-hero p{max-width:800px;color:#e6ecff;line-height:1.6}.help-kicker{color:var(--gold);font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase}.help-quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:20px}.help-quick-step{background:rgba(6,19,48,.55);border:1px solid rgba(255,255,255,.16);border-radius:11px;padding:13px;line-height:1.45}.help-quick-step b{display:block;color:var(--gold);margin-bottom:5px}.help-search-card{position:sticky;top:10px;z-index:5}.help-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px}.help-search-row input{width:100%;min-width:0;background:var(--deep);color:var(--white);border:1px solid var(--line);border-radius:9px;padding:11px 13px;font-size:16px}.help-filters{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.help-filter{background:var(--deep);color:var(--grey);border:1px solid var(--line);border-radius:999px;padding:7px 11px;cursor:pointer;font:600 12px var(--font-body)}.help-filter.active{background:var(--gold);border-color:var(--gold);color:#101a33}.help-count{display:block;margin-top:10px;color:var(--grey)}.help-list{display:grid;gap:9px}.faq-item{margin:0;background:var(--deep);border:1px solid var(--line);border-radius:11px;overflow:hidden}.faq-item:hover{border-color:#5274bd}.faq-item summary{display:flex;align-items:center;gap:12px;padding:15px 16px;cursor:pointer;font-weight:700;list-style:none}.faq-item summary::-webkit-details-marker{display:none}.faq-item summary:after{content:'+';margin-left:auto;color:var(--gold);font:24px/1 var(--font-head)}.faq-item[open] summary:after{content:'−'}.faq-category{flex:none;color:var(--gold);font-size:9px;letter-spacing:.12em;text-transform:uppercase;background:rgba(255,199,51,.1);border-radius:999px;padding:5px 7px}.faq-answer{padding:0 16px 16px;color:#e6ecff;line-height:1.62;border-top:1px solid rgba(58,90,156,.5)}.faq-answer p{margin:12px 0 0}.faq-answer ol,.faq-answer ul{margin:10px 0 0;padding-left:22px}.faq-answer li{margin:6px 0}.help-callout{border-left:4px solid var(--gold);background:rgba(255,199,51,.08);padding:10px 12px;margin-top:12px;border-radius:0 8px 8px 0}.help-empty{text-align:center;color:var(--grey);padding:26px}.help-footer-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.help-footer-actions a{text-decoration:none}@media(max-width:900px){.help-quick{grid-template-columns:repeat(2,minmax(0,1fr))}.help-search-card{position:static}}@media(max-width:600px){body.player nav{display:grid}.help-hero{padding:18px 16px}.help-quick{grid-template-columns:1fr}.help-search-row{grid-template-columns:1fr 1fr}.help-search-row input{grid-column:1/-1}.faq-item summary{position:relative;align-items:flex-start;flex-wrap:wrap;padding:13px 42px 13px 13px}.faq-item summary:after{position:absolute;right:14px}.faq-answer{padding:0 13px 14px}.help-filter{flex:1 1 auto}.help-search-card .btn{justify-content:center}}
+.legal-links{text-align:center;color:var(--grey);font-size:11px;padding:0 20px 24px}.legal-links a{color:var(--grey)}.legal-links a:hover,.legal-links a:focus-visible{color:var(--gold)}
+.announcement{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:12px;padding:14px 18px;margin-bottom:18px;border:1px solid #4e70b8;border-left:5px solid #78a6ff;border-radius:12px;background:linear-gradient(90deg,rgba(31,62,124,.96),rgba(23,47,96,.96));box-shadow:0 10px 25px rgba(0,0,0,.14)}.announcement-label{color:#dce8ff;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;padding-top:2px}.announcement-message{color:#fff;font-weight:650;line-height:1.5;white-space:pre-line;overflow-wrap:anywhere}.announcement.payment{border-left-color:var(--green)}.announcement.deadline{border-left-color:var(--gold)}.announcement.important{border-left-color:var(--red);background:linear-gradient(90deg,rgba(113,17,35,.96),rgba(54,27,66,.96))}.announcement-preview{margin-top:14px}.privacy-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.privacy-grid>section{background:var(--deep);border:1px solid var(--line);border-radius:11px;padding:16px}.privacy-grid h2{margin-top:0}.privacy-grid p{color:#e6ecff;line-height:1.6}.privacy-grid ul{color:#e6ecff;line-height:1.6;padding-left:20px}@media(max-width:650px){.announcement{grid-template-columns:1fr;gap:5px;padding:13px 14px}.privacy-grid{grid-template-columns:1fr}}
 .brand{width:max-content;max-width:calc(100% - 42px);text-decoration:none;color:inherit;border-radius:7px}.brand:hover h1{color:#fff}.brand:focus-visible{outline:2px solid var(--gold);outline-offset:5px}.hdr-top{position:relative;padding-right:62px}.refresh-app{position:absolute;z-index:21;right:12px;top:10px;display:flex;align-items:center;justify-content:center;width:34px;height:34px;padding:7px;border:1px solid rgba(166,181,214,.32);border-radius:9px;background:rgba(8,24,58,.28);color:var(--grey);opacity:.72;cursor:pointer}.refresh-app:hover,.refresh-app:focus-visible{opacity:1;color:#fff;border-color:var(--line);background:rgba(36,66,127,.75)}.refresh-app svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}.refresh-app.refreshing svg{animation:refresh-spin .8s linear infinite}@keyframes refresh-spin{to{transform:rotate(360deg)}}@media(max-width:900px){body .hdr-top{padding-right:54px}}@media(max-width:600px){.refresh-app{right:9px;top:9px;width:32px;height:32px;padding:7px;opacity:.62}}
 </style>
 </head>
@@ -359,6 +363,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 </header>
 <main id="main"></main>
 <footer id="foot">Last Man Standing. Data is saved in this browser. Use Settings &rarr; Backup to export a copy.</footer>
+<div class="legal-links"><a href="/privacy">Privacy</a></div>
 <div id="modalRoot"></div>
 <div id="toastRoot"></div>
 
@@ -498,7 +503,7 @@ const STORE_KEY = 'lms-nfl-2026-v1';
 function defaultState(){
   return {
     v:1,
-    settings:{ fee:20, tieRule:'loss', wipeoutResetTeams:true, missedPick:'eliminate', title:'Last Man Standing' },
+    settings:{ fee:20, tieRule:'loss', wipeoutResetTeams:true, missedPick:'eliminate', title:'Last Man Standing', announcement:'', announcementEnabled:false, announcementType:'update' },
     entries:[],          // {id,name,label,email,paid,notes,created}
     picks:{},            // picks[entryId][week] = abbr
     results:{},          // results[gameId] = {hs,as,final}
@@ -620,6 +625,7 @@ function memberHelpItems(){
     ['Results and standings','Where can I see scores and results?',`<p>Open <strong>Results</strong> to see that week’s fixtures, scores and final results. Results appear after an administrator fetches or enters them.</p><p>A win keeps the entry in. A loss eliminates it. Under the current rules, a tie also counts as a loss.</p>`],
     ['Results and standings','How do I see who is still in?',`<p>Open <strong>Standings</strong>. Every active person appears on a separate line with the badges of the teams they have picked so far. The page also separates entries awaiting payment and entries that have been eliminated.</p>`],
     ['Results and standings','What do Active, Inactive and Eliminated mean?',`<ul><li><strong>Active:</strong> paid and still eligible in the current round.</li><li><strong>Inactive:</strong> not paid for the current round or rollover, so no pick can be submitted.</li><li><strong>Eliminated:</strong> knocked out by a losing, tied or missed pick under the competition rules.</li></ul>`],
+    ['Results and standings','Where will I see competition announcements?',`<p>Payment reminders, deadline changes and competition updates appear in a highlighted banner near the top of member pages. Refresh the app if an administrator tells you a new notice has been posted.</p>`],
     ['Rollover','What happens in a rollover?',`<p>If every remaining player loses in the same week, the competition rolls over. Everyone comes back in, including people eliminated earlier, and all 32 teams become available again.</p><p>Every entry must pay ${fee} again. Contact Connor or Havo. Anyone not marked paid for the rollover stays eliminated and cannot submit the next pick.</p>`],
     ['Account and phone','How do I change my password or sign out?',`<p>On the Dashboard, use <strong>Change password</strong> in My account. Enter your current password and a new password of at least seven characters.</p><p>Use <strong>Sign out</strong> at the top of the app when you have finished, especially on a shared device.</p>`],
     ['Account and phone','What if I forget my password?',`<p>Contact an administrator. They can create a private reset link that works once and expires after one hour. Open the link, set a new password of at least seven characters, then sign in normally.</p>`],
@@ -656,6 +662,7 @@ function adminHelpItems(){
     ['Rollover and rounds','What is the admin rollover checklist?',`<ol><li>Verify every game in the week is final and correct.</li><li>Confirm that every remaining entry lost.</li><li>Check the Dashboard rollover notice.</li><li>Collect the new ${fee} fee from every returning entry through Connor or Havo.</li><li>Mark each repayment in Entries & payments.</li><li>Remind active entries that all 32 teams are available again and announce the next deadline.</li></ol>`],
     ['Rollover and rounds','How do I start a new round?',`<p>When a round has a winner before Week 18, use the new-round control shown in the competition overview. Confirm the starting week and review entries, fees and settings.</p><p>A new round resets team use and creates a separate competition run.</p>`],
     ['Settings and safety','Where do I change the entry fee and rules?',`<p>Open <strong>Settings</strong>. Review the entry fee, tie rule, missed-pick rule and round controls. Changes affect competition calculations, so make them only when agreed and before they affect settled play.</p>`],
+    ['Settings and safety','How do I post or remove a member announcement?',`<p>Open <strong>Settings</strong> and use Member announcement. Write the message, choose Competition update, Payment reminder, Deadline update or Important update, then turn on <strong>Show to members</strong>.</p><p>The preview shows the banner members will receive. To remove it, turn off Show to members. Keep announcements short and replace old information promptly.</p>`],
     ['Settings and safety','How do I back up or export the competition?',`<p>Use the backup and export controls in Settings and Entries. Keep a current backup before removing entries, restoring data or making a major correction.</p><p>The picks CSV is useful for a readable record; the full backup is the safer recovery copy.</p>`],
     ['Troubleshooting','A paid member still appears inactive. What should I check?',`<ol><li>Confirm you marked the correct entry rather than another entry with the same name.</li><li>After a rollover, confirm you marked the new rollover payment, not only the original fee.</li><li>Check whether the entry was eliminated for another reason.</li><li>Refresh the admin page and ask the member to refresh their Dashboard.</li></ol>`],
     ['Troubleshooting','A member cannot make a pick. What should I check?',`<ol><li>Is the correct entry marked paid for the current round or rollover?</li><li>Is the entry still active?</li><li>Has the deadline passed?</li><li>Has the team already been used, got a bye or finished its game?</li><li>Are they viewing the correct entry and week?</li></ol><p>If needed, use Manage picks to enter a confirmed selection for them.</p>`],
@@ -697,12 +704,31 @@ function renderMemberHelpPage(){
   document.getElementById('main').innerHTML=renderHelpGuide({kind:'Member',title:'How to use NFL LMS',intro:'Everything you need to join, pay, make or change a selection, follow the competition and use the app on your phone.',quick:[['Create your account','Use your full name, email and a password of at least seven characters.'],['Pay your entry','Contact Connor or Havo, then wait for your entry to show Active.'],['Pick and confirm','Choose one team before the weekly deadline and press Confirm pick.'],['Follow the round','Use Results and Standings to see scores, status and previous selections.']],items:memberHelpItems(),backHref:accountUser?'/dashboard':'/',backLabel:accountUser?'Back to my Dashboard':'Back to Dashboard'});
   const foot=document.getElementById('foot');if(foot)foot.textContent='NFL LMS member guide. Contact Connor or Havo if you need help.';
 }
+function renderPrivacyPage(){
+  document.body.classList.add('ro');document.body.classList.remove('player');document.getElementById('nav').classList.add('hidden');
+  const r=currentRound(),comp=computeRound(r);renderHeader(r,comp);
+  document.getElementById('main').innerHTML=`<div class="help-hero"><div class="help-kicker">NFL LMS · Privacy</div><h1>Your information</h1><p>This page explains the personal information used to run the competition and how it is handled.</p><div class="help-footer-actions"><a class="btn gold" href="${accountUser?'/dashboard':'/'}">Back to Dashboard</a></div></div>
+    <div class="card"><div class="privacy-grid">
+      <section><h2>What is stored</h2><p>When you register, NFL LMS stores your full name and email address. It also stores your account role, payment status, competition entries, weekly picks and results connected with those entries.</p><p>Your password is converted into a secure password hash. The original password is not stored or visible to the organiser.</p></section>
+      <section><h2>Why it is needed</h2><p>Your name identifies you in the competition and standings. Your email address is used to identify your account when you sign in and to help an administrator connect or recover the correct account.</p><p>The app does not take online payments and does not store card or bank details.</p></section>
+      <section><h2>Who can see it</h2><p>Members can see competition names, payment or playing status, and team picks once those picks are due to be revealed. Email addresses are available only to the owner and administrators for account management and are not shown in public standings.</p><p>The service providers that host the app and its database process the information needed to keep it running.</p></section>
+      <section><h2>Your choices</h2><p>Contact the organiser if your name or email address needs correcting, or if you want to ask about removal of your account. Some competition records may be retained while the competition is being settled or for its administration.</p><p>No confirmation or marketing emails are sent by the app. Last updated 6 September 2026.</p></section>
+    </div></div>`;
+  const foot=document.getElementById('foot');if(foot)foot.textContent='NFL LMS privacy information.';
+}
+function announcementBanner(){
+  const message=String(S.settings.announcement||'').trim();if(!S.settings.announcementEnabled||!message)return '';
+  const types={update:'Competition update',payment:'Payment reminder',deadline:'Deadline update',important:'Important update'};
+  const type=Object.hasOwn(types,S.settings.announcementType)?S.settings.announcementType:'update';
+  return `<aside class="announcement ${type}" role="status"><div class="announcement-label">${types[type]}</div><div class="announcement-message">${esc(message)}</div></aside>`;
+}
 function renderAdminHelp(){return renderHelpGuide({kind:'Admin',title:'Admin how-to guide',intro:'A complete guide to running entries, payments, accounts, picks, results, rollovers and competition settings.',quick:[['Check entries','Review new sign-ups, names, extra entries and payment status.'],['Check picks','Monitor outstanding selections before the weekly deadline.'],['Update results','Fetch or enter scores, verify them, then mark completed games final.'],['Handle outcomes','Check eliminations, collect rollover payments and announce the next deadline.']],items:adminHelpItems(),backHref:'/admin',backLabel:'Back to Admin home'});}
 
 /* ===================== RENDER ===================== */
 function render(){
   if(accountPage && ['/login','/signup','/reset-password'].includes(accountPage))return authForm();
   if(accountPage==='/help')return renderMemberHelpPage();
+  if(accountPage==='/privacy')return renderPrivacyPage();
   if(S.ui.view==='members' && ADMIN)return renderMembers();
   if(PLAYER_CODE) return renderPlayer();
   const r=currentRound(); const comp=computeRound(r);
@@ -717,7 +743,7 @@ function render(){
   const memberViews={dash:renderDashboard,picks:renderPicksPage,results:renderResults,standings:renderStandings};
   const adminViews={adminhome:renderAdminHome,adminhelp:renderAdminHelp,dash:renderDash,picks:renderPicks,results:renderResults,entries:renderEntries,settings:renderSettings};
   const views=ADMIN?adminViews:memberViews;
-  main.innerHTML=accountBar()+(S.ui.view==='dash'?deadlineBanner(defaultWeek()):'')+(views[S.ui.view]||views.dash)(r,comp);
+  main.innerHTML=accountBar()+(!ADMIN?announcementBanner():'')+(S.ui.view==='dash'?deadlineBanner(defaultWeek()):'')+(views[S.ui.view]||views.dash)(r,comp);
   const foot=document.getElementById('foot'); if(foot) foot.innerHTML = SHARED ? (ADMIN?(HOSTED?'Admin mode. Changes are saved in this browser until you press Publish.':'Admin mode. Changes are saved in this browser; press Download and upload the new index.html to update the shared page.'):'Live standings. Updated by the organiser after each round of games.') : 'Last Man Standing. Data is saved in this browser. Use Settings &rarr; Backup to export a copy.';
   if(REMOTE && foot) foot.textContent=ADMIN?'Admin mode. Changes are saved to the shared competition.':'Live standings. Refreshes every 45 seconds.';
   if(S.ui.view==='entries') wireDrop();
@@ -736,13 +762,26 @@ function renderHeader(r,comp){
 }
 
 /* ---- Dashboard ---- */
+function renderFixturesCard(w){
+  const games=gamesByWeek(w);
+  return `<div class="card">
+    <h2>Week ${w} fixtures <span class="tag">${games.length} games · UK time</span></h2>
+    <div class="grid three" style="gap:6px">
+    ${games.map(g=>{const result=S.results[g.id]; const fin=result?.final; const hw=fin&&+result.hs>+result.as,aw=fin&&+result.as>+result.hs;
+      return `<div class="fixture-card small"><div class="fixture-matchup">
+        ${logoImg(g.away)}<span class="fixture-name" style="${aw?'color:var(--green)':''}">${TEAMS[g.away].short}</span>
+        <span class="fixture-at">${fin?`${result.as}-${result.hs}`:'@'}</span>
+        <span class="fixture-name" style="${hw?'color:var(--green)':''}">${TEAMS[g.home].short}</span>${logoImg(g.home)}
+        </div><time class="fixture-time" datetime="${esc(g.date)}">${fin?'FINAL':fmtDate(g.date).replace(', ','<br>')}</time></div>`;}).join('')}
+    </div>
+  </div>`;
+}
 function renderHome(r,comp){
   const pot=prizePot(r,comp);
   const w=defaultWeek();
   const first=GAMES.slice().sort((a,b)=>a.date.localeCompare(b.date))[0];
-  const wk1=gamesByWeek(1); const wkCur=gamesByWeek(w);
+  const wkCur=gamesByWeek(w);
   const last=GAMES.slice().sort((a,b)=>b.date.localeCompare(a.date))[0];
-  const aliveList=S.entries.filter(e=>comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
   const winnerBanner = comp.complete&&comp.winnerIds ? `<div class="banner gold">🏆 Round ${r.n} ${comp.winnerIds.length===1?'winner':'shared by'}: ${esc(comp.winnerIds.map(entryName).join(', '))} - ${gbp(pot)}</div>` : '';
   return `${winnerBanner}
   <div class="homehero"><div class="heroflag"></div>
@@ -765,6 +804,7 @@ function renderHome(r,comp){
   <div class="card"><h2>The 32 teams <span class="tag">each team once until a rollover or new round</span></h2>
     <div class="logowall">${TEAM_LIST.map(t=>`<div class="lw">${logoImg(t.abbr,'logo xl')}<div class="ab">${esc(t.short)}</div></div>`).join('')}</div>
   </div>
+  ${renderFixturesCard(w)}
   <div class="grid two">
     <div class="card" style="margin:0"><h2>How it works</h2>
       <ol class="rules">
@@ -777,22 +817,17 @@ function renderHome(r,comp){
         <li><div><b>Winner takes the pot.</b> The last player standing wins ${pot?gbp(pot):'the full pot'}. If more than one player is still in after Week 18, the pot is shared equally.</div></li>
       </ol>
     </div>
-    <div>
-      <div class="card" style="margin:0 0 18px"><h2>Key dates <span class="tag">UK time</span></h2>
+    <div class="card" style="margin:0"><h2>Key dates <span class="tag">UK time</span></h2>
         <div class="datebox">
           <div class="date"><div class="l">Season kick-off</div><div class="d">${fmtDate(first.date)}</div><div class="small muted">${TEAMS[first.away].short} @ ${TEAMS[first.home].short}</div></div>
           <div class="date"><div class="l">Week ${w} first game</div><div class="d">${wkCur.length?fmtDate(wkCur[0].date):'-'}</div><div class="small muted">Picks close one hour earlier</div></div>
           <div class="date"><div class="l">Final week</div><div class="d">${new Date(last.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short',year:'numeric',timeZone:'Europe/London'}).replace(',','')}</div><div class="small muted">Week 18</div></div>
         </div>
-      </div>
-      <div class="card" style="margin:0"><h2>Still standing <span class="tag">${aliveList.length} of ${S.entries.length}</span></h2>
-        ${aliveList.length?`<div class="avatars">${aliveList.map(e=>{const vp=visiblePick(e.id,w); const p=vp==='HIDDEN'?null:vp; return `<span class="av">${p?logoImg(p):`<span class="fallback" style="background:#3a4a6a;width:22px;height:22px">${vp?'🔒':'?'}</span>`} ${esc(e.name)}${e.label?` <span class="muted">${esc(e.label)}</span>`:''}</span>`;}).join('')}</div>`:'<div class="empty">No entries yet</div>'}
-      </div>
     </div>
   </div>`;
 }
 
-function renderDashboard(r,comp){return renderHome(r,comp)+renderDash(r,comp);}
+function renderDashboard(r,comp){return renderHome(r,comp);}
 
 /* ---- Competition overview ---- */
 function renderDash(r,comp){
@@ -818,7 +853,6 @@ function renderDash(r,comp){
     if(ev.type==='winner') return `<li><span class="pill win">WINNER</span> <b>Wk ${ev.week}</b> ${esc(entryName(ev.ids[0]))} takes the pot</li>`;
     if(ev.type==='split') return `<li><span class="pill win">SPLIT</span> <b>Wk ${ev.week}</b> Season over, pot shared by ${ev.ids.length}</li>`;
   }).join('');
-  const games=gamesByWeek(w);
   const pickCounts={}; aliveList.forEach(e=>{const p=visiblePick(e.id,w); if(p&&p!=='HIDDEN') pickCounts[p]=(pickCounts[p]||0)+1;});
   const popular=Object.entries(pickCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
 
@@ -858,24 +892,24 @@ function renderDash(r,comp){
       ${feed? `<ul class="feed">${feed}</ul>` : '<div class="empty">Nothing has happened yet. Once results are in, eliminations show here.</div>'}
     </div>
   </div>
-  <div class="card" style="margin-top:18px">
-    <h2>Week ${w} fixtures <span class="tag">${games.length} games · UK time</span></h2>
-    <div class="grid three" style="gap:6px">
-    ${games.map(g=>{const r=S.results[g.id]; const fin=r?.final; const hw=fin&&+r.hs>+r.as, aw=fin&&+r.as>+r.hs;
-      return `<div class="fixture-card small"><div class="fixture-matchup">
-        ${logoImg(g.away)}<span class="fixture-name" style="${aw?'color:var(--green)':''}">${TEAMS[g.away].short}</span>
-        <span class="fixture-at">${fin?`${r.as}-${r.hs}`:'@'}</span>
-        <span class="fixture-name" style="${hw?'color:var(--green)':''}">${TEAMS[g.home].short}</span>${logoImg(g.home)}
-        </div><time class="fixture-time" datetime="${esc(g.date)}">${fin?'FINAL':fmtDate(g.date).replace(', ','<br>')}</time></div>`;}).join('')}
-    </div>
-  </div>`;
+  ${renderFixturesCard(w)}`;
 }
 
 function renderStandings(r,comp){
   const w=defaultWeek();
+  const pot=prizePot(r,comp);
   const aliveList=S.entries.filter(e=>comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
   const pendingList=S.entries.filter(e=>!entryPaid(e,r,comp)).sort((a,b)=>a.name.localeCompare(b.name));
   const outList=S.entries.filter(e=>!comp.alive.has(e.id)&&!pendingList.includes(e)).sort((a,b)=>a.name.localeCompare(b.name));
+  const missing=aliveList.filter(e=>!S.picks[e.id]?.[w]&&!weekSettled(w)&&isAliveForWeek(comp,w,e.id));
+  const pickCounts={};aliveList.forEach(e=>{const p=visiblePick(e.id,w);if(p&&p!=='HIDDEN')pickCounts[p]=(pickCounts[p]||0)+1;});
+  const popular=Object.entries(pickCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const feed=comp.events.slice().reverse().slice(0,25).map(ev=>{
+    if(ev.type==='out')return `<li><span class="pill out">OUT</span> <b>Wk ${ev.week}</b> ${esc(entryName(ev.id))} ${ev.pick?logoImg(ev.pick):''} <span class="muted">${esc(ev.reason)}</span></li>`;
+    if(ev.type==='wipeout')return `<li><span class="pill pending">ROLLOVER</span> <b>Wk ${ev.week}</b> All ${ev.count} remaining players lost - a new entry fee is required and all teams are available again</li>`;
+    if(ev.type==='winner')return `<li><span class="pill win">WINNER</span> <b>Wk ${ev.week}</b> ${esc(entryName(ev.ids[0]))} takes the pot</li>`;
+    if(ev.type==='split')return `<li><span class="pill win">SPLIT</span> <b>Wk ${ev.week}</b> Season over, pot shared by ${ev.ids.length}</li>`;
+  }).join('');
   const simpleList=(entries,cls='')=>entries.length?`<div class="avatars">${entries.map(e=>`<span class="av ${cls}">${esc(e.name)}${e.label?` <span class="muted">${esc(e.label)}</span>`:''}</span>`).join('')}</div>`:'<div class="empty">Nobody in this group.</div>';
   const activeList=aliveList.length?`<div class="standing-list">${aliveList.map(e=>{
     const picks=[];
@@ -886,11 +920,16 @@ function renderStandings(r,comp){
     }
     return `<div class="standing-row"><div class="standing-name"><strong>${esc(e.name)}</strong>${e.label?` <span class="muted">${esc(e.label)}</span>`:''}</div><div class="standing-picks" aria-label="Teams picked by ${esc(e.name)}">${picks.join('')||'<span class="muted small">No picks yet</span>'}</div></div>`;
   }).join('')}</div>`:'<div class="empty">Nobody in this group.</div>';
-  return `<div class="card"><h1 style="font-family:var(--font-head);margin-top:0">Standings</h1><p class="muted">Round ${r.n}. Current Week ${w} picks stay hidden until kick-off.</p>
+  return `<div class="hero">
+    <div class="bigpot"><div class="lbl">Round ${r.n} prize pot</div><div class="amt">${gbp(pot)}</div><div class="muted small">Confirmed entry and rollover fees &middot; ${S.entries.filter(e=>entryPaid(e,r,comp)).length} paid, ${S.entries.filter(e=>!entryPaid(e,r,comp)).length} unpaid</div><div style="margin-top:16px"><button class="btn" onclick="setView('picks')">Picks and history</button></div></div>
+    <div class="card" style="margin:0"><h2>Week ${w} status <span class="tag">${weekSettled(w)?'Settled':weekHasResults(w)?'In progress':'Upcoming'}</span></h2><div class="grid two" style="gap:10px"><div><div class="muted small">Still in</div><div style="font-family:var(--font-head);font-size:34px;color:var(--green)">${comp.alive.size}</div></div><div><div class="muted small">Picks outstanding</div><div style="font-family:var(--font-head);font-size:34px;color:${missing.length?'var(--gold)':'var(--green)'}">${missing.length}</div></div></div>${missing.length?`<div class="small muted" style="margin-top:8px">Waiting on: ${missing.slice(0,12).map(e=>esc(e.name)).join(', ')}${missing.length>12?` +${missing.length-12} more`:''}</div>`:''}<div style="margin-top:12px"><div class="muted small" style="margin-bottom:6px">Most picked this week</div>${popular.length?popular.map(([t,c])=>`<span class="av">${logoImg(t)} ${TEAMS[t].short} <b>${c}</b></span>`).join(' '):'<span class="muted small">No picks yet</span>'}</div></div>
+  </div>
+  <div class="card" style="margin-top:18px"><h1 style="font-family:var(--font-head);margin-top:0">Standings</h1><p class="muted">Round ${r.n}. Current Week ${w} picks stay hidden until kick-off.</p>
     <h2>Still standing <span class="tag">${aliveList.length}</span></h2>${activeList}
     ${pendingList.length?`<h2 style="margin-top:22px">Awaiting payment <span class="tag">${pendingList.length}</span></h2>${simpleList(pendingList)}`:''}
     <h2 style="margin-top:22px">Eliminated <span class="tag">${outList.length}</span></h2>${simpleList(outList,'out')}
-  </div>`;
+  </div>
+  <div class="card"><h2>Live feed</h2>${feed?`<ul class="feed">${feed}</ul>`:'<div class="empty">Nothing has happened yet. Once results are in, eliminations show here.</div>'}</div>`;
 }
 
 /* ---- Picks ---- */
@@ -1185,7 +1224,12 @@ function exportEntriesCSV(){ const lines=[['Name','Entry','Email','Paid'].join('
 /* ---- Settings ---- */
 function renderSettings(r,comp){
   const s=S.settings;
-  return `<div class="grid two">
+  return `<div class="card"><h2>Member announcement</h2><p class="muted">Show one shared message across member pages for payment reminders, deadline changes or competition news.</p>
+    <label class="f" style="display:block;margin-bottom:12px">Message<textarea maxlength="1000" rows="3" placeholder="Write the update members need to see…" onchange="setSetting('announcement',this.value)">${esc(s.announcement||'')}</textarea></label>
+    <div class="row"><label class="f">Type<select onchange="setSetting('announcementType',this.value)"><option value="update" ${s.announcementType==='update'?'selected':''}>Competition update</option><option value="payment" ${s.announcementType==='payment'?'selected':''}>Payment reminder</option><option value="deadline" ${s.announcementType==='deadline'?'selected':''}>Deadline update</option><option value="important" ${s.announcementType==='important'?'selected':''}>Important update</option></select></label><label class="f" style="display:flex;align-items:center;gap:9px"><input type="checkbox" ${s.announcementEnabled?'checked':''} onchange="setSetting('announcementEnabled',this.checked)"> Show to members</label></div>
+    <div class="announcement-preview">${announcementBanner()||'<div class="empty">The announcement is currently hidden. Add a message and turn on “Show to members” to publish it.</div>'}</div>
+  </div>
+  <div class="grid two">
   <div class="card" style="margin:0"><h2>Competition rules</h2>
     <div class="row" style="margin-bottom:12px"><label class="f">Entry fee (£)<input type="number" min="0" step="1" value="${s.fee}" onchange="setSetting('fee',+this.value)"></label></div>
     <div class="row" style="margin-bottom:12px"><label class="f">Tied game<select onchange="setSetting('tieRule',this.value)"><option value="loss" ${s.tieRule==='loss'?'selected':''}>Tie = eliminated (only a win survives)</option><option value="survive" ${s.tieRule==='survive'?'selected':''}>Tie = survive</option></select></label></div>
@@ -1355,7 +1399,7 @@ async function refreshRemote(){
 }
 async function bootRemote(){
   document.getElementById('nav').classList.add('hidden');
-  try{if(/^https?:$/.test(location.protocol)&&await accountBoot())return;}catch{document.getElementById('main').innerHTML='<div class="card"><h2>Account service unavailable</h2><p>Please try again shortly.</p><button class="btn" onclick="location.reload()">Retry</button></div>';return;}
+  try{if(/^https?:$/.test(location.protocol)&&await accountBoot())return;}catch{if(accountPage==='/privacy'){renderPrivacyPage();return;}document.getElementById('main').innerHTML='<div class="card"><h2>Account service unavailable</h2><p>Please try again shortly.</p><button class="btn" onclick="location.reload()">Retry</button></div>';return;}
   if(PLAYER_CODE){document.body.classList.add('player');document.getElementById('main').innerHTML='<div class="card"><h2>Your competition</h2><p class="muted">Loading your personal link…</p></div>';}
   else if(/^https?:$/.test(location.protocol)){document.body.classList.add('ro');document.getElementById('main').innerHTML='<div class="card"><h2>Last Man Standing</h2><p class="muted">Loading standings…</p></div>';}
   if(/^https?:$/.test(location.protocol)){
@@ -1409,7 +1453,7 @@ function renderPlayer(){
   const usedAll=usedTeams(e.id,r,comp,null);
   const accountSummary=`<div class="card"><h2>Hi ${esc(e.name)} ${playerStatus(comp,e)}</h2><p class="pill ${entryPaid(e,r,comp)?'alive':'pending'}">${entryPaid(e,r,comp)?'Active (paid)':'Inactive (not paid)'} · Round ${r.n}${comp.resetWeek>r.startWeek?' · Rollover':''}</p>${e.label?`<p class="muted">${esc(e.label)}</p>`:''}<p>Current pot <b style="color:var(--gold)">${gbp(prizePot(r,comp))}</b></p><div class="small muted">Already used since the last reset</div><div class="avatars" style="margin-top:8px">${Object.keys(usedAll).map(t=>logoImg(t)).join('')||'<span class="muted small">No teams used yet.</span>'}</div></div>`;
   const pages={dash:()=>memberTools()+deadlineBanner(first)+accountSummary+renderDashboard(r,comp),picks:()=>renderMemberPicks(e,r,comp),results:()=>renderResults(r,comp),standings:()=>renderStandings(r,comp)};
-  main.innerHTML=pages[S.ui.view]();updateCountdown();
+  main.innerHTML=announcementBanner()+pages[S.ui.view]();updateCountdown();
 }
 function updateCountdown(){const el=document.getElementById('playerCountdown');if(!el||!playerMe)return;const w=S.ui.week,p=playerMe.picks[w],time=L.weekDeadline(w);let minutes=Math.max(0,Math.ceil((time-serverNow())/60000));el.textContent=minutes?`Locks in ${Math.floor(minutes/1440)}d ${Math.floor(minutes%1440/60)}h ${minutes%60}m`:'Pick deadline has passed.';}
 function selectPlayerTeam(team){playerSelected=team;renderPlayer();document.getElementById('confirmPlayerPick')?.scrollIntoView({behavior:'smooth',block:'center'});}
@@ -1426,7 +1470,7 @@ setInterval(()=>{if(!PLAYER_CODE||!playerMe)return;const boundary=String(playerL
 document.getElementById('nav').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) setView(b.dataset.v); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 /* ACCOUNT:START */
-let accountUser=null,accountEntries=[],accountPage=['/login','/signup','/dashboard','/admin','/reset-password','/help'].includes(location.pathname)?location.pathname:null;
+let accountUser=null,accountEntries=[],accountPage=['/login','/signup','/dashboard','/admin','/reset-password','/help','/privacy'].includes(location.pathname)?location.pathname:null;
 const accountCall=(action,body)=>apiRequest('/api/account?action='+action,body);
 function accountBar(){if(location.protocol==='file:')return '';if(accountPage==='/admin')return adminNavigation();return ['/login','/signup','/reset-password'].includes(accountPage)?'<div class="row account-bar"><a class="btn" href="/">Dashboard</a></div>':'';}
 const adminSections=[['adminhome','Admin home'],['entries','Entries & payments'],['members','Members & roles'],['picks','Manage picks'],['results','Results'],['settings','Settings'],['dash','Overview'],['adminhelp','Admin guide']];
