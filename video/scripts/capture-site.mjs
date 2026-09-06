@@ -88,8 +88,7 @@ try {
   await member.click('button[type="submit"]');
   await waitForPath(member, '/dashboard');
   await shot(member, '03-member-dashboard.png');
-  await member.goto(`${base}/account`, {waitUntil: 'networkidle0'});
-  await clickButton(member, 'Add another entry');
+  await clickButton(member, 'Add an entry');
   await shot(member, '04-member-account.png');
 
   // Record the owner assigning admin access using the real controls.
@@ -111,7 +110,7 @@ try {
   await owner.evaluate(() => setView('entries'));
   await wait(900);
   await shot(owner, '08-entries-unpaid.png');
-  for (const name of ['Alex Morgan 1', 'Rob Admin 1']) {
+  for (const name of ['Alex Morgan 1']) {
     const clicked = await owner.evaluate((entryNameText) => {
       const row = [...document.querySelectorAll('.entries-table tbody tr')].find((node) =>
         node.textContent.replace(/\s+/g, ' ').includes(entryNameText),

@@ -33,7 +33,7 @@ test('rollover excludes unpaid players, retains prior fees and cannot award an i
 test('tie settings, season split, and new round reset',()=>{
  const S=defaults(),g=L.gamesByWeek(1)[0];S.picks={alice:{1:g.home},bob:{1:g.away}};S.results[g.id]={hs:10,as:10,final:true};assert.equal(L.computeRound(S).alive.has('alice'),false);S.settings.tieRule='survive';assert.equal(L.computeRound(S).alive.has('alice'),true);
  S.settings.missedPick='survive';for(let w=1;w<=18;w++)settle(S,w);S.picks={};assert.equal(L.computeRound(S).winnerIds.length,3);
- S.rounds.push({n:2,startWeek:2,endWeek:null,winnerIds:null});S.results={};S.picks={alice:{1:g.home}};assert.deepEqual(L.usedTeams(S,'alice',S.rounds[1],L.computeRound(S),2),{});
+ S.rounds.push({n:2,startWeek:2,endWeek:null,winnerIds:null});S.results={};S.picks={alice:{1:g.home}};assert.equal(L.computeRound(S).alive.size,0);S.entries.push({id:'round2',name:'Round Two',paid:true,round:2,rolloverPayments:{}});assert.deepEqual([...L.computeRound(S).alive],['round2']);assert.deepEqual(L.usedTeams(S,'alice',S.rounds[1],L.computeRound(S),2),{});
 });
 test('original stylesheet retained except removed body zoom; committed HTML has inline shared sources',()=>{
  const current=fs.readFileSync('index.html','utf8');const stylesheet=current.match(/<style>([\s\S]*?)<\/style>/)[1];assert.ok(!/\bzoom\s*:/.test(stylesheet));const css=stylesheet.replace('body{background:', 'body{zoom:1.2;background:').slice(0,contract.styleLength);assert.equal(hash(css),contract.styleHash);
@@ -53,12 +53,12 @@ test('mobile navigation, refresh, help, privacy and announcements stay wired',()
   assert.match(current,/function renderPrivacyPage\(/);assert.match(current,/function announcementBanner\(/);assert.match(current,/Member announcement/);
   assert.match(current,/function renderDashboard\(r,comp\)\{return renderHome\(r,comp\);\}/);
   assert.match(current,/function renderAccountPage\(/);assert.doesNotMatch(current,/dash:\(\)=>memberTools\(\)\+deadlineBanner/);
-  assert.match(current,/Available to pick in Week/);assert.match(current,/Teams you have left/);assert.match(current,/Your pick history/);assert.match(current,/accountUser\?\.name/);assert.match(current,/Add another entry/);assert.match(current,/Manage an entry/);assert.match(current,/must mark this entry paid/);
+  assert.match(current,/accountUser\?\.name/);assert.match(current,/Add another entry/);assert.match(current,/Choose an entry/);assert.match(current,/must be approved and marked paid/);
   assert.match(current,/Rob O’Shea 1/);assert.match(current,/function entryName\(id\)/);assert.match(current,/accountPage==='\/account'\)return renderAccountPage/);
   assert.match(current,/New player\?/);assert.match(current,/Register before you sign in/);assert.match(current,/Register and create account/);assert.match(current,/href="\/signup"/);
   assert.match(current,/function saveMemberName\(/);assert.match(current,/hidden member ID/);assert.match(current,/Last name required/);assert.match(current,/accountUser\?\.role==='owner'/);assert.match(current,/spreadsheet importer is kept in the owner area/);
-  assert.match(current,/function noEntryBanner\(/);assert.match(current,/No competition entry yet/);assert.match(current,/Open Admin area/);assert.match(current,/Add first entry/);assert.doesNotMatch(current,/if\(!accountEntries\.length\).*return true/);
-  assert.match(current,/Admin pick override/);assert.match(current,/function confirmAdminPick\(/);assert.match(current,/Save admin pick/);assert.match(current,/managed=ADMIN\?S\.entries/);assert.match(current,/What if I cannot sign in before the deadline\?/);assert.match(fs.readFileSync('lib/api.js','utf8'),/deadlineOverridden/);
+  assert.match(current,/function noEntryBanner\(/);assert.match(current,/Join this round/);assert.match(current,/Open Admin area/);assert.match(current,/Add an entry/);assert.match(current,/not participating/);assert.doesNotMatch(current,/if\(!accountEntries\.length\).*return true/);
+  assert.match(current,/Admin pick override/);assert.match(current,/function confirmAdminPick\(/);assert.match(current,/Save admin pick/);assert.match(current,/managed=ADMIN\?entries/);assert.match(current,/What if I cannot sign in before the deadline\?/);assert.match(fs.readFileSync('lib/api.js','utf8'),/deadlineOverridden/);
   assert.match(current,/Mark paid/);assert.match(current,/>Paid<\/span>/);assert.doesNotMatch(current,/Eligible<\/span>/);assert.doesNotMatch(current,/Recent admin activity/);
   assert.match(current,/entries-table \.entry-label/);assert.match(current,/inputmode="numeric"/);
   assert.ok(current.indexOf('The 32 teams')<current.indexOf('${renderFixturesCard(w)}'));

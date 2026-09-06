@@ -2,7 +2,7 @@
 
 A 113-second, 1080p Remotion walkthrough for competition owners and administrators. It uses screenshots captured from the actual NFL LMS app and adds only cursor movement, click highlights and written instructions. There is no narration or audio track.
 
-The walkthrough covers registration, extra entries, assigning admins, entry payments, pick overrides, results, announcements, rollovers and the searchable Admin guide.
+The walkthrough covers registration, joining a round, extra entries, assigning admins, entry payments, pick overrides, results, announcements, rollovers and the searchable Admin guide.
 
 ## Capture the current app
 

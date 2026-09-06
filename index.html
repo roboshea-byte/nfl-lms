@@ -347,6 +347,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .account-identity{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px}.account-identity h1{font-family:var(--font-head);font-size:clamp(30px,5vw,48px);line-height:1;margin:7px 0}.account-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}.account-entry-switch{grid-column:1/-1;border-top:1px solid var(--line);padding-top:14px}.account-entry-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.account-summary{margin-bottom:18px}.account-status{font-family:var(--font-head);font-size:clamp(28px,5vw,42px);margin:12px 0 6px}.account-status.active{color:var(--green)}.account-status.inactive{color:var(--gold)}.account-current-pick{display:flex;align-items:center;gap:14px;margin-top:12px}.account-current-pick strong{display:block;font-size:18px}.account-current-pick span{display:block;color:var(--grey);font-size:12px;margin-top:5px}.account-history{display:grid;gap:7px}.account-history-row{display:grid;grid-template-columns:70px minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 12px;background:var(--deep);border:1px solid var(--line);border-radius:9px}.account-week{color:var(--grey);font-size:12px;font-weight:700}.account-team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:7px}.account-team-card{display:flex;align-items:center;gap:9px;min-width:0;padding:9px 10px;background:var(--deep);border:1px solid var(--line);border-radius:9px}.account-team-card .logo{flex:none}.account-team-card div{min-width:0}.account-team-card b,.account-team-card span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.account-team-card span{color:var(--grey);font-size:10px;margin-top:3px}@media(max-width:650px){.account-identity{grid-template-columns:1fr}.account-actions{justify-content:flex-start}.account-history-row{grid-template-columns:58px minmax(0,1fr)}.account-history-row>.pill{grid-column:2}.account-team-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.account-team-card{padding:8px}.account-team-card .logo.lg{width:32px;height:32px}}
 .member-name-editor{display:grid;grid-template-columns:minmax(110px,1fr) minmax(140px,1fr) auto;gap:6px;min-width:390px}.name-required{color:#ff9aa8;font-weight:700;margin-top:5px}@media(max-width:650px){.member-name-editor{min-width:320px}}
 .brand{width:max-content;max-width:calc(100% - 42px);text-decoration:none;color:inherit;border-radius:7px}.brand:hover h1{color:#fff}.brand:focus-visible{outline:2px solid var(--gold);outline-offset:5px}.hdr-top{position:relative;padding-right:62px}.refresh-app{position:absolute;z-index:21;right:12px;top:10px;display:flex;align-items:center;justify-content:center;width:34px;height:34px;padding:7px;border:1px solid rgba(166,181,214,.32);border-radius:9px;background:rgba(8,24,58,.28);color:var(--grey);opacity:.72;cursor:pointer}.refresh-app:hover,.refresh-app:focus-visible{opacity:1;color:#fff;border-color:var(--line);background:rgba(36,66,127,.75)}.refresh-app svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}.refresh-app.refreshing svg{animation:refresh-spin .8s linear infinite}@keyframes refresh-spin{to{transform:rotate(360deg)}}@media(max-width:900px){body .hdr-top{padding-right:54px}}@media(max-width:600px){.refresh-app{right:9px;top:9px;width:32px;height:32px;padding:7px;opacity:.62}}
+.stat.account-access{min-width:190px;background:rgba(31,191,106,.2);border-color:var(--green);color:inherit;text-decoration:none}.stat.account-access .v{color:#fff;font-size:16px;padding-top:4px}.stat.admin-access{background:rgba(31,191,106,.3)}.stat.signout-access{color:inherit;font:inherit}.participation-summary{display:grid;grid-template-columns:repeat(6,minmax(92px,1fr));gap:9px;margin:16px 0}.participation-summary>div{padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--deep);text-align:center}.participation-summary b{display:block;font:700 30px/1 var(--font-head);color:#fff}.participation-summary span{display:block;margin-top:5px;color:var(--grey);font-size:10px;text-transform:uppercase;letter-spacing:.12em}.participation-summary .paid b{color:var(--green)}.participation-summary .unpaid b,.participation-summary .topick b{color:var(--gold)}@media(max-width:900px){.participation-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.stat.account-access{min-width:0;grid-column:span 2}}@media(max-width:520px){.participation-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.stat.account-access .v{font-size:13px}}
 </style>
 </head>
 <body>
@@ -402,6 +403,7 @@ function createLMSLogic(SCHEDULE){
   const weekSettled = (S,w) => { const gs=gamesByWeek(w); return gs.length>0 && gs.every(g=>S.results[g.id]?.final); };
   const weekHasResults = (S,w) => gamesByWeek(w).some(g=>S.results[g.id]?.final);
   const currentRound = S => S.rounds[S.rounds.length-1];
+  const entriesForRound = (S,r=currentRound(S)) => S.entries.filter(e=>(e.round||1)===r.n);
   const roundEndWeek = r => r.endWeek || WEEKS;
   function defaultWeek(S){
     const r=currentRound(S);
@@ -416,15 +418,15 @@ function createLMSLogic(SCHEDULE){
   const isPaid = (entry,r,comp,w) => paidForReset(entry,r,paymentWeek(r,comp,w));
   function prizePot(S,r,comp){
     const starts=comp.events.filter(e=>e.type==='wipeout' && e.week<roundEndWeek(r)).map(e=>e.week+1);
-    return S.settings.fee*S.entries.reduce((n,e)=>n+Number(!!e.paid)+starts.filter(w=>paidForReset(e,r,w)).length,0);
+    return S.settings.fee*entriesForRound(S,r).reduce((n,e)=>n+Number(!!e.paid)+starts.filter(w=>paidForReset(e,r,w)).length,0);
   }
 
   /* Walk the round week by week. Returns {weeks, alive:Set, events, winnerIds, complete, resetWeek, finalWeek} */
   function computeRound(S, r){
     r = r || currentRound(S);
-    const all = S.entries.map(e=>e.id);
-    let alive = new Set(S.entries.filter(e=>e.paid).map(e=>e.id));
-    const out = {weeks:{}, events:[], winnerIds:null, complete:false, resetWeek:r.startWeek, finalWeek:null};
+    const entries=entriesForRound(S,r),all = entries.map(e=>e.id);
+    let alive = new Set(entries.filter(e=>e.paid).map(e=>e.id));
+    const out = {round:r.n,weeks:{}, events:[], winnerIds:null, complete:false, resetWeek:r.startWeek, finalWeek:null};
     for(let w=r.startWeek; w<=roundEndWeek(r); w++){
       const settled = weekSettled(S,w);
       const aliveBefore=[...alive];
@@ -443,7 +445,7 @@ function createLMSLogic(SCHEDULE){
         out.resetWeek = w+1;
         out.events.push({week:w,type:'wipeout',count:losers.length});
         // Each rollover needs a fresh fee. Prior payments never carry forward.
-        alive = new Set(S.entries.filter(e=>paidForReset(e,r,w+1)).map(e=>e.id));
+        alive = new Set(entries.filter(e=>paidForReset(e,r,w+1)).map(e=>e.id));
         for(const id of all) if(!alive.has(id)) out.events.push({week:w+1,type:'out',id,reason:'Rollover fee not paid',pick:null,payment:true});
       } else {
         losers.forEach(l=>{ alive.delete(l.id); out.events.push({week:w,type:'out',...l}); });
@@ -466,14 +468,15 @@ function createLMSLogic(SCHEDULE){
   function aliveAtWeek(S, comp, w){
     const prev = comp.weeks[w-1];
     if(prev) return new Set(prev.aliveAfter);
-    return new Set(S.entries.filter(e=>e.paid).map(e=>e.id));
+    const r=S.rounds.find(r=>r.n===comp.round)||currentRound(S);
+    return new Set(entriesForRound(S,r).filter(e=>e.paid).map(e=>e.id));
   }
   const isAliveForWeek = (S,comp,w,id) => aliveAtWeek(S,comp,w).has(id);
   const kickoff = (abbr,w) => { const g=teamGame(abbr,w); return g? new Date(g.date).getTime() : null; };
   const weekFirstKickoff = w => { const gs=gamesByWeek(w); return gs.length? new Date(gs[0].date).getTime() : null; };
 
   const weekDeadline = w => {const first=weekFirstKickoff(w);return first===null?null:first-3600000;};
-  return {weekDeadline, WEEKS, GAMES, gamesByWeek, teamGame, teamResult, weekSettled, weekHasResults, currentRound, roundEndWeek, defaultWeek, isPickLost, computeRound, usedTeams, aliveAtWeek, isAliveForWeek, kickoff, weekFirstKickoff, paymentWeek, isPaid, prizePot};
+  return {weekDeadline, WEEKS, GAMES, gamesByWeek, teamGame, teamResult, weekSettled, weekHasResults, currentRound,entriesForRound, roundEndWeek, defaultWeek, isPickLost, computeRound, usedTeams, aliveAtWeek, isAliveForWeek, kickoff, weekFirstKickoff, paymentWeek, isPaid, prizePot};
 }
 if(typeof module!=='undefined' && module.exports) module.exports = { createLMSLogic };
 if(typeof window!=='undefined') window.createLMSLogic = createLMSLogic;
@@ -578,6 +581,7 @@ const roundEndWeek = r => L.roundEndWeek(r);
 const defaultWeek = () => L.defaultWeek(S);
 const isPickLost = code => L.isPickLost(S,code);
 const computeRound = r => L.computeRound(S,r);
+const roundEntries = (r=currentRound()) => L.entriesForRound(S,r);
 const entryPaid = (e,r=currentRound(),comp=computeRound(r)) => L.isPaid(e,r,comp);
 const prizePot = (r=currentRound(),comp=computeRound(r)) => L.prizePot(S,r,comp);
 const usedTeams = (entryId,r,comp,uptoWeek) => L.usedTeams(S,entryId,r,comp,uptoWeek);
@@ -616,10 +620,11 @@ function weekBar(r, comp, extraClass=''){
 function memberHelpItems(){
   const fee=gbp(S.settings.fee);
   return [
-    ['Getting started','How do I join?',`<p><strong>New players must register before trying to sign in.</strong> Open <a href="/signup">Register</a> and enter your first name, last name, email address and a password of at least seven characters. Your account is created straight away, with no confirmation email.</p><p>Your first competition entry is added automatically. You can sign in as soon as the form is complete.</p>`],
+    ['Getting started','How do I join?',`<p><strong>New players must register before trying to sign in.</strong> Open <a href="/signup">Register</a> and enter your first name, last name, email address and a password of at least seven characters. Your member account is created straight away, with no confirmation email.</p><p>Registration does not enter you into the competition. On your Dashboard, press <strong>Add an entry</strong> when you want to join the current round. That unpaid entry is counted only after you add it.</p>`],
     ['Getting started','How do I pay and become active?',`<p>Contact <strong>Connor or Havo</strong> to make your ${fee} payment. There are no online payments in the app.</p><p>Once Connor, Havo or another administrator marks your entry as paid, your Dashboard changes from <strong>Inactive</strong> to <strong>Active</strong> and you can submit a pick.</p><div class="help-callout">Payment is recorded separately for each entry, including entries belonging to an owner or admin.</div>`],
     ['Getting started','Why does my account say inactive or payment pending?',`<p>Your account works, but your competition entry has not yet been marked paid for the current round or rollover. Contact Connor or Havo. You cannot submit or change a pick until the entry is active.</p><p>If you have just paid, refresh the page after an administrator confirms it.</p>`],
-    ['Getting started','Can I enter more than once?',`<p>Yes. Open <strong>Account</strong> and choose <strong>Add another entry</strong>. Your entries are numbered under your full name for the current round, for example <strong>Rob O’Shea 1</strong> and <strong>Rob O’Shea 2</strong>.</p><p>Each entry costs ${fee} and is managed separately. A new entry starts unpaid, so Connor, Havo or another admin must approve its payment before it can make a pick. Use the named entry buttons in Account to switch between each entry’s status, current pick, history and remaining teams.</p>`],
+    ['Getting started','Can I enter more than once?',`<p>Yes. Open <strong>Dashboard</strong> and choose <strong>Add another entry</strong>. Your entries are numbered under your full name for the current round, for example <strong>Rob O’Shea 1</strong> and <strong>Rob O’Shea 2</strong>.</p><p>Each entry costs ${fee} and is managed separately. A new entry starts unpaid, so Connor, Havo or another admin must approve its payment before it can make a pick. Use the named entry buttons on Dashboard to switch between each entry’s status, current pick, history and remaining teams.</p>`],
+    ['Getting started','How do I sit out or remove an entry?',`<p>If you are not playing this round, press <strong>I’m not participating</strong> on Dashboard. You stay in the Members list but are not counted as an entry.</p><p>You can remove an individual unpaid entry from Dashboard. Once an entry is paid, an administrator must mark it unpaid before it can be removed or before you can sit out the round.</p>`],
     ['Picks','How do I make my weekly selection?',`<ol><li>Sign in and open <strong>Account</strong>. If you have more than one entry, select the numbered entry you want to manage.</li><li>Check that it is Active and choose <strong>Make your pick</strong>, or open <strong>Picks</strong> from the navigation.</li><li>Check that the correct week is selected.</li><li>Tap the team you want. The team card shows its opponent and game day.</li><li>Review the selected team and press <strong>Confirm pick</strong>.</li></ol><div class="help-callout">Your selection is saved only after you press Confirm pick. Repeat this separately for every paid entry. The Account and Picks pages then show the team badge in that entry’s history.</div>`],
     ['Picks','How do I change a pick?',`<p>Open <strong>Picks</strong>, choose the week and press <strong>Change pick</strong>. Select a different team, review it, then press <strong>Confirm pick</strong>.</p><p>You can change a selection as often as you like until that week’s deadline. The newest confirmed selection replaces the old one.</p>`],
     ['Picks','What if I cannot sign in before the deadline?',`<p>Contact Connor, Havo or another administrator immediately. Tell them your full numbered entry name, the week and the team you want.</p><p>An administrator can record or update the pick for you, including after the normal member deadline when there is a genuine access problem. Ask them to confirm that it has been saved. The normal team-use and bye-week rules still apply.</p>`],
@@ -650,8 +655,9 @@ function adminHelpItems(){
     ['Entries and payments','How do I mark an entry paid or unpaid?',`<p>Open <strong>Entries & payments</strong>. An unpaid entry shows a clear <strong>Mark paid</strong> button in the Payment column. The entry becomes Active as soon as it is paid.</p><p>A paid entry shows a Paid control, which you can press to correct it back to unpaid. This works for members, admins and the owner. If one person has several entries, mark each entry separately.</p>`],
     ['Entries and payments','How are rollover payments recorded?',`<p>After a rollover, the Payment column changes to the rollover fee for the reset week. Mark every ${fee} repayment there. Only repaid entries return to active play.</p><p>Previous fees remain in the prize pot. An unpaid rollover entry stays eliminated and cannot submit a pick.</p>`],
     ['Entries and payments','How do I edit or remove an entry?',`<p>Edit the name, label or email directly in the Entries table. Changes save when you leave the field.</p><p>Use <strong>Remove</strong> only when the entry should be deleted. Removing it also deletes all of its picks. Export a backup first if there is any doubt.</p>`],
-    ['Entries and payments','How do extra entries work?',`<p>A member uses <strong>Add another entry</strong> in Account. The app numbers every account entry under the member’s full name for the round, such as <strong>Rob O’Shea 1</strong> and <strong>Rob O’Shea 2</strong>.</p><p>Each entry costs ${fee}, starts unpaid and has its own payment badge, weekly picks, history and remaining-team list. Approve payment by marking each new entry Paid in <strong>Entries & payments</strong>. Until then, that entry cannot submit or change a pick. Check every numbered entry separately when taking payments and chasing missing picks.</p>`],
-    ['Members and accounts','How does member sign-up work?',`<p>Members enter first name, last name, email and a password of at least seven characters. They are signed up immediately with no confirmation email and receive their first unpaid competition entry, numbered under their full name.</p><p>Mark that entry paid after Connor or Havo receives payment. Any later entry they add also starts unpaid and needs its own payment approval.</p>`],
+    ['Entries and payments','How do extra entries work?',`<p>A member uses <strong>Add another entry</strong> on Dashboard. The app numbers every account entry under the member’s full name for the round, such as <strong>Rob O’Shea 1</strong> and <strong>Rob O’Shea 2</strong>.</p><p>Each entry costs ${fee}, starts unpaid and has its own payment badge, weekly picks, history and remaining-team list. Approve payment by marking each new entry Paid in <strong>Entries & payments</strong>. Until then, that entry cannot submit or change a pick.</p>`],
+    ['Members and accounts','How does member sign-up work?',`<p>Members enter first name, last name, email and a password of at least seven characters. They are signed up immediately with no confirmation email. They appear in Members but do not become a competition entry automatically.</p><p>The member chooses <strong>Add an entry</strong> on Dashboard to join a round. Each entry starts unpaid and needs its own payment approval.</p>`],
+    ['Members and accounts','How do I mark someone as not participating?',`<p>Open <strong>Members & roles</strong> and press <strong>Mark not participating</strong> for that member. This removes their unpaid current-round entries and keeps their account in the Members list.</p><p>If any entry is paid, first use Entries & payments to mark it unpaid. A member can also sit themselves out from their own Dashboard.</p>`],
     ['Members and accounts','How do I correct a member’s name?',`<p>Open <strong>Members & roles</strong>. Enter both the member’s first name and last name, then press <strong>Save name</strong>. Accounts with a missing surname are clearly flagged.</p><p>The corrected name is applied to all entries owned by that member. Their hidden member ID does not change, so their email, role, payment status, picks and history stay connected.</p><div class="help-callout">For an account-owned entry, change the name in Members & roles. Entries & payments keeps account-owned names read-only to prevent the account and its entries becoming inconsistent.</div>`],
     ['Members and accounts','How do I connect a manual entry to an account?',`<p>Owner only: open <strong>Members & roles</strong>, find the manual entry under Connect entries to accounts, and select the correct email address.</p><p>Verify the person carefully first. Connecting an entry gives that account control of its picks and history.</p>`],
     ['Members and accounts','How do I make someone an admin?',`<p>Owner only: open <strong>Members & roles</strong>, find the person and change their role from Member to Admin. They gain access to the admin area after signing in again.</p><p>Their competition entry and payment status do not change when their role changes.</p>`],
@@ -708,7 +714,7 @@ async function refreshApp(){
 function renderMemberHelpPage(){
   document.body.classList.add('ro');document.body.classList.remove('player');document.getElementById('nav').classList.add('hidden');
   const r=currentRound(),comp=computeRound(r);renderHeader(r,comp);
-  document.getElementById('main').innerHTML=renderHelpGuide({kind:'Member',title:'How to use NFL LMS',intro:'Everything you need to join, pay, make or change a selection, follow the competition and use the app on your phone.',quick:[['Create your account','Use your full name, email and a password of at least seven characters.'],['Pay your entry','Contact Connor or Havo, then wait for your entry to show Active.'],['Pick and confirm','Choose one team before the weekly deadline and press Confirm pick.'],['Follow the round','Use Results and Standings to see scores, status and previous selections.']],items:memberHelpItems(),backHref:accountUser?'/dashboard':'/',backLabel:accountUser?'Back to my Dashboard':'Back to Dashboard'});
+  document.getElementById('main').innerHTML=renderHelpGuide({kind:'Member',title:'How to use NFL LMS',intro:'Everything you need to join, pay, make or change a selection, follow the competition and use the app on your phone.',quick:[['Create your account','Use your full name, email and a password of at least seven characters.'],['Join the round','Press Add an entry on Dashboard, or choose not to participate.'],['Pay your entry','Contact Connor or Havo, then wait for your entry to show Active.'],['Pick and confirm','Open Picks, choose one team before the deadline and confirm it.']],items:memberHelpItems(),backHref:accountUser?'/dashboard':'/',backLabel:accountUser?'Back to my Dashboard':'Back to Dashboard'});
   const foot=document.getElementById('foot');if(foot)foot.textContent='NFL LMS member guide. Contact Connor or Havo if you need help.';
 }
 function renderPrivacyPage(){
@@ -757,15 +763,17 @@ function render(){
   if(S.ui.view==='entries') wireDrop();
 }
 function renderHeader(r,comp){
-  const pot=prizePot(r,comp);
-  const paid=S.entries.filter(e=>entryPaid(e,r,comp)).length;
+  const pot=prizePot(r,comp),entries=roundEntries(r);
+  const paid=entries.filter(e=>entryPaid(e,r,comp)).length,missing=missingEntries(S.ui.week||defaultWeek(),r,comp).length;
   document.getElementById('hdrStats').innerHTML=`
     <div class="stat"><div class="v">R${r.n}</div><div class="l">Round</div></div>
     <div class="stat"><div class="v">WK ${S.ui.week||defaultWeek()}</div><div class="l">Selected</div></div>
-    <div class="stat"><div class="v">${S.entries.length}</div><div class="l">Entries</div></div>
+    <div class="stat"><div class="v">${entries.length}</div><div class="l">Entries</div></div>
     <div class="stat alive"><div class="v">${comp.alive.size}</div><div class="l">Still In</div></div>
     <div class="stat pot"><div class="v">${gbp(pot)}</div><div class="l">Prize Pot</div></div>
-    <div class="stat"><div class="v">${paid}/${S.entries.length}</div><div class="l">Paid</div></div>
+    <div class="stat alive"><div class="v">${paid}</div><div class="l">Paid</div></div>
+    <div class="stat"><div class="v">${entries.length-paid}</div><div class="l">Unpaid</div></div>
+    <div class="stat pot"><div class="v">${missing}</div><div class="l">Still to pick</div></div>
     ${REMOTE?remoteHeader():SHARED?(ADMIN?`<div class="stat pub ${isDirty()?'dirty':''}" onclick="${HOSTED?'publishLive()':'exportLivePage()'}" title="${HOSTED?'Publish the current state so everyone with the link sees it':'Download an updated index.html to upload to your web host'}"><div class="v">${HOSTED?(isDirty()?'⬆ Publish':'✓ Live'):'⬇ Download'}</div><div class="l">${isDirty()?'unpublished changes':'up to date'}</div></div><div class="stat pub" style="border-color:var(--line);background:transparent" onclick="toggleAdmin()"><div class="v" style="color:#fff">Admin</div><div class="l">exit</div></div>`:`<div class="stat pub" style="border-color:var(--line);background:transparent;opacity:.6" onclick="toggleAdmin()" title="Organiser only"><div class="v" style="color:#fff">🔒</div><div class="l">organiser</div></div>`):''}`;
 }
 
@@ -785,7 +793,7 @@ function renderFixturesCard(w){
   </div>`;
 }
 function renderHome(r,comp){
-  const pot=prizePot(r,comp);
+  const pot=prizePot(r,comp),entries=roundEntries(r);
   const w=defaultWeek();
   const first=GAMES.slice().sort((a,b)=>a.date.localeCompare(b.date))[0];
   const wkCur=gamesByWeek(w);
@@ -793,7 +801,7 @@ function renderHome(r,comp){
   const winnerBanner = comp.complete&&comp.winnerIds ? `<div class="banner gold">🏆 Round ${r.n} ${comp.winnerIds.length===1?'winner':'shared by'}: ${esc(comp.winnerIds.map(entryName).join(', '))} - ${gbp(pot)}</div>` : '';
   return `${winnerBanner}
   <div class="homehero"><div class="heroflag"></div>
-    <div class="kick">NFL 2026 Season · ${S.entries.length?`${S.entries.length} entries`:'Entries open'}</div>
+    <div class="kick">NFL 2026 Season · ${entries.length?`${entries.length} entries`:'Entries open'}</div>
     <h1 class="big">Last Man <span>Standing</span></h1>
     <p>Pick One team per week. Win to stay in, losers go out. Last man standing take the pot.</p>
     <div class="herostats">
@@ -816,7 +824,7 @@ function renderHome(r,comp){
   <div class="grid two">
     <div class="card" style="margin:0"><h2>How it works</h2>
       <ol class="rules">
-        <li><div><b>${gbp(S.settings.fee)} per entry.</b> You can add more entries from Account. They are numbered under your name for the round, such as Rob O’Shea 1 and Rob O’Shea 2. Every entry has separate picks and must be approved and marked paid by an admin before it can pick.</div></li>
+        <li><div><b>${gbp(S.settings.fee)} per entry.</b> Registering creates a member account only. Add an entry from Dashboard when you want to participate in the round. You can add more entries there too. They are numbered under your name, such as Rob O’Shea 1 and Rob O’Shea 2. Every entry has separate picks and must be approved and marked paid by an admin before it can pick.</div></li>
         <li><div><b>One pick per week.</b> At least one hour before the first game of the week, pick one NFL team to win their game. Point spreads don't matter, they just have to win.</div></li>
         <li><div><b>Win and you're through.</b> If your team wins you progress to the next week. If they lose you're eliminated. ${S.settings.tieRule==='loss'?'A tie counts as a loss.':'A tie keeps you in.'}</div></li>
         <li><div><b>Each team once between resets.</b> Once you've picked a team you can't use them again until a rollover or a new round, so the longer you survive, the harder it gets.</div></li>
@@ -839,7 +847,7 @@ function renderDashboard(r,comp){return renderHome(r,comp);}
 
 /* ---- Competition overview ---- */
 function renderDash(r,comp){
-  const pot=prizePot(r,comp);
+  const pot=prizePot(r,comp),entries=roundEntries(r);
   const w=defaultWeek();
   let banner='';
   if(comp.complete && comp.winnerIds){
@@ -849,11 +857,11 @@ function renderDash(r,comp){
   }
   const lastWipe=comp.events.filter(e=>e.type==='wipeout').slice(-1)[0];
   if(lastWipe && !comp.complete) banner+=`<div class="banner">💥 Rollover in Week ${lastWipe.week}: all ${lastWipe.count} remaining players lost, all teams are available again. Everyone must pay ${gbp(S.settings.fee)} again to return; unpaid players are eliminated.</div>`;
-  if(!S.entries.length) banner+=`<div class="banner">No entries yet <button class="btn gold edit" onclick="setView('entries')">Add or import entries</button></div>`;
+  if(!entries.length) banner+=`<div class="banner">No entries yet <button class="btn gold edit" onclick="setView('entries')">Add entries</button></div>`;
 
-  const aliveList=S.entries.filter(e=>comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
-  const pendingList=S.entries.filter(e=>!entryPaid(e,r,comp));
-  const outList=S.entries.filter(e=>!comp.alive.has(e.id)&&!pendingList.includes(e)).sort((a,b)=>a.name.localeCompare(b.name));
+  const aliveList=entries.filter(e=>comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  const pendingList=entries.filter(e=>!entryPaid(e,r,comp));
+  const outList=entries.filter(e=>!comp.alive.has(e.id)&&!pendingList.includes(e)).sort((a,b)=>a.name.localeCompare(b.name));
   const missing=aliveList.filter(e=>!S.picks[e.id]?.[w] && !weekSettled(w) && isAliveForWeek(comp,w,e.id));
   const feed=comp.events.slice().reverse().slice(0,25).map(ev=>{
     if(ev.type==='out') return `<li><span class="pill out">OUT</span> <b>Wk ${ev.week}</b> ${esc(entryName(ev.id))} ${ev.pick?logoImg(ev.pick):''} <span class="muted">${esc(ev.reason)}</span></li>`;
@@ -869,7 +877,7 @@ function renderDash(r,comp){
     <div class="bigpot">
       <div class="lbl">Round ${r.n} prize pot</div>
       <div class="amt">${gbp(pot)}</div>
-      <div class="muted small">Confirmed entry and rollover fees &middot; ${S.entries.filter(e=>entryPaid(e,r,comp)).length} paid, ${S.entries.filter(e=>!entryPaid(e,r,comp)).length} unpaid</div>
+      <div class="muted small">Confirmed entry and rollover fees &middot; ${entries.filter(e=>entryPaid(e,r,comp)).length} paid, ${entries.filter(e=>!entryPaid(e,r,comp)).length} unpaid</div>
       <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn primary edit" onclick="setWeek(${w});setView('picks')">Make Week ${w} picks</button>
         <button class="btn edit" onclick="setWeek(${w});setView('results')">Enter results</button>
@@ -904,11 +912,11 @@ function renderDash(r,comp){
 }
 
 function renderStandings(r,comp){
-  const w=defaultWeek();
+  const w=defaultWeek(),entries=roundEntries(r);
   const pot=prizePot(r,comp);
-  const aliveList=S.entries.filter(e=>comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
-  const pendingList=S.entries.filter(e=>!entryPaid(e,r,comp)).sort((a,b)=>a.name.localeCompare(b.name));
-  const outList=S.entries.filter(e=>!comp.alive.has(e.id)&&!pendingList.includes(e)).sort((a,b)=>a.name.localeCompare(b.name));
+  const aliveList=entries.filter(e=>comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  const pendingList=entries.filter(e=>!entryPaid(e,r,comp)).sort((a,b)=>a.name.localeCompare(b.name));
+  const outList=entries.filter(e=>!comp.alive.has(e.id)&&!pendingList.includes(e)).sort((a,b)=>a.name.localeCompare(b.name));
   const missing=aliveList.filter(e=>!S.picks[e.id]?.[w]&&!weekSettled(w)&&isAliveForWeek(comp,w,e.id));
   const pickCounts={};aliveList.forEach(e=>{const p=visiblePick(e.id,w);if(p&&p!=='HIDDEN')pickCounts[p]=(pickCounts[p]||0)+1;});
   const popular=Object.entries(pickCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
@@ -929,7 +937,7 @@ function renderStandings(r,comp){
     return `<div class="standing-row"><div class="standing-name"><strong>${esc(entryName(e.id))}</strong></div><div class="standing-picks" aria-label="Teams picked by ${esc(entryName(e.id))}">${picks.join('')||'<span class="muted small">No picks yet</span>'}</div></div>`;
   }).join('')}</div>`:'<div class="empty">Nobody in this group.</div>';
   return `<div class="hero">
-    <div class="bigpot"><div class="lbl">Round ${r.n} prize pot</div><div class="amt">${gbp(pot)}</div><div class="muted small">Confirmed entry and rollover fees &middot; ${S.entries.filter(e=>entryPaid(e,r,comp)).length} paid, ${S.entries.filter(e=>!entryPaid(e,r,comp)).length} unpaid</div><div style="margin-top:16px"><button class="btn" onclick="setView('picks')">Picks and history</button></div></div>
+    <div class="bigpot"><div class="lbl">Round ${r.n} prize pot</div><div class="amt">${gbp(pot)}</div><div class="muted small">Confirmed entry and rollover fees &middot; ${entries.filter(e=>entryPaid(e,r,comp)).length} paid, ${entries.filter(e=>!entryPaid(e,r,comp)).length} unpaid</div><div style="margin-top:16px"><button class="btn" onclick="setView('picks')">Picks and history</button></div></div>
     <div class="card" style="margin:0"><h2>Week ${w} status <span class="tag">${weekSettled(w)?'Settled':weekHasResults(w)?'In progress':'Upcoming'}</span></h2><div class="grid two" style="gap:10px"><div><div class="muted small">Still in</div><div style="font-family:var(--font-head);font-size:34px;color:var(--green)">${comp.alive.size}</div></div><div><div class="muted small">Picks outstanding</div><div style="font-family:var(--font-head);font-size:34px;color:${missing.length?'var(--gold)':'var(--green)'}">${missing.length}</div></div></div>${missing.length?`<div class="small muted" style="margin-top:8px">Waiting on: ${missing.slice(0,12).map(e=>esc(e.name)).join(', ')}${missing.length>12?` +${missing.length-12} more`:''}</div>`:''}<div style="margin-top:12px"><div class="muted small" style="margin-bottom:6px">Most picked this week</div>${popular.length?popular.map(([t,c])=>`<span class="av">${logoImg(t)} ${TEAMS[t].short} <b>${c}</b></span>`).join(' '):'<span class="muted small">No picks yet</span>'}</div></div>
   </div>
   <div class="card" style="margin-top:18px"><h1 style="font-family:var(--font-head);margin-top:0">Standings</h1><p class="muted">Round ${r.n}. Current Week ${w} picks stay hidden until kick-off.</p>
@@ -942,11 +950,11 @@ function renderStandings(r,comp){
 
 /* ---- Picks ---- */
 function renderPicks(r,comp){
-  const w=S.ui.week;
+  const w=S.ui.week,entries=roundEntries(r);
   const inRound = w>=r.startWeek && w<=roundEndWeek(r);
-  const eligible=S.entries.filter(e=>isAliveForWeek(comp,w,e.id)).sort((a,b)=>a.name.localeCompare(b.name));
-  const managed=ADMIN?S.entries.slice().sort((a,b)=>entryName(a.id).localeCompare(entryName(b.id))):eligible;
-  const others=ADMIN?[]:S.entries.filter(e=>!isAliveForWeek(comp,w,e.id));
+  const eligible=entries.filter(e=>isAliveForWeek(comp,w,e.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  const managed=ADMIN?entries.slice().sort((a,b)=>entryName(a.id).localeCompare(entryName(b.id))):eligible;
+  const others=ADMIN?[]:entries.filter(e=>!isAliveForWeek(comp,w,e.id));
   const settled=weekSettled(w);
   const deadline=L.weekDeadline(w),deadlinePassed=deadline!==null&&serverNow()>=deadline;
   const done=managed.filter(e=>S.picks[e.id]?.[w]).length;
@@ -957,7 +965,7 @@ function renderPicks(r,comp){
     const opp=g?(g.home===p?`vs ${TEAMS[g.away].short}`:`@ ${TEAMS[g.home].short}`):'';
     const used=usedTeams(e.id,r,comp,w);
     const lost = res && (isPickLost(res.code));
-    const paidNow=entryPaid(e,r,comp),status=paidNow?(isAliveForWeek(comp,w,e.id)?'<span class="pill alive">Paid</span>':'<span class="pill out">Eliminated</span>'):`<div class="row"><span class="pill pending">Unpaid</span><button class="btn sm gold" onclick="setEntryPayment('${e.id}',true)">Mark paid</button></div>`;
+    const paidNow=entryPaid(e,r,comp),status=paidNow?`<div class="row"><span class="pill ${isAliveForWeek(comp,w,e.id)?'alive':'out'}">${isAliveForWeek(comp,w,e.id)?'Paid':'Eliminated'}</span><button class="btn sm" onclick="setEntryPayment('${e.id}',false)">Mark unpaid</button></div>`:`<div class="row"><span class="pill pending">Unpaid</span><button class="btn sm gold" onclick="setEntryPayment('${e.id}',true)">Mark paid</button></div>`;
     return `<tr class="${lost?'out':''}">
       <td><b>${esc(e.name)}</b>${e.label?`<div class="muted small">${esc(e.label)}</div>`:''}</td>
       ${ADMIN?`<td>${status}</td>`:''}
@@ -983,7 +991,7 @@ function renderPicks(r,comp){
     </div>
     ${REMOTE && ADMIN?chaseStrip(w,r,comp):''}
     ${managed.length? `<div class="table-scroll" tabindex="0" role="region" aria-label="Weekly picks"><table><thead><tr><th>Player</th>${ADMIN?'<th>Status</th>':''}<th>Pick</th><th>Fixture</th><th>Result</th><th>Already used since the last reset</th></tr></thead><tbody>${rows}</tbody></table></div>`
-      : `<div class="empty">${S.entries.length?'Nobody is eligible to pick in this week.':'No entries yet - add some on the Entries tab.'}</div>`}
+      : `<div class="empty">${entries.length?'Nobody is eligible to pick in this week.':'No entries yet - add some on the Entries tab.'}</div>`}
     ${others.length?`<div class="muted small" style="margin-top:12px">Eliminated before this week (${others.length}): ${others.map(e=>esc(e.name)).join(', ')}</div>`:''}
   </div>`;
 }
@@ -1021,7 +1029,7 @@ function makePick(entryId,w,abbr){
 function clearPick(entryId,w){ if(REMOTE&&ADMIN){const current=S.picks[entryId]?.[w];return modal(`<h2>Clear admin pick</h2><p><strong>${esc(entryName(entryId))}</strong> · Week ${w}</p>${current?`<div class="row">${teamChip(current)}<span>→ No pick</span></div>`:''}<div class="help-callout">This change is immediate, can override the member deadline and is recorded.</div><div class="row"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="remoteAdminPick('${entryId}',${w},null)">Clear pick</button></div>`);} if(REMOTE) return remoteAdminPick(entryId,w,null); if(S.picks[entryId]){ delete S.picks[entryId][w]; save(); render(); } }
 function printSheet(w){
   const r=currentRound(); const comp=computeRound(r);
-  const eligible=S.entries.filter(e=>isAliveForWeek(comp,w,e.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  const eligible=roundEntries(r).filter(e=>isAliveForWeek(comp,w,e.id)).sort((a,b)=>a.name.localeCompare(b.name));
   const win=window.open('','_blank');
   win.document.write(`<html><head><title>Week ${w} picks</title><style>body{font-family:Arial;padding:20px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:6px 8px;text-align:left}img{height:22px;vertical-align:middle;margin-right:6px}/* Account screens keep touch inputs readable without changing page scale. */
 .auth-card{max-width:460px;margin:24px auto}.auth-card label,#passwordForm label{display:grid;gap:7px;margin:16px 0}.auth-card input,#passwordForm input{background:var(--navy-2);color:var(--white);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%;min-width:0;min-height:44px;font-size:16px}.account-bar{flex-wrap:wrap;margin-bottom:16px}.account-bar a{text-decoration:none}.deadline{padding:14px 18px}.deadline b{color:var(--gold)}.tablewrap{max-width:100%;overflow-x:auto}.card select{max-width:100%}#accountError,#passwordError{color:#ffb9bd}.auth-card button{min-height:44px}a{color:#ffcf48}
@@ -1033,7 +1041,7 @@ function printSheet(w){
 /* ---- Results ---- */
 function renderResults(r,comp){
   const w=S.ui.week; const games=gamesByWeek(w);
-  const pickedTeams={}; S.entries.forEach(e=>{const p=S.picks[e.id]?.[w]; if(p) pickedTeams[p]=(pickedTeams[p]||0)+1;});
+  const pickedTeams={}; roundEntries(r).forEach(e=>{const p=S.picks[e.id]?.[w]; if(p) pickedTeams[p]=(pickedTeams[p]||0)+1;});
   const rows=games.map(g=>{
     const res=S.results[g.id]||{};
     const fin=!!res.final;
@@ -1089,14 +1097,14 @@ async function fetchWeekResults(w){
 /* ---- History ---- */
 function renderHistory(r,comp){
   const weeks=[]; for(let w=r.startWeek; w<=(comp.finalWeek||roundEndWeek(r)); w++) weeks.push(w);
-  const entries=S.entries.slice().sort((a,b)=>{const aa=comp.alive.has(a.id),bb=comp.alive.has(b.id); return aa===bb? a.name.localeCompare(b.name) : (aa?-1:1);});
+  const entries=roundEntries(r).slice().sort((a,b)=>{const aa=comp.alive.has(a.id),bb=comp.alive.has(b.id); return aa===bb? a.name.localeCompare(b.name) : (aa?-1:1);});
   const outWeek={}; comp.events.filter(e=>e.type==='out').forEach(e=>{ outWeek[e.id]=e.week; });
   // if wipeout later re-admitted them, ignore earlier outs
   comp.events.filter(e=>e.type==='wipeout').forEach(e=>{ Object.keys(outWeek).forEach(id=>{ if(outWeek[id]<=e.week) delete outWeek[id]; }); });
   const rows=entries.map(e=>{
     const alive=comp.alive.has(e.id);
     return `<tr class="${alive?'':'out'}"><td><b>${esc(e.name)}</b>${e.label?`<div class="muted small">${esc(e.label)}</div>`:''}</td>
-      <td>${comp.complete&&comp.winnerIds?.includes(e.id)?'<span class="pill win">Winner</span>':alive?'<span class="pill alive">In</span>':`<span class="pill out">Out wk ${outWeek[e.id]??'?'}</span>`}</td>
+      <td>${!entryPaid(e,r,comp)?'<span class="pill unpaid">Unpaid</span>':comp.complete&&comp.winnerIds?.includes(e.id)?'<span class="pill win">Winner</span>':alive?'<span class="pill alive">In</span>':`<span class="pill out">Out wk ${outWeek[e.id]??'?'}</span>`}</td>
       ${weeks.map(w=>{
         const vp=visiblePick(e.id,w); const p=vp==='HIDDEN'?null:vp;
         const wk=comp.weeks[w];
@@ -1120,7 +1128,7 @@ function exportPicksCSV(){
   const r=currentRound();
   const weeks=[]; for(let w=r.startWeek; w<=roundEndWeek(r); w++) weeks.push(w);
   const lines=[['Name','Entry','Email','Paid',...weeks.map(w=>'Week '+w)].join(',')];
-  S.entries.forEach(e=>lines.push([e.name,e.label||'',e.email||'',entryPaid(e)?'Yes':'No',...weeks.map(w=>S.picks[e.id]?.[w]?TEAMS[S.picks[e.id][w]].name:'')].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')));
+  roundEntries(r).forEach(e=>lines.push([e.name,e.label||'',e.email||'',entryPaid(e)?'Yes':'No',...weeks.map(w=>S.picks[e.id]?.[w]?TEAMS[S.picks[e.id][w]].name:'')].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')));
   download(`lms-round${r.n}-picks.csv`, lines.join('\n'), 'text/csv');
 }
 async function download(name, content, type){
@@ -1135,12 +1143,12 @@ async function download(name, content, type){
 
 /* ---- Entries ---- */
 function renderEntries(r,comp){
-  const list=S.entries.slice().sort((a,b)=>a.name.localeCompare(b.name)||(a.label||'').localeCompare(b.label||''));
+  const list=roundEntries(r).slice().sort((a,b)=>a.name.localeCompare(b.name)||(a.label||'').localeCompare(b.label||''));
   const rows=list.map(e=>{const paid=entryPaid(e,r,comp);return `<tr>
     <td>${e.accountId?`<b>${esc(entryName(e.id))}</b><div class="small muted">Edit account name in Members</div>`:`<input type="text" value="${esc(e.name)}" onchange="updEntry('${e.id}','name',this.value)" style="width:100%">`}</td>
     <td class="entry-label"><input type="text" inputmode="numeric" value="${esc(e.label||'')}" placeholder="#" aria-label="Entry number for ${esc(entryName(e.id))}" onchange="updEntry('${e.id}','label',this.value)"></td>
     <td><input type="email" value="${esc(e.email||'')}" placeholder="optional" onchange="updEntry('${e.id}','email',this.value)" style="width:100%"></td>
-    <td>${paid?`<button class="pill paid" style="border:0;cursor:pointer" title="Mark unpaid" onclick="setEntryPayment('${e.id}',false)">Paid</button>`:`<div class="row"><span class="pill unpaid">Unpaid</span><button class="btn sm gold" onclick="setEntryPayment('${e.id}',true)">Mark paid</button></div>`}</td>
+    <td>${paid?`<div class="row"><span class="pill paid">Paid</span><button class="btn sm" onclick="setEntryPayment('${e.id}',false)">Mark unpaid</button></div>`:`<div class="row"><span class="pill unpaid">Unpaid</span><button class="btn sm gold" onclick="setEntryPayment('${e.id}',true)">Mark paid</button></div>`}</td>
     <td>${playerStatus(comp,e)}</td>
     ${REMOTE?personalLinkCell(e,r,comp):''}
     <td><button class="btn sm danger" onclick="delEntry('${e.id}')">Remove</button></td>
@@ -1169,19 +1177,19 @@ function renderEntries(r,comp){
     </div>`:''}
   </div>
   <div class="card" style="margin-top:18px">
-    <h2>Entries <span class="tag">${S.entries.length} entries · ${S.entries.filter(e=>entryPaid(e,r,comp)).length} paid · pot ${gbp(prizePot(r,comp))}</span></h2>
+    <h2>Entries <span class="tag">${list.length} entries · ${list.filter(e=>entryPaid(e,r,comp)).length} paid · pot ${gbp(prizePot(r,comp))}</span></h2>
     <p class="muted small">Payment belongs to the competition entry. Owner and admin entries can be marked paid here without changing their staff access.</p>
     ${comp.resetWeek>r.startWeek?`<p class="muted small">Rollover: each player must pay ${gbp(S.settings.fee)} again for Week ${comp.resetWeek}. Mark the new fee paid here. Unpaid players are eliminated and cannot pick.</p>`:''}
     ${rows?`<div class="table-scroll" tabindex="0" role="region" aria-label="Competition entries"><table class="entries-table"><thead><tr><th>Name</th><th class="entry-label">Label</th><th>Email</th><th>${comp.resetWeek>r.startWeek?'Rollover fee · Wk '+comp.resetWeek:'Payment'}</th><th>Status</th>${REMOTE?'<th>Account</th>':''}<th></th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty">No entries yet.</div>'}
-    ${S.entries.length?`<div style="margin-top:10px"><button class="btn sm danger" onclick="clearEntries()">Remove all entries</button></div>`:''}
+    ${list.length?`<div style="margin-top:10px"><button class="btn sm danger" onclick="clearEntries()">Remove all current-round entries</button></div>`:''}
   </div>`;
 }
-function addEntry(name,label='',email='',paid=false){ name=(name||'').trim(); if(!name) return false; S.entries.push({id:uid(),name,label:(label||'').trim(),email:(email||'').trim(),paid:!!paid,created:Date.now()}); return true; }
+function addEntry(name,label='',email='',paid=false){ name=(name||'').trim(); if(!name) return false; S.entries.push({id:uid(),name,label:(label||'').trim(),email:(email||'').trim(),paid:!!paid,round:currentRound().n,created:Date.now()}); return true; }
 function addEntryFromForm(){ const n=document.getElementById('newName').value; if(!n.trim()) return toast('Enter a name'); addEntry(n,document.getElementById('newLabel').value,document.getElementById('newEmail').value,document.getElementById('newPaid').value==='1'); save(); render(); toast(`Added ${esc(n)}`); }
 function setEntryPayment(id,paid){const e=S.entries.find(x=>x.id===id);if(!e)return;const r=currentRound(),comp=computeRound(r),week=L.paymentWeek(r,comp);if(week===r.startWeek)e.paid=paid;else (e.rolloverPayments ||= {})[week]=paid;save();render();}
 function updEntry(id,k,v){ const e=S.entries.find(x=>x.id===id); if(e){ e[k]=v; save(); render(); } }
 function delEntry(id){ const e=S.entries.find(x=>x.id===id); if(!confirm(`Remove ${e.name}${e.label?' ('+e.label+')':''}? Their picks will be deleted too.`)) return; S.entries=S.entries.filter(x=>x.id!==id); delete S.picks[id]; save(); render(); }
-function clearEntries(){ if(!confirm('Remove ALL entries and their picks?')) return; S.entries=[]; S.picks={}; save(); render(); }
+function clearEntries(){ const ids=new Set(roundEntries().map(e=>e.id));if(!confirm('Remove ALL current-round entries and their picks?')) return; S.entries=S.entries.filter(e=>!ids.has(e.id));for(const id of ids)delete S.picks[id];save();render(); }
 function importPaste(){
   const txt=document.getElementById('pasteBox').value; let n=0;
   txt.split(/\r?\n/).forEach(line=>{ if(!line.trim()) return; const parts=line.split(/[,\t;]/).map(s=>s.trim()); if(addEntry(parts[0],parts[1],parts[2],/^(y|yes|paid|true|1)$/i.test(parts[3]||''))) n++; });
@@ -1337,7 +1345,7 @@ function applyRemote(data,sequence=remoteSequence){
     if(!remoteReplacePicks)S.picks=data.picks;
     S.updatedAt=data.updatedAt;
   }
-  ADMIN=data.admin===true;
+  ADMIN=data.admin===true&&accountPage==='/admin';
 }
 function queueRemote(work){
   remoteWrites++;liveStatus='Saving…';updateLiveStatus();
@@ -1399,7 +1407,7 @@ async function copyText(value){
   catch{modal(`<h2>Copy message</h2><textarea id="copyFallback" rows="5" style="width:100%">${esc(value)}</textarea><button class="btn" onclick="closeModal()">Close</button>`);document.getElementById('copyFallback').select();}
 }
 function copyEntryLink(id,invite){const e=S.entries.find(e=>e.id===id);if(!e?.code)return toast('Wait for the entry to finish saving.');const link=personalLink(e);copyText(invite?`You're in the NFL Last Man Standing. Your personal pick link is ${link}. Pick one team to win each week before kick-off. Each team can only be used once. Good luck!`:link);}
-function missingEntries(w,r,comp){return w<r.startWeek||w>roundEndWeek(r)||weekSettled(w)?[]:S.entries.filter(e=>entryPaid(e,r,comp) && isAliveForWeek(comp,w,e.id) && !S.picks[e.id]?.[w]);}
+function missingEntries(w,r,comp){return w<r.startWeek||w>roundEndWeek(r)||weekSettled(w)?[]:roundEntries(r).filter(e=>entryPaid(e,r,comp) && isAliveForWeek(comp,w,e.id) && !S.picks[e.id]?.[w]);}
 function chaseStrip(w,r,comp){const missing=missingEntries(w,r,comp);return `<div class="card edit"><h2>Not picked yet <span class="tag">${missing.length}</span></h2><div class="avatars">${missing.map(e=>`<span class="av">${esc(entryName(e.id))}</span>`).join('')||'<span class="muted small">All eligible paid entries have picked.</span>'}</div><button class="btn sm" style="margin-top:10px" onclick="copyChase(${w})" ${missing.length?'':'disabled'}>Copy chase message</button></div>`;}
 function copyChase(w){const r=currentRound(),comp=computeRound(r);copyText(`Week ${w} picks close ${fmtDate(L.weekDeadline(w))} (UK time). Still waiting on: ${missingEntries(w,r,comp).map(e=>entryName(e.id)).join(', ')}. Sign in to your account to pick.`);}
 function remotePublicSnapshot(){
@@ -1470,8 +1478,9 @@ function renderPlayer(){
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===S.ui.view));
   renderHeader(r,comp);
   const usedAll=usedTeams(e.id,r,comp,null);
-  const accountSummary=`<div class="card"><h2>Hi ${esc(e.name)} ${playerStatus(comp,e)}</h2><p class="pill ${entryPaid(e,r,comp)?'alive':'pending'}">${entryPaid(e,r,comp)?'Active (paid)':'Inactive (not paid)'} · Round ${r.n}${comp.resetWeek>r.startWeek?' · Rollover':''}</p>${e.label?`<p class="muted">${esc(e.label)}</p>`:''}<p>Current pot <b style="color:var(--gold)">${gbp(prizePot(r,comp))}</b></p><div class="small muted">Already used since the last reset</div><div class="avatars" style="margin-top:8px">${Object.keys(usedAll).map(t=>logoImg(t)).join('')||'<span class="muted small">No teams used yet.</span>'}</div></div>`;
-  const pages={dash:()=>deadlineBanner(first)+accountSummary+renderDashboard(r,comp),picks:()=>renderMemberPicks(e,r,comp),results:()=>renderResults(r,comp),standings:()=>renderStandings(r,comp)};
+  const currentPick=playerMe.picks[first];
+  const accountSummary=`<div class="card"><h2>Hi ${esc(e.name)} ${playerStatus(comp,e)}</h2><p class="pill ${entryPaid(e,r,comp)?'alive':'pending'}">${entryPaid(e,r,comp)?'Active (paid)':'Inactive (not paid)'} · Round ${r.n}${comp.resetWeek>r.startWeek?' · Rollover':''}</p>${e.label?`<p class="muted">Entry ${esc(e.label)}</p>`:''}<p>Current pot <b style="color:var(--gold)">${gbp(prizePot(r,comp))}</b></p><div class="row" style="margin:14px 0">${currentPick?teamChip(currentPick,'logo lg'):'<span class="muted">No Week '+first+' pick yet</span>'}${entryPaid(e,r,comp)?`<button class="btn gold" onclick="setView('picks')">${currentPick?'Change pick':'Make pick'}</button>`:'<span class="pill unpaid">Payment required before picking</span>'}</div><div class="small muted">Already used since the last reset</div><div class="avatars" style="margin-top:8px">${Object.keys(usedAll).map(t=>logoImg(t)).join('')||'<span class="muted small">No teams used yet.</span>'}</div></div>`;
+  const pages={dash:()=>deadlineBanner(first)+memberDashboardControls(e)+accountSummary+renderDashboard(r,comp),picks:()=>renderMemberPicks(e,r,comp),results:()=>renderResults(r,comp),standings:()=>renderStandings(r,comp)};
   main.innerHTML=announcementBanner()+pages[S.ui.view]();updateCountdown();
 }
 function updateCountdown(){const el=document.getElementById('playerCountdown');if(!el||!playerMe)return;const w=S.ui.week,p=playerMe.picks[w],time=L.weekDeadline(w);let minutes=Math.max(0,Math.ceil((time-serverNow())/60000));el.textContent=minutes?`Locks in ${Math.floor(minutes/1440)}d ${Math.floor(minutes%1440/60)}h ${minutes%60}m`:'Pick deadline has passed.';}
@@ -1486,25 +1495,26 @@ let lastPlayerBoundary=null;
 setInterval(()=>{if(!PLAYER_CODE||!playerMe)return;const boundary=String(playerLock(S.ui.week))+':'+gamesByWeek(S.ui.week).filter(g=>new Date(g.date).getTime()<=serverNow()).length;if(boundary!==lastPlayerBoundary){lastPlayerBoundary=boundary;render();}else updateCountdown();},1000);
 
 /* ===================== INIT ===================== */
-document.getElementById('nav').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) setView(b.dataset.v); });
+document.getElementById('nav').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return;if(accountPage==='/account'){location.href='/dashboard?view='+encodeURIComponent(b.dataset.v);return;} setView(b.dataset.v); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 /* ACCOUNT:START */
-let accountUser=null,accountEntries=[],accountPage=['/login','/signup','/dashboard','/account','/admin','/reset-password','/help','/privacy'].includes(location.pathname)?location.pathname:null;
+let accountUser=null,accountEntries=[],accountParticipation='not_entered',accountSummary=null,accountPage=['/login','/signup','/dashboard','/account','/admin','/reset-password','/help','/privacy'].includes(location.pathname)?location.pathname:null;
 const accountCall=(action,body)=>apiRequest('/api/account?action='+action,body);
 function accountBar(){if(location.protocol==='file:')return '';if(accountPage==='/admin')return adminNavigation();return ['/login','/signup','/reset-password'].includes(accountPage)?'<div class="row account-bar"><a class="btn" href="/">Dashboard</a></div>':'';}
 const adminSections=[['adminhome','Admin home'],['entries','Entries & payments'],['members','Members & roles'],['picks','Manage picks'],['results','Results'],['settings','Settings'],['dash','Overview'],['adminhelp','Admin guide']];
 function adminNavigation(){return accountPage==='/admin'&&ADMIN?`<div class="admin-nav" role="navigation" aria-label="Admin tools">${adminSections.map(([view,label])=>`<button class="btn ${S.ui.view===view?'gold':''}" aria-current="${S.ui.view===view?'page':'false'}" onclick="setView('${view}')">${view==='members'&&accountUser?.role!=='owner'?'Members':label}</button>`).join('')}</div>`:'';}
 function renderAdminHome(r,comp){
- const paid=S.entries.filter(e=>entryPaid(e,r,comp)).length;
+ const entries=roundEntries(r),paid=entries.filter(e=>entryPaid(e,r,comp)).length,missing=missingEntries(defaultWeek(),r,comp).length,summary=accountSummary||{members:0,participating:0,entries:entries.length,paid,unpaid:entries.length-paid};
  const tools=[['entries','Entries & payments',accountUser?.role==='owner'?'Mark payments, add people manually and use the owner-only spreadsheet importer.':'Mark payments and add individual entries. New members should register and set their own password.'],['members',accountUser?.role==='owner'?'Members & roles':'Members',accountUser?.role==='owner'?'Correct names, assign admins, manage access, link entries and reset passwords.':'Correct member names and reset member passwords.'],['picks','Manage picks','Add, replace or clear picks for any entry, including your own and deadline overrides.'],['results','Results','Fetch scores, enter results and settle the week.'],['settings','Competition settings','Manage rounds, rules, entry fees and backups.'],['dash','Competition overview','Check the prize pot, standings, missing picks and fixtures.'],['adminhelp','Admin how-to guide','Search the complete guide to payments, accounts, picks, results, rollovers and settings.']];
- return `<div class="card admin-intro"><div class="kick">${accountUser?.role==='owner'?'Owner':'Administrator'} access</div><h1>Admin area</h1><p>Manage your competition here. Your own entry and picks are in <a href="/dashboard">My dashboard</a>, with password and entry controls in <a href="/account">Account settings</a>.</p><div class="row"><span class="pill">Round ${r.n}</span><span class="pill paid">${paid} paid</span><span class="pill unpaid">${S.entries.length-paid} awaiting payment</span></div></div><div class="admin-tools">${tools.map(([view,label,description])=>`<button class="card admin-tool" onclick="setView('${view}')"><strong>${label}</strong><span>${description}</span><span class="admin-tool-open">Open →</span></button>`).join('')}</div>${deadlineBanner(defaultWeek())}`;
+ return `<div class="card admin-intro"><div class="kick">${accountUser?.role==='owner'?'Owner':'Administrator'} access</div><h1>Admin area</h1><p>Manage the competition here. Use <a href="/dashboard">Dashboard</a> for your own entries and picks, just like every other member.</p>${participationSummary(summary,missing)}</div><div class="admin-tools">${tools.map(([view,label,description])=>`<button class="card admin-tool" onclick="setView('${view}')"><strong>${label}</strong><span>${description}</span><span class="admin-tool-open">Open →</span></button>`).join('')}</div>${deadlineBanner(defaultWeek())}`;
 }
+function participationSummary(summary,missing){return `<div class="participation-summary"><div><b>${summary.members}</b><span>Members</span></div><div><b>${summary.participating}</b><span>Participating</span></div><div><b>${summary.entries}</b><span>Entries</span></div><div class="paid"><b>${summary.paid}</b><span>Paid</span></div><div class="unpaid"><b>${summary.unpaid}</b><span>Unpaid</span></div><div class="topick"><b>${missing}</b><span>Still to pick</span></div></div>`;}
 
 function deadlineBanner(w){const d=L.weekDeadline(w);return `<div class="card deadline"><b>Week ${w} pick deadline: ${d?new Date(d).toLocaleString('en-GB',{weekday:'long',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/London'}):'Awaiting fixtures'} (UK time)</b><div class="small muted">All picks and changes close one hour before the first kick-off.${d&&d<=serverNow()?' This week is now locked.':''}</div></div>`;}
 function remoteHeader(){
  if(!accountUser)return '<a class="stat pub" style="color:inherit;font:inherit;text-decoration:none" href="/signup"><div class="v" style="font-size:18px">Register</div><div class="l">or sign in</div></a>';
- const staff=['owner','admin'].includes(accountUser.role),inAdmin=accountPage==='/admin';
- return `<a class="stat pub" style="color:inherit;font:inherit;text-decoration:none" href="${staff?(inAdmin?'/dashboard':'/admin'):'/account'}"><div class="v" style="font-size:18px">${staff?(inAdmin?'Exit admin':'Admin'):'Account'}</div><div class="l">${staff?(inAdmin?'dashboard':accountUser.role):'settings'}</div></a><button type="button" class="stat pub" style="color:inherit;font:inherit" onclick="accountLogout()"><div class="v" style="font-size:18px">Sign out</div><div class="l">account</div></button>`;
+ const staff=['owner','admin'].includes(accountUser.role),inAdmin=accountPage==='/admin',inAccount=accountPage==='/account';
+ return `<a class="stat pub account-access" href="${inAccount?'/dashboard':'/account'}"><div class="v">${inAccount?'Exit account settings':'Account settings'}</div><div class="l">${esc(accountUser.name)}</div></a>${staff?`<a class="stat pub account-access admin-access" href="${inAdmin?'/dashboard':'/admin'}"><div class="v">${inAdmin?'Exit admin':'Admin area'}</div><div class="l">${accountUser.role}</div></a>`:''}<button type="button" class="stat pub signout-access" onclick="accountLogout()"><div class="v">Sign out</div><div class="l">account</div></button>`;
 }
 async function remoteAdmin(){location.href=accountUser&&['admin','owner'].includes(accountUser.role)?'/admin':'/login';}
 async function accountLogout(){try{await flushRemote();await remoteQueue;if(remoteDirty)return;await accountCall('logout',{});location.href='/';}catch(e){toast(esc(e.message));}}
@@ -1513,14 +1523,14 @@ function authForm(){
  document.body.classList.add('ro');document.getElementById('nav').classList.add('hidden');document.getElementById('hdrStats').innerHTML='';document.getElementById('foot').textContent='Manual payments. Play responsibly. 18+.';
  const tabs=reset?'':`<div class="auth-tabs"><a class="${signup?'active':''}" href="/signup">Register</a><a class="${!signup?'active':''}" href="/login">Sign in</a></div>`;
  const registerPrompt=!signup&&!reset?'<div class="register-prompt"><div><span>New player?</span><strong>Register before you sign in</strong><p>Create your NFL LMS account with your first name, last name, email and password.</p></div><a class="btn gold" href="/signup">Create my account</a></div><div class="auth-divider"><span>Already registered? Sign in below</span></div>':'';
- document.getElementById('main').innerHTML=accountBar()+`<div class="card auth-card">${tabs}${registerPrompt}<h2>${reset?'Set a new password':signup?'Register for NFL LMS':'Member sign in'}</h2><p class="muted">${reset?'Your reset link works once and expires after one hour.':signup?'Enter your first name, last name, email address and a password. Registration is immediate, with no confirmation email. Your entry becomes active after payment is approved.':'Use the email address and password you registered with.'}</p><form id="accountForm">${reset?'':`${signup?'<div class="auth-name-grid"><label>First name<input type="text" name="firstName" autocomplete="given-name" maxlength="50" required></label><label>Last name<input type="text" name="lastName" autocomplete="family-name" maxlength="50" required></label></div>':''}<label>Email address<input name="email" type="email" autocomplete="email" required maxlength="320" ${signup&&location.hash.startsWith('#setup=')?'value="roboshea@gmail.com"':''}></label>`}<label>Password<input name="password" type="password" autocomplete="${signup||reset?'new-password':'current-password'}" ${signup||reset?'minlength="7"':''} maxlength="256" required></label>${signup||reset?'<p class="small muted">At least 7 characters.</p>':''}<p id="accountError" role="alert"></p><button class="btn gold auth-submit" type="submit">${reset?'Save password':signup?'Register and create account':'Sign in'}</button></form><p>${reset?'<a href="/login">Back to sign in</a>':signup?'Already have an account? <a href="/login"><strong>Sign in here</strong></a>':''}</p><p><a href="/help">How to use NFL LMS</a></p>${!signup&&!reset?'<details><summary>Forgotten your password?</summary><p>Contact the organiser for a private password reset link.</p></details>':''}</div>`;
+ document.getElementById('main').innerHTML=accountBar()+`<div class="card auth-card">${tabs}${registerPrompt}<h2>${reset?'Set a new password':signup?'Register for NFL LMS':'Member sign in'}</h2><p class="muted">${reset?'Your reset link works once and expires after one hour.':signup?'Enter your first name, last name, email address and a password. Registration is immediate, with no confirmation email. After registering, use Dashboard to add an entry if you want to join the current round.':'Use the email address and password you registered with.'}</p><form id="accountForm">${reset?'':`${signup?'<div class="auth-name-grid"><label>First name<input type="text" name="firstName" autocomplete="given-name" maxlength="50" required></label><label>Last name<input type="text" name="lastName" autocomplete="family-name" maxlength="50" required></label></div>':''}<label>Email address<input name="email" type="email" autocomplete="email" required maxlength="320" ${signup&&location.hash.startsWith('#setup=')?'value="roboshea@gmail.com"':''}></label>`}<label>Password<input name="password" type="password" autocomplete="${signup||reset?'new-password':'current-password'}" ${signup||reset?'minlength="7"':''} maxlength="256" required></label>${signup||reset?'<p class="small muted">At least 7 characters.</p>':''}<p id="accountError" role="alert"></p><button class="btn gold auth-submit" type="submit">${reset?'Save password':signup?'Register and create account':'Sign in'}</button></form><p>${reset?'<a href="/login">Back to sign in</a>':signup?'Already have an account? <a href="/login"><strong>Sign in here</strong></a>':''}</p><p><a href="/help">How to use NFL LMS</a></p>${!signup&&!reset?'<details><summary>Forgotten your password?</summary><p>Contact the organiser for a private password reset link.</p></details>':''}</div>`;
  document.getElementById('accountForm').onsubmit=async event=>{
   event.preventDefault();const form=event.currentTarget,button=form.querySelector('button'),error=document.getElementById('accountError');button.disabled=true;error.textContent='';
   try{const body=Object.fromEntries(new FormData(form));if(signup)body.setupToken=new URLSearchParams(location.hash.slice(1)).get('setup');if(reset)body.token=new URLSearchParams(location.hash.slice(1)).get('token');await accountCall(reset?'reset':signup?'signup':'login',body);history.replaceState(null,'',location.pathname);location.href=reset?'/login':'/dashboard';}catch(e){error.textContent=e.message;button.disabled=false;}
  };
 }
 async function accountBoot(){
- const data=await accountCall('me');accountUser=data.user;accountEntries=data.entries;document.getElementById('homeBrand').href=accountUser?'/dashboard':'/';
+ const data=await accountCall('me');accountUser=data.user;accountEntries=data.entries;accountParticipation=data.participation||'not_entered';accountSummary=data.summary;document.getElementById('homeBrand').href=accountUser?'/dashboard':'/';
  if(['/login','/signup','/reset-password'].includes(accountPage)){authForm();return true;}
  if(accountPage==='/dashboard'||accountPage==='/account'||location.pathname.startsWith('/play/')){
   if(!accountUser){location.replace('/login');return true;}
@@ -1534,35 +1544,22 @@ async function accountBoot(){
 }
 function memberEntrySwitcher(){
  if(accountEntries.length<2)return '';
- return `<div class="account-entry-switch"><div class="small muted">Manage an entry</div><div class="account-entry-tabs" role="navigation" aria-label="Choose competition entry">${accountEntries.map((e,i)=>`<a class="btn ${e.id===PLAYER_CODE?'gold':''}" aria-current="${e.id===PLAYER_CODE?'page':'false'}" href="/account?entry=${encodeURIComponent(e.id)}">${esc(`${accountUser?.name||e.name} ${e.label||i+1}`)}</a>`).join('')}</div><p class="small muted">Each entry has its own payment status, picks and history.</p></div>`;
+ const base=accountPage==='/account'?'/account':'/dashboard';return `<div class="account-entry-switch"><div class="small muted">Choose an entry</div><div class="account-entry-tabs" role="navigation" aria-label="Choose competition entry">${accountEntries.map((e,i)=>`<a class="btn ${e.id===PLAYER_CODE?'gold':''}" aria-current="${e.id===PLAYER_CODE?'page':'false'}" href="${base}?entry=${encodeURIComponent(e.id)}">${esc(`${accountUser?.name||e.name} ${e.label||i+1}`)}</a>`).join('')}</div><p class="small muted">Each entry has its own payment status, pick and history.</p></div>`;
 }
-function memberTools(){return `<div class="card account-identity"><div><div class="help-kicker">My account</div><h1>${esc(accountUser?.name||'Member')}</h1><div class="muted">${esc(accountUser?.email||'')}</div></div><div class="account-actions"><button class="btn" onclick="addAccountEntry()">${accountEntries.length?'Add another entry':'Add first entry'}</button><button class="btn" onclick="changeAccountPassword()">Change password</button><a class="btn" href="/help">How to use the app</a><a class="btn gold" href="/dashboard${PLAYER_CODE?'?entry='+encodeURIComponent(PLAYER_CODE):''}">Dashboard</a></div>${memberEntrySwitcher()}</div>`;}
+function memberTools(){return `<div class="card account-identity"><div><div class="help-kicker">Account settings</div><h1>${esc(accountUser?.name||'Member')}</h1><div class="muted">${esc(accountUser?.email||'')}</div></div><div class="account-actions"><button class="btn" onclick="changeAccountPassword()">Change password</button><a class="btn" href="/help">How to use the app</a><a class="btn gold" href="/dashboard">Exit account settings</a></div></div>`;}
 function noEntryBanner(){
  if(!accountUser||accountEntries.length)return '';
  const staff=['owner','admin'].includes(accountUser.role);
- return `<div class="card"><div class="kick">Your account</div><h2>No competition entry yet</h2><p>Your sign-in is working, but there is no playing entry linked to this account. Add your first entry to join the current round. An admin must then mark it paid before it can make a pick.</p><div class="row"><button class="btn gold" onclick="addAccountEntry()">Add first entry</button>${staff?'<a class="btn" href="/admin">Open Admin area</a>':''}<a class="btn" href="/account">Account settings</a></div></div>`;
+ const sittingOut=accountParticipation==='not_participating';return `<div class="card join-round"><div class="kick">Round ${currentRound().n}</div><h2>${sittingOut?'You are not participating':'Join this round'}</h2><p>${sittingOut?'You are currently marked as not participating. Add an entry whenever you decide to join.':'Your member account is ready. You are not counted as an entry until you choose to join this round.'}</p><div class="row"><button class="btn gold" onclick="addAccountEntry()">Add an entry</button>${!sittingOut?`<button class="btn" onclick="setAccountParticipation('not_participating')">I’m not participating</button>`:''}${sittingOut?`<button class="btn" onclick="setAccountParticipation('not_entered')">Clear this status</button>`:''}${staff?'<a class="btn" href="/admin">Open Admin area</a>':''}</div></div>`;
 }
-function accountHistory(e,r,comp){
- const weeks=[];for(let w=r.startWeek;w<=Math.min(defaultWeek(),roundEndWeek(r));w++)if(playerMe?.picks?.[w])weeks.push(w);
- return `<div class="card"><h2>Your pick history <span class="tag">Round ${r.n}</span></h2>${weeks.length?`<div class="account-history">${weeks.map(w=>{const team=playerMe.picks[w],result=teamResult(team,w),label=result.code==='W'?'Won':result.code==='L'||result.code==='BYE'?'Lost':result.code==='T'?'Tied':'Awaiting result';return `<div class="account-history-row"><span class="account-week">Week ${w}</span>${teamChip(team)}<span class="pill ${result.code==='W'?'alive':result.code==='L'||result.code==='BYE'?'out':'pending'}">${label}</span></div>`;}).join('')}</div>`:'<div class="empty">No picks made yet.</div>'}</div>`;
-}
-function accountTeamDirectory(e,r,comp,w){
- const usedForChoice=usedTeams(e.id,r,comp,w),pickedSinceReset=new Set(Object.entries(playerMe?.picks||{}).filter(([week])=>+week>=comp.resetWeek).map(([,team])=>team));
- const available=playerLock(w)?[]:TEAM_LIST.filter(t=>{const game=teamGame(t.abbr,w);return game&&!usedForChoice[t.abbr]&&new Date(game.date).getTime()>serverNow()&&!S.results[game.id]?.final;});
- const left=TEAM_LIST.filter(t=>!pickedSinceReset.has(t.abbr));
- const cards=list=>`<div class="account-team-grid">${list.map(t=>{const game=teamGame(t.abbr,w);return `<div class="account-team-card">${logoImg(t.abbr,'logo lg')}<div><b>${esc(t.short)}</b>${game?`<span>${game.home===t.abbr?'vs '+TEAMS[game.away].short:'@ '+TEAMS[game.home].short}</span>`:''}</div></div>`;}).join('')}</div>`;
- return `<div class="card"><h2>Available to pick in Week ${w} <span class="tag">${available.length} teams</span></h2><p class="muted small">Playing this week, not previously used since the last reset, and still available before kick-off.</p>${available.length?cards(available):'<div class="empty">No teams are currently available.</div>'}</div><div class="card"><h2>Teams you have left <span class="tag">${left.length} of 32</span></h2><p class="muted small">Every team you have not selected since the last rollover or new round, including teams on a bye this week.</p>${left.length?cards(left):'<div class="empty">No unused teams remain.</div>'}</div>`;
-}
+function memberDashboardControls(e){const paid=e&&entryPaid(e),name=e?entryName(e.id):'';return `<div class="card entry-controls"><h2>Your round entries <span class="tag">${accountEntries.length} ${accountEntries.length===1?'entry':'entries'}</span></h2>${memberEntrySwitcher()}<div class="row"><button class="btn gold" onclick="addAccountEntry()">Add another entry</button>${e&&!paid?`<button class="btn danger" onclick="removeAccountEntry('${e.id}','${esc(name)}')">Remove this unpaid entry</button>`:''}<button class="btn" onclick="setAccountParticipation('not_participating')">Sit out this round</button></div><p class="small muted">Every entry must be approved and marked paid by an administrator before it can make a pick. Paid entries must be marked unpaid by an administrator before removal.</p></div>`;}
 function renderAccountPage(){
  document.body.classList.add('ro','player');document.getElementById('nav').classList.remove('hidden');const r=currentRound(),comp=computeRound(r),w=defaultWeek();renderHeader(r,comp);document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
- if(!playerMe){document.getElementById('main').innerHTML=memberTools()+(!accountEntries.length?noEntryBanner():`<div class="card"><p>${esc(playerError||'Loading your competition entry…')}</p></div>`);return;}
- const e=playerMe.entry,entryIndex=Math.max(0,accountEntries.findIndex(item=>item.id===e.id)),entryTitle=`${accountUser?.name||e.name} ${e.label||entryIndex+1}`,paid=entryPaid(e,r,comp),alive=comp.alive.has(e.id),pick=playerMe.picks[w],game=pick?teamGame(pick,w):null,locked=playerLock(w),eligible=isAliveForWeek(comp,w,e.id)&&!comp.complete,fullName=/\S+\s+\S+/.test(accountUser?.name||'');
- const status=paid&&alive?'Active':!paid?'Inactive · payment required':'Eliminated';
- const pickAction=!fullName?'<span class="pill out">Full name required</span>':paid&&eligible&&!locked?`<a class="btn gold" href="/dashboard?entry=${encodeURIComponent(e.id)}&view=picks">${pick?'Change pick':'Make your pick'}</a>`:`<span class="pill ${locked?'pending':'out'}">${locked?'Picks locked':!paid?'Payment required':'Not eligible to pick'}</span>`;
- const current=`<div class="grid two account-summary"><div class="card" style="margin:0"><h2>${esc(entryTitle)} <span class="tag">Round ${r.n}</span></h2><div class="account-status ${paid&&alive?'active':'inactive'}">${status}</div><p>${!fullName?'Ask an administrator to add your first and last name before you make a pick.':paid?'Payment confirmed for this entry.':'Contact Connor or Havo to pay. An admin must mark this entry paid before it can make a pick.'}</p></div><div class="card" style="margin:0"><h2>Current pick <span class="tag">Week ${w}</span></h2>${pick?`<div class="account-current-pick">${logoImg(pick,'logo xl')}<div><strong>${esc(TEAMS[pick].name)}</strong>${game?`<span>${TEAMS[game.away].short} @ ${TEAMS[game.home].short} · ${fmtDate(game.date)}</span>`:''}</div></div>`:'<p class="muted">No selection confirmed for this week.</p>'}<div class="row" style="margin-top:14px">${pickAction}</div></div></div>`;
- document.getElementById('main').innerHTML=announcementBanner()+memberTools()+deadlineBanner(w)+current+accountHistory(e,r,comp)+accountTeamDirectory(e,r,comp,w);const foot=document.getElementById('foot');if(foot)foot.textContent='Your NFL LMS account and competition entry.';
+ document.getElementById('main').innerHTML=memberTools()+`<div class="card"><h2>Round participation</h2><p>${accountEntries.length?`You have ${accountEntries.length} ${accountEntries.length===1?'entry':'entries'} in Round ${r.n}. Manage entries and picks from your Dashboard.`:accountParticipation==='not_participating'?`You are marked as not participating in Round ${r.n}. You can join from your Dashboard.`:`You have not joined Round ${r.n}. Add an entry from your Dashboard if you want to play.`}</p><a class="btn gold" href="/dashboard">Go to Dashboard</a></div>`;const foot=document.getElementById('foot');if(foot)foot.textContent='Your NFL LMS account settings.';
 }
 async function addAccountEntry(){try{const data=await accountCall('entry',{});location.href=(accountPage==='/account'?'/account?entry=':'/dashboard?entry=')+encodeURIComponent(data.entryId);}catch(e){toast(esc(e.message));}}
+async function removeAccountEntry(entryId,name){if(!confirm(`Remove ${name}? Its picks will also be removed.`))return;try{await accountCall('remove-entry',{entryId});location.href='/dashboard';}catch(e){toast(esc(e.message));}}
+async function setAccountParticipation(status){const message=status==='not_participating'?'Sit out this round? Any unpaid entries and their picks will be removed.':'Clear your not-participating status?';if(!confirm(message))return;try{await accountCall('participation',{status});location.href='/dashboard';}catch(e){toast(esc(e.message));}}
 function changeAccountPassword(){
  modal('<h2>Change password</h2>'+ `<form id="passwordForm"><label>Current password<input name="currentPassword" type="password" autocomplete="current-password" required></label><label>New password<input name="password" type="password" autocomplete="new-password" minlength="7" maxlength="256" required></label><p class="small muted">At least 7 characters.</p><p id="passwordError" role="alert"></p><button class="btn gold">Save password</button></form>`);
  document.getElementById('passwordForm').onsubmit=async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button');btn.disabled=true;try{await accountCall('password',Object.fromEntries(new FormData(e.currentTarget)));closeModal();toast('Password updated. Other sessions have been signed out.');}catch(error){document.getElementById('passwordError').textContent=error.message;btn.disabled=false;}};
@@ -1572,11 +1569,12 @@ async function renderMembers(){
  const owner=accountUser.role==='owner';
  const nameEditor=u=>{const parts=u.name.trim().split(/\s+/),first=parts.shift()||'',last=parts.join(' '),editable=owner||u.role!=='owner';return editable?`<div class="member-name-editor"><input id="first-${u.id}" aria-label="First name for ${esc(u.name)}" value="${esc(first)}" placeholder="First name" maxlength="50"><input id="last-${u.id}" aria-label="Last name for ${esc(u.name)}" value="${esc(last)}" placeholder="Last name required" maxlength="50" required><button class="btn sm" onclick="saveMemberName('${u.id}')">Save name</button></div>${!last?'<div class="small name-required">Last name required</div>':''}`:`<b>${esc(u.name)}</b>`;};
  const ownerPanels=owner?`<div class="card"><h2>Connect entries to accounts</h2>${data.entries.length?data.entries.map(e=>`<div class="row" style="margin-bottom:12px"><b>${esc(e.name)} ${esc(e.label||'')}</b><select aria-label="Account for ${esc(e.name)}" onchange="assignEntry('${e.id}',this.value)"><option value="">${e.accountId?'Choose account':'Managed manually'}</option>${data.users.filter(u=>!u.disabled).map(u=>`<option value="${u.id}" ${e.accountId===u.id?'selected':''}>${esc(u.email)}</option>`).join('')}</select></div>`).join(''):'<p>No entries yet.</p>'}</div>`:'';
- document.getElementById('main').innerHTML=accountBar()+`<div class="card"><h2>${owner?'Members and roles':'Members'}</h2><p class="muted">Every account needs a first name, last name and email address. Saving a name correction updates every entry owned by that member; their hidden member ID keeps payments, picks and history connected.</p><div class="tablewrap"><table><thead><tr><th>First and last name</th><th>Email address</th><th>Role</th><th>Access</th><th>Actions</th></tr></thead><tbody>${data.users.map(u=>`<tr><td>${nameEditor(u)}</td><td>${esc(u.email)}</td><td>${owner&&u.role!=='owner'?`<select aria-label="Role for ${esc(u.name)}" onchange="memberAction('role','${u.id}',{role:this.value})"><option ${u.role==='member'?'selected':''}>member</option><option ${u.role==='admin'?'selected':''}>admin</option></select>`:esc(u.role)}</td><td>${u.disabled?'Disabled':'Enabled'}</td><td>${u.role!=='owner'&&(owner||u.role==='member')?`<button class="btn sm" onclick="memberAction('reset-link','${u.id}')">Reset password</button>`:''}${owner&&u.role!=='owner'?` <button class="btn sm" onclick="memberAction('disable','${u.id}',{disabled:${!u.disabled}})">${u.disabled?'Enable':'Disable'}</button>`:''}</td></tr>`).join('')}</tbody></table></div></div>${ownerPanels}`;
+ const missing=missingEntries(defaultWeek(),currentRound(),computeRound(currentRound())).length;
+ document.getElementById('main').innerHTML=accountBar()+`<div class="card"><h2>${owner?'Members and roles':'Members'}</h2>${participationSummary(data.summary,missing)}<p class="muted">Members exist independently from competition entries. Only people who add an entry are participating and counted in the current round.</p><div class="tablewrap"><table><thead><tr><th>First and last name</th><th>Email address</th><th>Role</th><th>Round ${data.round}</th><th>Actions</th></tr></thead><tbody>${data.users.map(u=>{const status=u.participation==='participating'?`${u.entryCount} ${u.entryCount===1?'entry':'entries'} · ${u.paidCount} paid · ${u.unpaidCount} unpaid`:u.participation==='not_participating'?'Not participating':'Not entered';return `<tr><td>${nameEditor(u)}</td><td>${esc(u.email)}</td><td>${owner&&u.role!=='owner'?`<select aria-label="Role for ${esc(u.name)}" onchange="memberAction('role','${u.id}',{role:this.value})"><option ${u.role==='member'?'selected':''}>member</option><option ${u.role==='admin'?'selected':''}>admin</option></select>`:esc(u.role)}</td><td><b>${status}</b></td><td><div class="row">${!u.disabled?`<button class="btn sm gold" onclick="memberAction('entry','${u.id}')">Add entry</button>`:''}${u.participation==='not_participating'?`<button class="btn sm" onclick="memberAction('participation','${u.id}',{status:'not_entered'})">Clear status</button>`:`<button class="btn sm" onclick="memberAction('participation','${u.id}',{status:'not_participating'})">Mark not participating</button>`}${u.role!=='owner'&&(owner||u.role==='member')?`<button class="btn sm" onclick="memberAction('reset-link','${u.id}')">Reset password</button>`:''}${owner&&u.role!=='owner'?`<button class="btn sm" onclick="memberAction('disable','${u.id}',{disabled:${!u.disabled}})">${u.disabled?'Enable':'Disable'}</button>`:''}</div></td></tr>`;}).join('')}</tbody></table></div></div>${ownerPanels}`;
  }catch(e){toast(esc(e.message));}
 }
 async function saveMemberName(userId){const firstName=document.getElementById('first-'+userId)?.value||'',lastName=document.getElementById('last-'+userId)?.value||'';try{await accountCall('name',{userId,firstName,lastName});applyRemote(await apiRequest('/api/state'));await renderMembers();toast('Member name updated.');}catch(e){toast(esc(e.message));}}
-async function memberAction(action,userId,extra={}){try{const data=await accountCall(action,{userId,...extra});if(data.resetToken){modal('<h2>Private password reset link</h2>'+ `<p>Send this link privately to the member. It expires in one hour and works once.</p><input id="resetLink" readonly value="${esc(location.origin+'/reset-password#token='+data.resetToken)}"><button class="btn" onclick="copyText(document.getElementById('resetLink').value)">Copy link</button>`);}else await renderMembers();}catch(e){toast(esc(e.message));}}
+async function memberAction(action,userId,extra={}){if(action==='participation'&&extra.status==='not_participating'&&!confirm('Mark this member as not participating? Any unpaid current-round entries and their picks will be removed.'))return;try{const data=await accountCall(action,{userId,...extra});if(data.resetToken){modal('<h2>Private password reset link</h2>'+ `<p>Send this link privately to the member. It expires in one hour and works once.</p><input id="resetLink" readonly value="${esc(location.origin+'/reset-password#token='+data.resetToken)}"><button class="btn" onclick="copyText(document.getElementById('resetLink').value)">Copy link</button>`);}else{if(action==='entry'||action==='participation')applyRemote(await apiRequest('/api/state'));await renderMembers();}}catch(e){toast(esc(e.message));}}
 async function assignEntry(entryId,userId){if(!userId)return;try{await accountCall('assign',{entryId,userId});applyRemote(await apiRequest('/api/state'));toast('Entry connected.');}catch(e){toast(esc(e.message));}await renderMembers();}
 /* ACCOUNT:END */
 bootRemote().then(()=>{

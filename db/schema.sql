@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS entries (
   created_at timestamptz DEFAULT now()
 );
 ALTER TABLE entries ADD COLUMN IF NOT EXISTS rollover_payments jsonb NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS round_n int NOT NULL DEFAULT 1 REFERENCES rounds(n);
 CREATE TABLE IF NOT EXISTS picks (
   entry_id text REFERENCES entries(id) ON DELETE CASCADE,
   week int NOT NULL,
@@ -54,4 +55,11 @@ CREATE TABLE IF NOT EXISTS auth_limits (key text PRIMARY KEY, hits int NOT NULL,
 CREATE TABLE IF NOT EXISTS audit_log (
  id text PRIMARY KEY, actor_id text, action text NOT NULL, target_id text,
  details jsonb NOT NULL DEFAULT '{}'::jsonb, created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS account_round_status (
+ account_id text NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+ round_n int NOT NULL REFERENCES rounds(n) ON DELETE CASCADE,
+ status text NOT NULL CHECK(status IN ('not_participating')),
+ updated_at timestamptz NOT NULL DEFAULT now(),
+ PRIMARY KEY(account_id,round_n)
 );
