@@ -3,6 +3,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 function createStore(pool) {
+  // Neon may close idle pooled connections; do not let an unhandled Pool error
+  // terminate the process or dump a connection object into application logs.
+  pool.on?.('error', () => console.warn('An idle database connection closed. The next request will reconnect.'));
   let ready;
   function bootstrap() {
     if (!ready) ready = (async () => {
@@ -71,7 +74,9 @@ function getStore() {
   if (!store) {
     const connectionString=process.env.DATABASE_URL || process.env.POSTGRES_URL;
     if (!connectionString) throw Object.assign(new Error('Database is not configured.'),{status:503,code:'database_unavailable'});
-    store=createStore(new Pool({connectionString,max:3,idleTimeoutMillis:10000,connectionTimeoutMillis:10000}));
+    const url=new URL(connectionString);
+    if (url.searchParams.get('sslmode')==='require') url.searchParams.set('sslmode','verify-full');
+    store=createStore(new Pool({connectionString:url.toString(),max:3,idleTimeoutMillis:10000,connectionTimeoutMillis:10000}));
   }
   return store;
 }

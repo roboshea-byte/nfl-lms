@@ -7,3 +7,7 @@ public/
 
 node_modules
 .node_modules-icloud/
+.vercel
+
+.agents/
+skills-lock.json
