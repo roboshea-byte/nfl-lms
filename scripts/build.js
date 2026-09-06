@@ -10,4 +10,6 @@ for (const [name, content] of [['SCHEDULE', 'const SCHEDULE = ' + JSON.stringify
   html = html.replace(pattern, () => '/* ' + name + ':START */\n' + content.trim() + '\n/* ' + name + ':END */');
 }
 fs.writeFileSync(path.join(root, 'index.html'), html);
+fs.mkdirSync(path.join(root, 'public'), {recursive:true});
+fs.writeFileSync(path.join(root, 'public/index.html'), html);
 console.log('Inlined shared rules and unchanged 2026 schedule into index.html.');

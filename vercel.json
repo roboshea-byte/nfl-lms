@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": ".",
+  "outputDirectory": "public",
   "rewrites": [{ "source": "/play/:code", "destination": "/index.html" }],
   "headers": [
     { "source": "/(.*)", "headers": [

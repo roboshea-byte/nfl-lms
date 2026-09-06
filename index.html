@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
 <title>NFL Last Man Standing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -198,6 +199,15 @@ footer{text-align:center;color:var(--grey);font-size:11px;padding:20px}
 body.ro .edit{display:none!important}
 body.ro .pickbtn{border-style:solid;cursor:default;pointer-events:none}
 body.ro nav button[data-v=entries],body.ro nav button[data-v=settings]{display:none}
+/* Remote additions reuse the original palette and components. */
+input[type=password]{background:var(--deep);border:1px solid var(--line);color:#fff;border-radius:8px;padding:8px 10px}
+body.player nav{display:none}
+body.player main{max-width:900px}
+body.player .teamgrid button{color:var(--white);font:inherit}
+body.player .season{display:flex;flex-wrap:wrap;gap:10px}
+.personal-link{overflow-wrap:anywhere;min-width:180px}
+.personal-link.unpaid-link{opacity:.55}
+@media(max-width:900px){body.player{zoom:1}body.player .hdr-top{padding:12px;gap:12px}body.player .brand h1{font-size:25px}body.player .hdr-stats{margin-left:0;gap:6px}body.player .stat{min-width:76px;padding:6px 8px}body.player main{padding:14px}body.player .card{padding:16px}body.player .teamgrid{grid-template-columns:repeat(2,minmax(0,1fr))}body.player .card h2{flex-wrap:wrap}}
 </style>
 </head>
 <body>
@@ -329,10 +339,12 @@ function embeddedState(){ try{ const t=document.getElementById('lms-state')?.tex
 function embeddedHasData(){ const e=embeddedState(); return !!(e && (e.updatedAt||0)>0); }
 // A baked copy served from a normal web host (not file://, not the claude.ai viewer): viewers read-only, organiser downloads an updated copy to re-upload.
 const STATIC = !HOSTED && /^https?:$/.test(location.protocol) && embeddedHasData();
-const SHARED = HOSTED || STATIC;
+let REMOTE = false;
+const PLAYER_CODE = location.pathname.match(/^\/play\/([^/]+)\/?$/)?.[1] || new URLSearchParams(location.search).get('c');
+let SHARED = HOSTED || STATIC;
 function isRO(){ return SHARED && !ADMIN; }
 // Read-only viewers only see a pick once that game has a score against it (so nobody copies picks before kick-off).
-function visiblePick(id,w){ const p=S.picks?.[id]?.[w]; if(!p) return null; if(p==='HIDDEN') return 'HIDDEN'; if(!isRO()) return p; const g=teamGame(p,w); return (g && S.results[g.id]) ? p : 'HIDDEN'; }
+function visiblePick(id,w){ const p=S.picks?.[id]?.[w]; if(!p) return null; if(p==='HIDDEN') return 'HIDDEN'; if(!isRO() || REMOTE) return p; const g=teamGame(p,w); return (g && S.results[g.id]) ? p : 'HIDDEN'; }
 
 /* ===================== DATA ===================== */
 const TEAMS = SCHEDULE.teams;
@@ -367,11 +379,12 @@ function load(){
   return hydrate(L||E||{});
 }
 function save(opts={}){
+  if(REMOTE){ if(!opts.uiOnly && ADMIN){ remoteSequence++; remoteDirty=true; clearTimeout(remoteTimer); remoteTimer=setTimeout(()=>flushRemote().catch(()=>{}),500); liveStatus='Saving…'; updateLiveStatus(); } return; }
   if(!opts.uiOnly) S.updatedAt=Date.now();
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){ toast('Could not save to browser storage: '+e.message); }
 }
-function isDirty(){ return SHARED && ADMIN && (S.updatedAt||0) > PUBLISHED_AT; }
-function stateForPublish(){ const c=JSON.parse(JSON.stringify(S)); c.ui={view:'home',week:null}; return c; }
+function isDirty(){ if(REMOTE) return remoteDirty; return SHARED && ADMIN && (S.updatedAt||0) > PUBLISHED_AT; }
+function stateForPublish(){ const c=JSON.parse(JSON.stringify(REMOTE?remotePublicSnapshot():S)); c.ui={view:'home',week:null}; return c; }
 async function publishLive(){
   if(!HOSTED) return toast('Publishing only works on the hosted version.');
   if(!artifactNS){ artifactNS = await window.claude.use('artifact'); }
@@ -396,7 +409,7 @@ function bakedPage(){
 }
 // Download a copy of this page with the current standings baked in, ready to upload to any web host.
 function exportLivePage(){ const html=bakedPage(); if(!html) return toast('Could not build the page.'); download('index.html', html, 'text/html'); toast('Upload index.html to your web host to update the shared page.'); }
-function toggleAdmin(){ ADMIN=!ADMIN; try{localStorage.setItem('lms-admin',ADMIN?'1':'0');}catch(e){} S=load(); render(); toast(ADMIN?'Admin mode on. Make your changes, then hit Publish.':'Admin mode off.'); }
+function toggleAdmin(){ if(REMOTE) return remoteAdmin(); ADMIN=!ADMIN; try{localStorage.setItem('lms-admin',ADMIN?'1':'0');}catch(e){} S=load(); render(); toast(ADMIN?'Admin mode on. Make your changes, then hit Publish.':'Admin mode off.'); }
 const uid = () => Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const gbp = n => '£'+Number(n||0).toLocaleString('en-GB',{minimumFractionDigits:0,maximumFractionDigits:2});
@@ -448,6 +461,7 @@ function weekBar(r, comp, extraClass=''){
 
 /* ===================== RENDER ===================== */
 function render(){
+  if(PLAYER_CODE) return renderPlayer();
   const r=currentRound(); const comp=computeRound(r);
   if(!S.ui.week) S.ui.week=defaultWeek();
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===S.ui.view));
@@ -458,6 +472,7 @@ function render(){
   const views={home:renderHome,dash:renderDash,picks:renderPicks,results:renderResults,history:renderHistory,entries:renderEntries,settings:renderSettings};
   main.innerHTML=(views[S.ui.view]||renderHome)(r,comp);
   const foot=document.getElementById('foot'); if(foot) foot.innerHTML = SHARED ? (ADMIN?(HOSTED?'Admin mode. Changes are saved in this browser until you press Publish.':'Admin mode. Changes are saved in this browser; press Download and upload the new index.html to update the shared page.'):'Live standings. Updated by the organiser after each round of games.') : 'Last Man Standing. Data is saved in this browser. Use Settings &rarr; Backup to export a copy.';
+  if(REMOTE && foot) foot.textContent=ADMIN?'Admin mode. Changes are saved to the shared competition.':'Live standings. Refreshes every 45 seconds.';
   if(S.ui.view==='entries') wireDrop();
 }
 function renderHeader(r,comp){
@@ -470,7 +485,7 @@ function renderHeader(r,comp){
     <div class="stat alive"><div class="v">${comp.alive.size}</div><div class="l">Still In</div></div>
     <div class="stat pot"><div class="v">${gbp(pot)}</div><div class="l">Prize Pot</div></div>
     <div class="stat"><div class="v">${paid}/${S.entries.length}</div><div class="l">Paid</div></div>
-    ${SHARED?(ADMIN?`<div class="stat pub ${isDirty()?'dirty':''}" onclick="${HOSTED?'publishLive()':'exportLivePage()'}" title="${HOSTED?'Publish the current state so everyone with the link sees it':'Download an updated index.html to upload to your web host'}"><div class="v">${HOSTED?(isDirty()?'⬆ Publish':'✓ Live'):'⬇ Download'}</div><div class="l">${isDirty()?'unpublished changes':'up to date'}</div></div><div class="stat pub" style="border-color:var(--line);background:transparent" onclick="toggleAdmin()"><div class="v" style="color:#fff">Admin</div><div class="l">exit</div></div>`:`<div class="stat pub" style="border-color:var(--line);background:transparent;opacity:.6" onclick="toggleAdmin()" title="Organiser only"><div class="v" style="color:#fff">🔒</div><div class="l">organiser</div></div>`):''}`;
+    ${REMOTE?remoteHeader():SHARED?(ADMIN?`<div class="stat pub ${isDirty()?'dirty':''}" onclick="${HOSTED?'publishLive()':'exportLivePage()'}" title="${HOSTED?'Publish the current state so everyone with the link sees it':'Download an updated index.html to upload to your web host'}"><div class="v">${HOSTED?(isDirty()?'⬆ Publish':'✓ Live'):'⬇ Download'}</div><div class="l">${isDirty()?'unpublished changes':'up to date'}</div></div><div class="stat pub" style="border-color:var(--line);background:transparent" onclick="toggleAdmin()"><div class="v" style="color:#fff">Admin</div><div class="l">exit</div></div>`:`<div class="stat pub" style="border-color:var(--line);background:transparent;opacity:.6" onclick="toggleAdmin()" title="Organiser only"><div class="v" style="color:#fff">🔒</div><div class="l">organiser</div></div>`):''}`;
 }
 
 /* ---- Home ---- */
@@ -537,11 +552,11 @@ function renderDash(r,comp){
   if(comp.complete && comp.winnerIds){
     const names=comp.winnerIds.map(entryName).join(', ');
     banner=`<div class="banner gold">🏆 ${comp.winnerIds.length===1?'Winner':'Pot shared by'}: ${esc(names)} &mdash; ${gbp(pot)} ${comp.winnerIds.length>1?`(${gbp(pot/comp.winnerIds.length)} each)`:''}
-      ${comp.finalWeek<WEEKS?`<button class="btn" onclick="startNewRound(${comp.finalWeek+1})">Start Round ${r.n+1} from Week ${comp.finalWeek+1}</button>`:''}</div>`.replace(/&mdash;/g,'-');
+      ${comp.finalWeek<WEEKS?`<button class="btn edit" onclick="startNewRound(${comp.finalWeek+1})">Start Round ${r.n+1} from Week ${comp.finalWeek+1}</button>`:''}</div>`.replace(/&mdash;/g,'-');
   }
   const lastWipe=comp.events.filter(e=>e.type==='wipeout').slice(-1)[0];
   if(lastWipe && !comp.complete) banner+=`<div class="banner">💥 Wipeout in Week ${lastWipe.week}: all ${lastWipe.count} remaining players lost, so everyone is back in.</div>`;
-  if(!S.entries.length) banner+=`<div class="banner">No entries yet <button class="btn gold" onclick="setView('entries')">Add or import entries</button></div>`;
+  if(!S.entries.length) banner+=`<div class="banner">No entries yet <button class="btn gold edit" onclick="setView('entries')">Add or import entries</button></div>`;
 
   const aliveList=S.entries.filter(e=>comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
   const outList=S.entries.filter(e=>!comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
@@ -640,6 +655,7 @@ function renderPicks(r,comp){
       <button class="btn sm" onclick="printSheet(${w})">🖨 Print pick sheet</button>
       <button class="btn sm edit" onclick="setView('results')">Go to results →</button>
     </div>
+    ${REMOTE && ADMIN?chaseStrip(w,r,comp):''}
     ${eligible.length? `<table><thead><tr><th>Player</th><th>Pick</th><th>Fixture</th><th>Result</th><th>Already used this round</th></tr></thead><tbody>${rows}</tbody></table>`
       : `<div class="empty">${S.entries.length?'Nobody is eligible to pick in this week.':'No entries yet - add some on the Entries tab.'}</div>`}
     ${others.length?`<div class="muted small" style="margin-top:12px">Eliminated before this week (${others.length}): ${others.map(e=>esc(e.name)).join(', ')}</div>`:''}
@@ -657,7 +673,7 @@ function openPicker(entryId, w){
     const isUsed=used[t.abbr]!=null;
     const opp=g?(g.home===t.abbr?`vs ${TEAMS[g.away].short}`:`@ ${TEAMS[g.home].short}`):'BYE WEEK';
     const cls=['tcard', isUsed?'used':'', bye?'bye':'', fin&&!isUsed&&!bye?'final':'', current===t.abbr?'selected':''].join(' ');
-    const disabled=isUsed||bye;
+    const disabled=REMOTE?false:isUsed||bye;
     const badge=isUsed?`<span class="badge">Used wk ${used[t.abbr]}</span>`:bye?'<span class="badge">Bye</span>':fin?'<span class="badge" style="background:#3a4a6a">Final</span>':'';
     return `<div class="${cls}" ${disabled?'':`onclick="makePick('${entryId}',${w},'${t.abbr}')"`}>${badge}${logoImg(t.abbr,'logo xl')}<div class="nm">${esc(t.short)}</div><div class="opp">${opp}${g?` · ${fmtDay(g.date)}`:''}</div></div>`;
   }).join('');
@@ -666,15 +682,16 @@ function openPicker(entryId, w){
     <div class="teamgrid">${cards}</div>`);
 }
 function makePick(entryId,w,abbr){
+  if(REMOTE) return remoteAdminPick(entryId,w,abbr);
   S.picks[entryId]=S.picks[entryId]||{};
   S.picks[entryId][w]=abbr; save(); closeModal(); render();
 }
-function clearPick(entryId,w){ if(S.picks[entryId]){ delete S.picks[entryId][w]; save(); render(); } }
+function clearPick(entryId,w){ if(REMOTE) return remoteAdminPick(entryId,w,null); if(S.picks[entryId]){ delete S.picks[entryId][w]; save(); render(); } }
 function printSheet(w){
   const r=currentRound(); const comp=computeRound(r);
   const eligible=S.entries.filter(e=>isAliveForWeek(comp,w,e.id)).sort((a,b)=>a.name.localeCompare(b.name));
   const win=window.open('','_blank');
-  win.document.write(`<html><head><title>Week ${w} picks</title><style>body{font-family:Arial;padding:20px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:6px 8px;text-align:left}img{height:22px;vertical-align:middle;margin-right:6px}</style></head><body><h1>Last Man Standing - Round ${r.n}, Week ${w}</h1><table><tr><th>Player</th><th>Pick</th><th>Result</th></tr>${eligible.map(e=>{const p=S.picks[e.id]?.[w];const res=p?teamResult(p,w).code:'';return `<tr><td>${esc(e.name)}${e.label?` (${esc(e.label)})`:''}</td><td>${p?`<img src="${TEAMS[p].logo}">${TEAMS[p].name}`:'-'}</td><td>${res==='P'?'':res}</td></tr>`;}).join('')}</table></body></html>`);
+  win.document.write(`<html><head><title>Week ${w} picks</title><style>body{font-family:Arial;padding:20px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:6px 8px;text-align:left}img{height:22px;vertical-align:middle;margin-right:6px}</style></head><body><h1>Last Man Standing - Round ${r.n}, Week ${w}</h1><table><tr><th>Player</th><th>Pick</th><th>Result</th></tr>${eligible.map(e=>{const vp=visiblePick(e.id,w);const p=vp==='HIDDEN'?null:vp;const res=p?teamResult(p,w).code:'';return `<tr><td>${esc(e.name)}${e.label?` (${esc(e.label)})`:''}</td><td>${p?`<img src="${TEAMS[p].logo}">${TEAMS[p].name}`:vp==='HIDDEN'?'Hidden until kick-off':'-'}</td><td>${res==='P'?'':res}</td></tr>`;}).join('')}</table></body></html>`);
   win.document.close();
 }
 
@@ -713,6 +730,7 @@ function setFinal(gid,on){ const r=S.results[gid]||{hs:null,as:null,final:false}
 function markAllFinal(w){ gamesByWeek(w).forEach(g=>{const r=S.results[g.id]; if(r&&r.hs!=null&&r.as!=null) r.final=true;}); save(); render(); }
 function clearWeekResults(w){ if(!confirm(`Clear all Week ${w} scores?`)) return; gamesByWeek(w).forEach(g=>delete S.results[g.id]); save(); render(); }
 async function fetchWeekResults(w){
+  if(REMOTE) return remoteResults(w);
   toast(`Fetching Week ${w} scores…`,1500);
   try{
     const res=await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=${w}&dates=${SCHEDULE.season}`);
@@ -789,6 +807,7 @@ function renderEntries(r,comp){
     <td><input type="email" value="${esc(e.email||'')}" placeholder="optional" onchange="updEntry('${e.id}','email',this.value)" style="width:100%"></td>
     <td><button class="pill ${e.paid?'paid':'unpaid'}" style="border:0;cursor:pointer" onclick="updEntry('${e.id}','paid',${!e.paid})">${e.paid?'Paid':'Unpaid'}</button></td>
     <td>${comp.alive.has(e.id)?'<span class="pill alive">In</span>':'<span class="pill out">Out</span>'}</td>
+    ${REMOTE?personalLinkCell(e):''}
     <td><button class="btn sm danger" onclick="delEntry('${e.id}')">Remove</button></td>
   </tr>`).join('');
   return `<div class="grid two">
@@ -815,7 +834,7 @@ function renderEntries(r,comp){
   </div>
   <div class="card" style="margin-top:18px">
     <h2>Entries <span class="tag">${S.entries.length} entries · ${S.entries.filter(e=>e.paid).length} paid · pot ${gbp(S.entries.length*S.settings.fee)}</span></h2>
-    ${rows?`<table><thead><tr><th>Name</th><th>Label</th><th>Email</th><th>Payment</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table>`:'<div class="empty">No entries yet.</div>'}
+    ${rows?`<table><thead><tr><th>Name</th><th>Label</th><th>Email</th><th>Payment</th><th>Status</th>${REMOTE?'<th>Personal link</th>':''}<th></th></tr></thead><tbody>${rows}</tbody></table>`:'<div class="empty">No entries yet.</div>'}
     ${S.entries.length?`<div style="margin-top:10px"><button class="btn sm danger" onclick="clearEntries()">Remove all entries</button></div>`:''}
   </div>`;
 }
@@ -893,7 +912,7 @@ function renderSettings(r,comp){
     <div class="muted small">Winner is declared when exactly one player survives a settled week. If more than one is still standing after Week 18, the pot is shared.</div>
   </div>
   <div class="card" style="margin:0"><h2>Rounds</h2>
-    ${S.rounds.map(x=>`<div style="padding:8px 0;border-bottom:1px solid #1b2a4a"><b>Round ${x.n}</b> · weeks ${x.startWeek} to ${x.endWeek||'…'} ${x.winnerIds?`· won by ${x.winnerIds.map(entryName).join(', ')}`:''}</div>`).join('')}
+    ${S.rounds.map(x=>`<div style="padding:8px 0;border-bottom:1px solid #1b2a4a"><b>Round ${x.n}</b> · weeks ${x.startWeek} to ${x.endWeek||'…'} ${x.winnerIds?`· won by ${esc(x.winnerIds.map(entryName).join(', '))}`:''}</div>`).join('')}
     <div class="row" style="margin-top:12px">
       <label class="f">Start a new round from week<select id="newRoundWeek">${Array.from({length:WEEKS},(_,i)=>i+1).filter(w=>w>r.startWeek).map(w=>`<option value="${w}" ${w===(comp.finalWeek?comp.finalWeek+1:defaultWeek())?'selected':''}>Week ${w}</option>`).join('')}</select></label>
       <button class="btn" onclick="startNewRound(+document.getElementById('newRoundWeek').value)">Start round ${r.n+1}</button>
@@ -911,7 +930,7 @@ function renderSettings(r,comp){
       <button class="btn danger" onclick="resetAll()">Reset everything</button>
     </div>
     <div class="muted small" style="margin-top:8px"><b>Download live page</b> gives you a copy of this app with the current entries, picks and results baked in. Upload it to any web host (a folder on one of your sites, Netlify, GitHub Pages) and share that address - visitors see the standings read-only. Re-upload after each week's results.</div>
-    <div class="muted small" style="margin-top:8px">${HOSTED?'On the hosted version your changes are saved in this browser until you press Publish, which bakes them into the live page for everyone with the link. Export a backup now and then as a safety net.':STATIC?'Your changes are saved in this browser. Press Download live page and upload the new index.html to your web host to update what everyone else sees. Export a backup now and then as a safety net.':'Everything is stored in this browser\'s local storage. Export a backup before clearing browser data or moving to another machine. When this is hosted with member logins, this will move to a shared database.'}</div>
+    <div class="muted small" style="margin-top:8px">${REMOTE?'Changes are saved to the shared database. Export a full backup as a safety net. Personal links in backups are private.':HOSTED?'On the hosted version your changes are saved in this browser until you press Publish, which bakes them into the live page for everyone with the link. Export a backup now and then as a safety net.':STATIC?'Your changes are saved in this browser. Press Download live page and upload the new index.html to your web host to update what everyone else sees. Export a backup now and then as a safety net.':'Everything is stored in this browser\'s local storage. Export a backup before clearing browser data or moving to another machine. When this is hosted with member logins, this will move to a shared database.'}</div>
   </div>`;
 }
 function setSetting(k,v){ S.settings[k]=v; save(); render(); }
@@ -924,8 +943,8 @@ function startNewRound(w){
 }
 function undoRound(){ if(S.rounds.length<2||!confirm('Undo the last round? Picks made in it are kept.')) return; S.rounds.pop(); const r=currentRound(); r.endWeek=null; r.winnerIds=null; S.ui.week=null; save(); render(); }
 function exportBackup(){ download(`lms-backup-${new Date().toISOString().slice(0,10)}.json`, JSON.stringify(S,null,2),'application/json'); }
-function restoreBackup(file){ if(!file) return; const rd=new FileReader(); rd.onload=e=>{ try{ const s=JSON.parse(e.target.result); if(!s.entries||!s.rounds) throw new Error('not a LMS backup'); S=Object.assign(defaultState(),s); save(); render(); toast('Backup restored'); }catch(err){ toast('Restore failed: '+err.message); } }; rd.readAsText(file); }
-function resetAll(){ if(!confirm('Delete ALL entries, picks and results?')) return; S=defaultState(); save(); render(); }
+function restoreBackup(file){ if(!file) return; const rd=new FileReader(); rd.onload=e=>{ try{ const s=JSON.parse(e.target.result); if(!s.entries||!s.rounds) throw new Error('not a LMS backup'); S=Object.assign(defaultState(),s); if(REMOTE)remoteReplacePicks=true; save(); render(); toast('Backup restored'); }catch(err){ toast('Restore failed: '+err.message); } }; rd.readAsText(file); }
+function resetAll(){ if(!confirm('Delete ALL entries, picks and results?')) return; S=defaultState(); if(REMOTE)remoteReplacePicks=true; save(); render(); }
 function loadDemo(){
   if(S.entries.length && !confirm('This replaces current entries and picks with demo data. Continue?')) return;
   S=defaultState();
@@ -941,13 +960,182 @@ function loadDemo(){
   // week 2 picks for survivors, no results
   const comp=computeRound(currentRound()); const w2=gamesByWeek(2); const pool2=w2.flatMap(g=>[g.home,g.away]);
   S.entries.forEach((e,i)=>{ if(comp.alive.has(e.id)){ let k=(i*5)%pool2.length; while(pool2[k]===S.picks[e.id][1]) k=(k+1)%pool2.length; S.picks[e.id][2]=pool2[k]; } });
-  S.ui.week=2; save(); setView('dash'); toast('Demo data loaded');
+  S.ui.week=2; if(REMOTE)remoteReplacePicks=true; save(); setView('dash'); toast('Demo data loaded');
 }
+
+/* ===================== REMOTE COMPETITION ===================== */
+let remoteKey='';try{remoteKey=localStorage.getItem('lms-admin-key')||'';}catch{}
+let remoteTimer,remoteSequence=0,remoteDirty=false,remoteReplacePicks=false,remoteRevision=null;
+let remoteQueue=Promise.resolve(),remoteWrites=0,liveStatus='✓ Live',remoteLastError=null;
+let serverEpoch=Date.now(),serverMonotonic=performance.now(),remoteReady=false;
+let playerMe=null,playerError='',playerSelected=null,playerChanging=false,playerSending=false;
+const serverNow=()=>serverEpoch+(performance.now()-serverMonotonic);
+function remoteHeader(){
+  if(PLAYER_CODE)return '';
+  return ADMIN?`<div class="stat pub" onclick="retryRemote()" title="Shared competition save status"><div class="v" id="liveStatus" style="${liveStatus==='Save failed'?'color:var(--red-2)':''}">${liveStatus}</div><div class="l">${liveStatus==='Save failed'?'tap to retry':'shared live'}</div></div><div class="stat pub" style="border-color:var(--line);background:transparent" onclick="toggleAdmin()"><div class="v" style="color:#fff">Admin</div><div class="l">exit</div></div>`:`<div class="stat pub" style="border-color:var(--line);background:transparent;opacity:.6" onclick="toggleAdmin()" title="Organiser only"><div class="v" style="color:#fff">🔒</div><div class="l">organiser</div></div>`;
+}
+function updateLiveStatus(){const el=document.getElementById('liveStatus');if(el){el.textContent=liveStatus;el.style.color=liveStatus==='Save failed'?'var(--red-2)':'';}}
+async function apiRequest(path,body,key=remoteKey){
+  const headers={};if(key && !PLAYER_CODE)headers['x-admin-key']=key;
+  if(body!==undefined)headers['Content-Type']='application/json';
+  const response=await fetch(path,{method:body===undefined?'GET':'POST',headers,cache:'no-store',...(body===undefined?{}:{body:JSON.stringify(body)}),signal:AbortSignal.timeout(20000)});
+  const data=await response.json();
+  if(data.serverTime){serverEpoch=new Date(data.serverTime).getTime();serverMonotonic=performance.now();}
+  if(!response.ok)throw Object.assign(new Error(data.message||'Could not complete that request.'),{code:data.error,status:response.status});
+  return data;
+}
+function applyRemote(data,sequence=remoteSequence){
+  remoteRevision=data.revision||remoteRevision;
+  if(sequence===remoteSequence){const ui=S.ui;S=hydrate(data);S.ui=ui;}
+  else {
+    // Keep edits made while a previous save was travelling to the server.
+    S.entries.forEach(e=>{const saved=data.entries.find(x=>x.id===e.id);if(saved)e.code=saved.code;});
+    if(!remoteReplacePicks)S.picks=data.picks;
+    S.updatedAt=data.updatedAt;
+  }
+  ADMIN=data.admin===true;
+}
+function queueRemote(work){
+  remoteWrites++;liveStatus='Saving…';updateLiveStatus();
+  const job=remoteQueue.then(work);
+  remoteQueue=job.catch(()=>{});
+  return job.then(data=>{remoteLastError=null;return data;}).catch(error=>{
+    remoteLastError=error;toast(esc(error.message));throw error;
+  }).finally(()=>{remoteWrites--;liveStatus=remoteLastError?'Save failed':remoteDirty||remoteWrites?'Saving…':'✓ Live';updateLiveStatus();});
+}
+function flushRemote(){
+  clearTimeout(remoteTimer);
+  if(!REMOTE||!ADMIN)return Promise.resolve();
+  return queueRemote(async()=>{
+    if(!remoteDirty)return;
+    const sequence=remoteSequence;
+    const body={settings:S.settings,entries:S.entries,results:S.results,rounds:S.rounds,baseRevision:remoteRevision,...(remoteReplacePicks?{replacePicks:S.picks}:{})};
+    const data=await apiRequest('/api/admin/state',body);
+    if(sequence===remoteSequence){remoteDirty=false;remoteReplacePicks=false;}
+    applyRemote(data,sequence);
+    // Do not destroy a partly typed entry/import form when autosave completes.
+    if(!document.querySelector('#main input:focus,#main textarea:focus,#main select:focus'))render();
+    else refreshPersonalLinks();
+  });
+}
+async function retryRemote(){
+  if(remoteLastError?.code==='conflict'){
+    modal(`<h2>Competition changed</h2><p>Another organiser saved changes. Your edits are still on this page. Export a backup to keep them, then reload the shared competition before editing again.</p><div class="row"><button class="btn" onclick="exportBackup()">Export backup</button><button class="btn primary" onclick="location.reload()">Reload competition</button><button class="btn" onclick="closeModal()">Close</button></div>`);return;
+  }
+  try{await flushRemote();}catch{}
+}
+async function remoteAdmin(){
+  if(ADMIN){
+    try{await flushRemote();await remoteQueue;if(remoteDirty)return;remoteKey='';localStorage.removeItem('lms-admin-key');applyRemote(await apiRequest('/api/state',undefined,''));render();}catch{}
+    return;
+  }
+  modal(`<form onsubmit="event.preventDefault();unlockRemote()"><h2>Organiser access</h2><p class="muted">Enter your admin passphrase.</p><label class="f">Passphrase<input type="password" id="adminPassphrase" autocomplete="current-password" required></label><p id="adminError" class="small" role="alert"></p><div class="row"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" id="adminUnlock">Unlock</button></div></form>`);
+  document.getElementById('adminPassphrase').focus();
+}
+async function unlockRemote(){
+  const input=document.getElementById('adminPassphrase'),button=document.getElementById('adminUnlock');const key=input.value;button.disabled=true;
+  try{
+    const data=await apiRequest('/api/state',undefined,key);
+    if(!data.admin)throw new Error('That passphrase is not correct.');
+    remoteKey=key;try{localStorage.setItem('lms-admin-key',key);}catch{}
+    applyRemote(data);closeModal();render();toast('Admin mode on. Changes are saved live.');
+  }catch(error){document.getElementById('adminError').textContent=error.message;button.disabled=false;}
+}
+async function remoteAdminPick(entryId,week,team){
+  try{await flushRemote();if(remoteDirty)return;await queueRemote(async()=>{const sequence=++remoteSequence;const data=await apiRequest('/api/admin/pick',{entryId,week,team});applyRemote(data,sequence);closeModal();render();});}catch{}
+}
+async function remoteResults(week){
+  try{await flushRemote();if(remoteDirty)return;await queueRemote(async()=>{const sequence=++remoteSequence;const data=await apiRequest('/api/admin/results/fetch',{week});applyRemote(data,sequence);render();toast(data.fetched.count?`Updated ${data.fetched.count} games (${data.fetched.final} final).`:`No Week ${week} games have started yet.`);});}catch{}
+}
+function personalLink(e){return `${location.origin}/play/${encodeURIComponent(e.code)}`;}
+function personalLinkCell(e){return `<td data-personal-entry="${esc(e.id)}" class="personal-link ${e.paid?'':'unpaid-link'}">${e.code?`<span class="small">${esc(e.code)}</span><div class="row" style="margin-top:6px"><button class="btn sm" onclick="copyEntryLink('${e.id}',false)">Copy link</button><button class="btn sm" onclick="copyEntryLink('${e.id}',true)">Copy invite</button></div>`:'<span class="muted small">Saving personal link…</span>'}${e.paid?'':'<div class="muted small">Player cannot pick until marked paid.</div>'}</td>`;}
+function refreshPersonalLinks(){document.querySelectorAll('[data-personal-entry]').forEach(el=>{const e=S.entries.find(e=>e.id===el.dataset.personalEntry);if(e)el.outerHTML=personalLinkCell(e);});}
+async function copyText(value){
+  try{await navigator.clipboard.writeText(value);toast('Copied.');}
+  catch{modal(`<h2>Copy message</h2><textarea id="copyFallback" rows="5" style="width:100%">${esc(value)}</textarea><button class="btn" onclick="closeModal()">Close</button>`);document.getElementById('copyFallback').select();}
+}
+function copyEntryLink(id,invite){const e=S.entries.find(e=>e.id===id);if(!e?.code)return toast('Wait for the entry to finish saving.');const link=personalLink(e);copyText(invite?`You're in the NFL Last Man Standing. Your personal pick link is ${link}. Pick one team to win each week before kick-off. Each team can only be used once. Good luck!`:link);}
+function missingEntries(w,r,comp){return w<r.startWeek||w>roundEndWeek(r)||weekSettled(w)?[]:S.entries.filter(e=>e.paid && isAliveForWeek(comp,w,e.id) && !S.picks[e.id]?.[w]);}
+function chaseStrip(w,r,comp){const missing=missingEntries(w,r,comp);return `<div class="card edit"><h2>Not picked yet <span class="tag">${missing.length}</span></h2><div class="avatars">${missing.map(e=>`<span class="av">${esc(entryName(e.id))}</span>`).join('')||'<span class="muted small">All eligible paid entries have picked.</span>'}</div><button class="btn sm" style="margin-top:10px" onclick="copyChase(${w})" ${missing.length?'':'disabled'}>Copy chase message</button></div>`;}
+function copyChase(w){const r=currentRound(),comp=computeRound(r);copyText(`Week ${w} picks close ${fmtDate(L.weekFirstKickoff(w))} (UK time). Still waiting on: ${missingEntries(w,r,comp).map(e=>entryName(e.id)).join(', ')}. Use your personal link to pick.`);}
+function remotePublicSnapshot(){
+  const c=JSON.parse(JSON.stringify(S));c.entries=c.entries.map(({id,name,label,paid})=>({id,name,label,paid}));
+  for(const weeks of Object.values(c.picks))for(const [w,t] of Object.entries(weeks))if(t==='HIDDEN'||L.kickoff(t,+w)===null||L.kickoff(t,+w)>serverNow())weeks[w]='HIDDEN';
+  delete c.admin;delete c.revision;delete c.serverTime;c.updatedAt=Date.now();return c;
+}
+async function refreshRemote(){
+  if(!REMOTE || remoteDirty || remoteWrites || playerSending)return;
+  const sequence=remoteSequence;
+  try{
+    if(PLAYER_CODE){const data=await apiRequest('/api/me?code='+encodeURIComponent(PLAYER_CODE),undefined,'');if(sequence!==remoteSequence || playerSending)return;const changed=!playerMe||JSON.stringify(data.picks)!==JSON.stringify(playerMe.picks)||data.state.updatedAt!==S.updatedAt;acceptMe(data);if(changed)render();}
+    else {const data=await apiRequest('/api/state');if(sequence!==remoteSequence || remoteDirty || remoteWrites)return;if(data.updatedAt!==S.updatedAt && !document.querySelector('#main input:focus,#main textarea:focus,#main select:focus')){applyRemote(data);render();}}
+  }catch(error){if(PLAYER_CODE && error.code==='unknown_code'){playerMe=null;playerError=error.message;render();}}
+}
+async function bootRemote(){
+  if(PLAYER_CODE){document.body.classList.add('player');document.getElementById('main').innerHTML='<div class="card"><h2>Your competition</h2><p class="muted">Loading your personal link…</p></div>';}
+  else if(/^https?:$/.test(location.protocol)){document.body.classList.add('ro');document.getElementById('main').innerHTML='<div class="card"><h2>Last Man Standing</h2><p class="muted">Loading standings…</p></div>';}
+  if(/^https?:$/.test(location.protocol)){
+    try{
+      const data=await apiRequest('/api/state');
+      if(!data.settings||!Array.isArray(data.entries)||!data.serverTime)throw new Error('Not a remote competition');
+      REMOTE=true;SHARED=true;remoteReady=true;applyRemote(data);
+      if(PLAYER_CODE){try{acceptMe(await apiRequest('/api/me?code='+encodeURIComponent(PLAYER_CODE),undefined,''));}catch(error){playerError=error.message;}}
+    }catch(error){
+      if(PLAYER_CODE){playerError=error.code==='unknown_code'?'That personal link was not found. Ask the organiser for your link.':'The competition is unavailable. Please try again shortly.';}
+      // An installed API with a database error must never become a writable local app.
+      else if(error.code || (!STATIC && !HOSTED)){
+        REMOTE=true;SHARED=true;ADMIN=false;
+        document.getElementById('main').innerHTML='<div class="card"><h2>Competition unavailable</h2><p>The shared competition could not be loaded. Please try again shortly.</p><button class="btn" onclick="location.reload()">Retry</button></div>';document.getElementById('nav').classList.add('hidden');return;
+      }
+    }
+  }
+  render();if(REMOTE)setInterval(refreshRemote,45000);
+}
+window.addEventListener('beforeunload',event=>{if(REMOTE && (remoteDirty||remoteWrites)){event.preventDefault();event.returnValue='';}});
+
+/* ===================== PERSONAL PLAYER VIEW ===================== */
+function acceptMe(data){const ui=S.ui;playerMe=data;S=hydrate(data.state);S.ui=ui;S.picks[data.entry.id]={...data.picks};ADMIN=false;playerError='';}
+function choosePlayerWeek(w){S.ui.week=w;playerSelected=null;playerChanging=false;renderPlayer();}
+function playerLock(w){const p=playerMe?.picks[w];return p?L.kickoff(p,w)!==null && L.kickoff(p,w)<=serverNow():L.weekFirstKickoff(w)<=serverNow();}
+function playerStatus(comp,e){const out=comp.events.filter(x=>x.type==='out'&&x.id===e.id).at(-1);return comp.winnerIds?.includes(e.id)?'<span class="pill win">Winner</span>':comp.alive.has(e.id)?'<span class="pill alive">In</span>':`<span class="pill out">Out wk ${out?.week||'?'}</span>`;}
+function renderPlayer(){
+  document.body.classList.add('player');document.body.classList.remove('ro');document.getElementById('nav').classList.add('hidden');
+  const main=document.getElementById('main');document.getElementById('foot').textContent='Your personal pick link. Keep it private. All kick-off times are UK time.';
+  if(!playerMe){document.getElementById('hdrStats').innerHTML='';main.innerHTML=`<div class="card"><h2>Your competition</h2><p>${esc(playerError||'Loading your personal link…')}</p><a href="/">View standings</a></div>`;return;}
+  const e=playerMe.entry,r=currentRound(),comp=computeRound(r),first=defaultWeek(),end=roundEndWeek(r);
+  if(!S.ui.week||S.ui.week<first||S.ui.week>end)S.ui.week=first;
+  const w=S.ui.week,p=playerMe.picks[w],g=p?teamGame(p,w):null,locked=playerLock(w),used=usedTeams(e.id,r,comp,w),eligible=isAliveForWeek(comp,w,e.id)&&!comp.complete;
+  renderHeader(r,comp);
+  const usedAll=usedTeams(e.id,r,comp,null);
+  let html=`<div class="card"><h2>Hi ${esc(e.name)} ${playerStatus(comp,e)}</h2>${e.label?`<p class="muted">${esc(e.label)}</p>`:''}<p>Current pot <b style="color:var(--gold)">${gbp(S.entries.length*S.settings.fee)}</b></p><div class="small muted">Already used this round</div><div class="avatars" style="margin-top:8px">${Object.keys(usedAll).map(t=>logoImg(t)).join('')||'<span class="muted small">No teams used yet.</span>'}</div></div>`;
+  if(!e.paid){main.innerHTML=html+`<div class="card"><h2>Payment pending</h2><p>You're not marked as paid yet, contact the organiser. Your personal link will let you pick once payment is confirmed.</p></div><a href="/">View standings</a>`;return;}
+  html+=`<div class="card"><h2>Choose your week <span class="tag">Round ${r.n}</span></h2><div class="weeks">${Array.from({length:end-first+1},(_,i)=>i+first).map(week=>`<button class="${week===w?'active':''}" onclick="choosePlayerWeek(${week})" title="Week ${week}${L.weekFirstKickoff(week)<=serverNow()?' · week started':''}">${week}${L.weekFirstKickoff(week)<=serverNow()?' 🔒':''}</button>`).join('')}</div></div>`;
+  html+=`<div class="card"><h2>Your pick <span class="tag">Week ${w}</span></h2>${p?`<div class="row">${teamChip(p,'logo lg')}</div><p class="muted">${g?`${TEAMS[g.away].name} @ ${TEAMS[g.home].name}<br>${fmtDate(g.date)} (UK time)`:'No fixture this week'}</p>`:'<p class="muted">No team selected yet.</p>'}<p id="playerCountdown" class="small" role="status"></p>${locked?'<span class="pill pending">Locked</span>':!eligible?'<p class="muted">'+(comp.complete?'This round is complete.':'You are out for this week.')+'</p>':p&&!playerChanging?'<button class="btn" onclick="playerChanging=true;renderPlayer()">Change pick</button>':''}</div>`;
+  if(!locked&&eligible&&(!p||playerChanging)){
+    html+=`<div class="card"><h2>Pick a team</h2><p class="muted small">Tap a team, then confirm your pick.</p><div class="teamgrid">${TEAM_LIST.map(t=>{
+      const game=teamGame(t.abbr,w),bye=!game,isUsed=used[t.abbr]!=null,started=game&&(new Date(game.date).getTime()<=serverNow()||S.results[game.id]?.final),disabled=bye||isUsed||started||playerSending;
+      const reason=isUsed?`Used wk ${used[t.abbr]}`:bye?'Bye':started?'Locked':'';
+      return `<button type="button" class="tcard ${isUsed?'used':bye?'bye':started?'final':''} ${playerSelected===t.abbr?'selected':''}" ${disabled?'disabled':''} aria-label="Pick ${esc(t.name)}${reason?' — '+reason:''}" aria-pressed="${playerSelected===t.abbr}" onclick="selectPlayerTeam('${t.abbr}')">${reason?`<span class="badge">${reason}</span>`:''}${logoImg(t.abbr,'logo xl')}<div class="nm">${esc(t.short)}</div><div class="opp">${game?`${game.home===t.abbr?'vs '+TEAMS[game.away].short:'@ '+TEAMS[game.home].short} · ${fmtDay(game.date)}`:'BYE WEEK'}</div></button>`;
+    }).join('')}</div>${playerSelected?`<div class="row" style="margin-top:14px"><button id="confirmPlayerPick" class="btn primary" onclick="submitPlayerPick(playerSelected)" ${playerSending?'disabled':''}>${playerSending?'Saving…':'Confirm '+esc(TEAMS[playerSelected].name)}</button><button class="btn" onclick="playerSelected=null;renderPlayer()" ${playerSending?'disabled':''}>Cancel</button></div>`:''}${p?`<button class="btn ghost sm" style="margin-top:14px" onclick="submitPlayerPick(null)" ${playerSending?'disabled':''}>Clear pick</button>`:''}</div>`;
+  }
+  html+=`<div class="card"><h2>Your season so far</h2><div class="season">${Array.from({length:18},(_,i)=>i+1).filter(week=>playerMe.picks[week]||weekSettled(week)).map(week=>{const pick=playerMe.picks[week],result=pick?teamResult(pick,week).code:'NP';return `<div><div class="muted small">Wk ${week}</div><span class="hcell ${result}" title="${pick?esc(TEAMS[pick]?.name):'No pick'} · ${result}">${pick?logoImg(pick):'NP'}</span><div class="small res ${result}">${result==='P'?'–':result}</div></div>`;}).join('')||'<span class="muted small">Your picks will appear here.</span>'}</div></div><a href="/">View standings</a>`;
+  main.innerHTML=html;updateCountdown();
+}
+function updateCountdown(){const el=document.getElementById('playerCountdown');if(!el||!playerMe)return;const w=S.ui.week,p=playerMe.picks[w],time=p?L.kickoff(p,w):L.weekFirstKickoff(w);let minutes=Math.max(0,Math.ceil((time-serverNow())/60000));el.textContent=minutes?`Locks in ${Math.floor(minutes/1440)}d ${Math.floor(minutes%1440/60)}h ${minutes%60}m`:'Pick deadline has passed.';}
+function selectPlayerTeam(team){playerSelected=team;renderPlayer();document.getElementById('confirmPlayerPick')?.scrollIntoView({behavior:'smooth',block:'center'});}
+async function submitPlayerPick(team){
+  if(playerSending)return;remoteSequence++;playerSending=true;renderPlayer();
+  try{acceptMe(await apiRequest('/api/pick',{code:PLAYER_CODE,week:S.ui.week,team},''));playerSelected=null;playerChanging=false;toast(team?'Your pick is confirmed.':'Your pick has been cleared.');}
+  catch(error){toast(esc(error.message));try{acceptMe(await apiRequest('/api/me?code='+encodeURIComponent(PLAYER_CODE),undefined,''));}catch{}}
+  finally{playerSending=false;renderPlayer();}
+}
+let lastPlayerBoundary=null;
+setInterval(()=>{if(!PLAYER_CODE||!playerMe)return;const boundary=String(playerLock(S.ui.week))+':'+gamesByWeek(S.ui.week).filter(g=>new Date(g.date).getTime()<=serverNow()).length;if(boundary!==lastPlayerBoundary){lastPlayerBoundary=boundary;renderPlayer();}else updateCountdown();},1000);
 
 /* ===================== INIT ===================== */
 document.getElementById('nav').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) setView(b.dataset.v); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
-render();
+bootRemote();
 
 </script>
 </body>

@@ -3,3 +3,7 @@ node_modules/
 !.env.example
 .vercel/
 .test-output/
+public/
+
+node_modules
+.node_modules-icloud/
