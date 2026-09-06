@@ -1192,7 +1192,7 @@ async function refreshRemote(){
   }catch(error){if(PLAYER_CODE && error.code==='unknown_code'){playerMe=null;playerError=error.message;render();}}
 }
 async function bootRemote(){
-  try{if(await accountBoot())return;}catch{document.getElementById('main').innerHTML='<div class="card"><h2>Account service unavailable</h2><p>Please try again shortly.</p><button class="btn" onclick="location.reload()">Retry</button></div>';return;}
+  try{if(/^https?:$/.test(location.protocol)&&await accountBoot())return;}catch{document.getElementById('main').innerHTML='<div class="card"><h2>Account service unavailable</h2><p>Please try again shortly.</p><button class="btn" onclick="location.reload()">Retry</button></div>';return;}
   if(PLAYER_CODE){document.body.classList.add('player');document.getElementById('main').innerHTML='<div class="card"><h2>Your competition</h2><p class="muted">Loading your personal link…</p></div>';}
   else if(/^https?:$/.test(location.protocol)){document.body.classList.add('ro');document.getElementById('main').innerHTML='<div class="card"><h2>Last Man Standing</h2><p class="muted">Loading standings…</p></div>';}
   if(/^https?:$/.test(location.protocol)){
@@ -1260,7 +1260,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 /* ACCOUNT:START */
 let accountUser=null,accountEntries=[],accountPage=['/login','/signup','/dashboard','/admin','/reset-password'].includes(location.pathname)?location.pathname:null;
 const accountCall=(action,body)=>apiRequest('/api/account?action='+action,body);
-function accountBar(){return `<div class="row account-bar"><a class="btn" href="/">Standings</a>${accountUser?`<a class="btn" href="/dashboard">My dashboard</a>${['owner','admin'].includes(accountUser.role)?'<a class="btn" href="/admin">Admin area</a>':''}<button class="btn" onclick="accountLogout()">Sign out</button>`:'<a class="btn" href="/login">Sign in</a><a class="btn gold" href="/signup">Join the competition</a>'}</div>`;}
+function accountBar(){if(location.protocol==='file:')return '';return `<div class="row account-bar"><a class="btn" href="/">Standings</a>${accountUser?`<a class="btn" href="/dashboard">My dashboard</a>${['owner','admin'].includes(accountUser.role)?'<a class="btn" href="/admin">Admin area</a>':''}<button class="btn" onclick="accountLogout()">Sign out</button>`:'<a class="btn" href="/login">Sign in</a><a class="btn gold" href="/signup">Join the competition</a>'}</div>`;}
 function deadlineBanner(w){const d=L.weekDeadline(w);return `<div class="card deadline"><b>Week ${w} pick deadline: ${d?new Date(d).toLocaleString('en-GB',{weekday:'long',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/London'}):'Awaiting fixtures'} (UK time)</b><div class="small muted">All picks and changes close one hour before the first kick-off.${d&&d<=serverNow()?' This week is now locked.':''}</div></div>`;}
 function remoteHeader(){return `<div class="stat pub" onclick="location.href='${accountUser?'/dashboard':'/login'}'"><div class="v" style="font-size:18px">${accountUser?'Account':'Sign in'}</div><div class="l">${accountUser?esc(accountUser.role):'join / login'}</div></div>`;}
 async function remoteAdmin(){location.href=accountUser&&['admin','owner'].includes(accountUser.role)?'/admin':'/login';}

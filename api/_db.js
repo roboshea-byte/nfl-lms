@@ -73,13 +73,13 @@ function createStore(pool) {
 let store;
 function getStore() {
   if (!store) {
-    const connectionString=process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    const connectionString=(process.env.DB_SCHEMA && (process.env.DATABASE_URL_UNPOOLED||process.env.POSTGRES_URL_NON_POOLING)) || process.env.DATABASE_URL || process.env.POSTGRES_URL;
     if (!connectionString) throw Object.assign(new Error('Database is not configured.'),{status:503,code:'database_unavailable'});
     const url=new URL(connectionString);
     if (url.searchParams.get('sslmode')==='require') url.searchParams.set('sslmode','verify-full');
     const schema=process.env.DB_SCHEMA||'public';
     if(!/^[a-z][a-z0-9_]*$/.test(schema))throw new Error('Invalid database schema.');
-    store=createStore(new Pool({options:'-c search_path='+schema,connectionString:url.toString(),max:3,idleTimeoutMillis:10000,connectionTimeoutMillis:10000}));
+    store=createStore(new Pool({...(process.env.DB_SCHEMA?{options:'-c search_path='+schema}:{}),connectionString:url.toString(),max:3,idleTimeoutMillis:10000,connectionTimeoutMillis:10000}));
   }
   return store;
 }
