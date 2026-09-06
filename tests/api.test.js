@@ -19,9 +19,10 @@ test('ordered validation: unknown code, unpaid, bad week, eliminated, locked, by
 test('before kick-off save, me privacy, public masking, server clock reveal without a DB write',async()=>{
   const c=setup();const saved=await pick(c,1,first.home);assert.equal(saved.status,200);assert.equal(saved.body.picks[1],first.home);
   const me=await call(c.handlers.me,{code:'alice12345'});assert.equal(me.body.picks[1],first.home);assert.equal(me.body.entry.email,undefined);assert.equal(me.body.entry.code,undefined);
-  const hidden=await call(c.handlers.state);assert.equal(hidden.body.picks.alice[1],'HIDDEN');assert.equal(hidden.body.entries[0].code,undefined);assert.equal(hidden.body.entries[0].email,undefined);assert.equal(hidden.headers['Cache-Control'],'no-store');
+  await c.db.mutate(S=>{S.entries.find(e=>e.id==='bob').paid=false;S.picks.bob={1:first.away};});
+  const hidden=await call(c.handlers.state);assert.equal(hidden.body.picks.alice[1],'HIDDEN');assert.equal(hidden.body.entries[0].code,undefined);assert.equal(hidden.body.entries[0].email,undefined);assert.equal(hidden.body.entries.some(e=>e.id==='bob'),false);assert.equal(hidden.body.picks.bob,undefined);assert.equal(hidden.headers['Cache-Control'],'no-store');
   c.clock(new Date(first.date).getTime());const shown=await call(c.handlers.state);assert.equal(shown.body.picks.alice[1],first.home);assert.notEqual(shown.body.updatedAt,hidden.body.updatedAt);
-  const admin=await call(c.handlers.state,{key:'test-admin'});assert.equal(admin.body.admin,true);assert.equal(admin.body.entries[0].code,'alice12345');
+  const admin=await call(c.handlers.state,{key:'test-admin'});assert.equal(admin.body.admin,true);assert.equal(admin.body.entries[0].code,'alice12345');assert.equal(admin.body.entries.some(e=>e.id==='bob'),true);
   assert.equal((await call(c.handlers.me,{code:'nope'})).status,404);
 });
 test('deadline boundaries: first pick, existing pick, target, change and clear',async()=>{

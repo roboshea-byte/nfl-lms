@@ -51,10 +51,11 @@ test('mobile navigation, refresh, help, privacy and announcements stay wired',()
  assert.match(current,/<a class="brand" id="homeBrand" href="\/"/);assert.match(current,/\.refresh-app\{position:absolute/);assert.doesNotMatch(current,/\.refresh-app\{position:fixed/);
   assert.match(current,/How to use NFL LMS/);assert.match(current,/Admin how-to guide/);assert.match(current,/Connor or Havo/);assert.match(current,/function filterHelp\(/);
   assert.match(current,/function renderPrivacyPage\(/);assert.match(current,/function announcementBanner\(/);assert.match(current,/Member announcement/);
-  assert.match(current,/function renderDashboard\(r,comp\)\{return renderHome\(r,comp\);\}/);
+  assert.match(current,/function renderDashboard\(r,comp,afterHero=''\)\{return renderHome\(r,comp,afterHero\);\}/);
   assert.match(current,/function renderAccountPage\(/);assert.doesNotMatch(current,/dash:\(\)=>memberTools\(\)\+deadlineBanner/);
   const header=current.match(/function renderHeader\(r,comp\)\{[\s\S]*?\n\}/)[0];assert.match(header,/>Round<\/div>/);assert.match(header,/>Week<\/div>/);assert.match(header,/>Entries<\/div>/);assert.match(header,/>Still In<\/div>/);assert.doesNotMatch(header,/>Prize Pot<\/div>|>Paid<\/div>|>Unpaid<\/div>|>Still to pick<\/div>/);
-  assert.match(current,/href="\/login"><div class="v" style="font-size:18px">Sign in/);assert.match(current,/Current pot<\/div>/);assert.match(current,/Still to pick<\/div>/);assert.match(current,/class="btn admin-exit" href="\/dashboard">Exit admin/);
+  assert.match(current,/href="\/login"><div class="v" style="font-size:18px">Sign in/);assert.match(current,/Round entries<\/div>/);assert.match(current,/Current pot<\/div>/);assert.match(current,/Picked<\/div>/);assert.match(current,/Still to pick<\/div>/);assert.match(current,/class="btn admin-exit" href="\/dashboard">Exit admin/);
+  const standings=current.match(/function renderStandings\(r,comp\)\{[\s\S]*?\/\* ---- Picks ---- \*\//)[0];assert.doesNotMatch(standings,/Awaiting payment|paid, .* unpaid/);
   assert.match(current,/accountUser\?\.name/);assert.match(current,/Add another entry/);assert.match(current,/Choose an entry/);assert.match(current,/must be approved and marked paid/);
   assert.match(current,/Rob O’Shea 1/);assert.match(current,/function entryName\(id\)/);assert.match(current,/accountPage==='\/account'\)return renderAccountPage/);
   assert.match(current,/New player\?/);assert.match(current,/Register before you sign in/);assert.match(current,/Register and create account/);assert.match(current,/href="\/signup"/);
