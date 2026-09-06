@@ -1,0 +1,9 @@
+.node_modules-icloud
+node_modules
+.env*
+.git
+.agents
+.claude
+tests
+docs
+CODEX-PROMPT.md
