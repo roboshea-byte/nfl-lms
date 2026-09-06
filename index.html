@@ -17,7 +17,7 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--navy);color:var(--white);font-family:var(--font-body);font-size:14px;min-height:100%}
-body{zoom:1.2;background:
+body{background:
   radial-gradient(1200px 500px at 50% -200px, #2f5cb8 0%, transparent 70%),
   repeating-linear-gradient(90deg, transparent 0 79px, rgba(255,255,255,.035) 79px 80px),
   var(--navy)}
@@ -210,7 +210,7 @@ body.player .teamgrid button{color:var(--white);font:inherit}
 body.player .season{display:flex;flex-wrap:wrap;gap:10px}
 .personal-link{overflow-wrap:anywhere;min-width:180px}
 .personal-link.unpaid-link{opacity:.55}
-@media(max-width:900px){body.player{zoom:1}body.player .hdr-top{padding:12px;gap:12px}body.player .brand h1{font-size:25px}body.player .hdr-stats{margin-left:0;gap:6px}body.player .stat{min-width:76px;padding:6px 8px}body.player main{padding:14px}body.player .card{padding:16px}body.player .teamgrid{grid-template-columns:repeat(2,minmax(0,1fr))}body.player .card h2{flex-wrap:wrap}}
+@media(max-width:900px){body.player .hdr-top{padding:12px;gap:12px}body.player .brand h1{font-size:25px}body.player .hdr-stats{margin-left:0;gap:6px}body.player .stat{min-width:76px;padding:6px 8px}body.player main{padding:14px}body.player .card{padding:16px}body.player .teamgrid{grid-template-columns:repeat(2,minmax(0,1fr))}body.player .card h2{flex-wrap:wrap}}
 
 /* Compact branding and hero, with layouts sized for each viewport. */
 .brand{gap:10px;min-width:0}
@@ -232,7 +232,6 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
 .herostat .l{font-size:9px;letter-spacing:.12em}
 .hero-actions{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
 @media(max-width:900px){
-  body{zoom:1}
   body .hdr-top{padding:12px 16px;display:block}
   body .brand h1,body.player .brand h1{font-size:24px}
   body .hdr-stats{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));margin:12px 0 0;gap:6px}
@@ -1248,7 +1247,20 @@ setInterval(()=>{if(!PLAYER_CODE||!playerMe)return;const boundary=String(playerL
 /* ===================== INIT ===================== */
 document.getElementById('nav').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) setView(b.dataset.v); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
-bootRemote();
+bootRemote().then(()=>{
+  if(new URLSearchParams(location.search).get('display-check')!=='1')return;
+  const panel=document.createElement('section');
+  panel.setAttribute('aria-label','Display check');
+  panel.style.cssText='position:fixed;z-index:9999;left:8px;right:8px;bottom:8px;max-width:440px;margin:auto;background:#fff;color:#111;padding:16px;border:2px solid #ffc733;border-radius:12px;font:16px/1.4 system-ui;box-shadow:0 4px 30px #0008';
+  panel.innerHTML='<b>Display check</b><p style="margin:8px 0">Copy these details and paste them into our chat.</p><textarea readonly aria-label="Display details" style="display:block;width:100%;height:110px;font:16px/1.3 monospace;color:#111;background:#f1f3f6;padding:8px;border:1px solid #777"></textarea><button type="button" style="margin-top:10px;padding:10px;background:#132650;color:white;border:0;border-radius:6px">Copy display details</button> <button type="button" style="padding:10px;background:#eee;color:#111;border:0;border-radius:6px">Close</button>';
+  const box=panel.querySelector('textarea');
+  const rect=e=>{const b=e.getBoundingClientRect();return {x:Math.round(b.x),width:Math.round(b.width)}};
+  box.value=JSON.stringify({build:'mobile-no-zoom-1',screen:[screen.width,screen.height],window:[innerWidth,innerHeight],documentWidth:document.documentElement.scrollWidth,visual:visualViewport?{width:visualViewport.width,scale:visualViewport.scale,left:visualViewport.offsetLeft}:null,body:rect(document.body),hero:document.querySelector('.homehero')?rect(document.querySelector('.homehero')):null,cssZoom:getComputedStyle(document.body).zoom,phone:matchMedia('(max-width:600px)').matches,browser:navigator.userAgent},null,2);
+  const buttons=panel.querySelectorAll('button');
+  buttons[0].onclick=async()=>{try{await navigator.clipboard.writeText(box.value);buttons[0].textContent='Copied';}catch{box.focus();box.select();buttons[0].textContent='Select and copy the text above';}};
+  buttons[1].onclick=()=>panel.remove();
+  document.body.append(panel);
+});
 
 </script>
 </body>

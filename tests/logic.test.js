@@ -35,8 +35,8 @@ test('tie settings, season split, and new round reset',()=>{
  S.settings.missedPick='survive';for(let w=1;w<=18;w++)settle(S,w);S.picks={};assert.equal(L.computeRound(S).winnerIds.length,3);
  S.rounds.push({n:2,startWeek:2,endWeek:null,winnerIds:null});S.results={};S.picks={alice:{1:g.home}};assert.deepEqual(L.usedTeams(S,'alice',S.rounds[1],L.computeRound(S),2),{});
 });
-test('original stylesheet retained verbatim; committed HTML has inline shared sources',()=>{
- const current=fs.readFileSync('index.html','utf8');const css=current.match(/<style>([\s\S]*?)<\/style>/)[1].slice(0,contract.styleLength);assert.equal(hash(css),contract.styleHash);
+test('original stylesheet retained except removed body zoom; committed HTML has inline shared sources',()=>{
+ const current=fs.readFileSync('index.html','utf8');const stylesheet=current.match(/<style>([\s\S]*?)<\/style>/)[1];assert.ok(!/\bzoom\s*:/.test(stylesheet));const css=stylesheet.replace('body{background:', 'body{zoom:1.2;background:').slice(0,contract.styleLength);assert.equal(hash(css),contract.styleHash);
  assert.ok(current.includes(fs.readFileSync('lib/logic.js','utf8').trim()));
  const data=current.match(/const SCHEDULE = (.*);/)[1];assert.deepEqual(JSON.parse(JSON.stringify(vm.runInNewContext('('+data+')'))),schedule);
 });

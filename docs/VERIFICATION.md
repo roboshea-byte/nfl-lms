@@ -86,3 +86,10 @@ An initial direct database probe exposed an idle Neon connection closing unexpec
 - Mobile editable fields now use at least 16px; text-size-adjust is fixed at 100%. Mobile document width is constrained and horizontal page overflow clipped while navigation/table containers remain scrollable. User pinch zoom remains enabled.
 - WebKit iPhone emulation exposed 16px of transient document overflow on the 320px Settings screen after rotation; the width constraint fixed it. Verified all organiser/public views at 320, 393, 430, 768 and 852px landscape after opening/filling/closing the organiser modal, with no document overflow, horizontal visual offset or sub-16px editable fields. Chromium check and all 20 existing tests pass.
 - These are browser-engine checks, not a physical iPhone test. A fresh WebKit page already fitted before the fix, so the exact on-device zoom state remains unconfirmed.
+
+## Persistent iPhone clipping investigation — 6 September 2026
+
+- Rob confirmed the clipping persists even in a new Private Safari tab. Live HTML is current, with no browser errors in fresh WebKit emulation. The exact on-device cause remains unresolved.
+- Removed every CSS zoom declaration, including the original body zoom of 1.2, rather than relying on breakpoint overrides. Preservation test allows that explicit deletion and still checks the rest of the original CSS.
+- Added an opt-in `?display-check=1` panel to copy screen/viewport/visual zoom/body bounds/browser version and a build marker. It appears only via that query; measurements stay local unless the user copies them, and contain no account or entry details.
+- WebKit checks pass at 320–852px including landscape. Verified the diagnostic panel shows accurate measurements and closes correctly; all 20 tests pass. Physical-device measurements are needed before calling the reported problem resolved.
