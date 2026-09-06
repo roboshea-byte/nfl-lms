@@ -259,8 +259,7 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
 @media(max-width:900px){
   body .hdr-top{padding:12px 16px;display:block}
   body .brand h1,body.player .brand h1{font-size:24px}
-  body .hdr-stats{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));margin:12px 0 0;gap:6px}
-  body.player .hdr-stats{grid-template-columns:repeat(6,minmax(0,1fr))}
+  body .hdr-stats,body.player .hdr-stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));margin:12px 0 0;gap:6px}
   body .stat,body.player .stat{min-width:0;padding:6px 4px}
   nav{padding:0 12px}
   nav button{padding:12px 14px;font-size:13px;min-height:44px}
@@ -276,7 +275,7 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
   body .brand h1,body.player .brand h1{font-size:22px}
   .brand h1 small{font-size:9px;letter-spacing:.2em}
   .brand .nfl-logo{width:30px;height:36px}
-  body .hdr-stats,body.player .hdr-stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:10px}
+  body .hdr-stats,body.player .hdr-stats{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px}
   .stat .v{font-size:18px}
   .stat .l{font-size:8px;letter-spacing:.08em}
   nav{position:fixed;z-index:100;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:rgba(8,18,43,.97);border-top:1px solid var(--line);border-bottom:0;box-shadow:0 -8px 28px rgba(0,0,0,.45);overflow:visible}
@@ -347,7 +346,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .account-identity{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px}.account-identity h1{font-family:var(--font-head);font-size:clamp(30px,5vw,48px);line-height:1;margin:7px 0}.account-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}.account-entry-switch{grid-column:1/-1;border-top:1px solid var(--line);padding-top:14px}.account-entry-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.account-summary{margin-bottom:18px}.account-status{font-family:var(--font-head);font-size:clamp(28px,5vw,42px);margin:12px 0 6px}.account-status.active{color:var(--green)}.account-status.inactive{color:var(--gold)}.account-current-pick{display:flex;align-items:center;gap:14px;margin-top:12px}.account-current-pick strong{display:block;font-size:18px}.account-current-pick span{display:block;color:var(--grey);font-size:12px;margin-top:5px}.account-history{display:grid;gap:7px}.account-history-row{display:grid;grid-template-columns:70px minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 12px;background:var(--deep);border:1px solid var(--line);border-radius:9px}.account-week{color:var(--grey);font-size:12px;font-weight:700}.account-team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:7px}.account-team-card{display:flex;align-items:center;gap:9px;min-width:0;padding:9px 10px;background:var(--deep);border:1px solid var(--line);border-radius:9px}.account-team-card .logo{flex:none}.account-team-card div{min-width:0}.account-team-card b,.account-team-card span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.account-team-card span{color:var(--grey);font-size:10px;margin-top:3px}@media(max-width:650px){.account-identity{grid-template-columns:1fr}.account-actions{justify-content:flex-start}.account-history-row{grid-template-columns:58px minmax(0,1fr)}.account-history-row>.pill{grid-column:2}.account-team-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.account-team-card{padding:8px}.account-team-card .logo.lg{width:32px;height:32px}}
 .member-name-editor{display:grid;grid-template-columns:minmax(110px,1fr) minmax(140px,1fr) auto;gap:6px;min-width:390px}.name-required{color:#ff9aa8;font-weight:700;margin-top:5px}@media(max-width:650px){.member-name-editor{min-width:320px}}
 .brand{width:max-content;max-width:calc(100% - 42px);text-decoration:none;color:inherit;border-radius:7px}.brand:hover h1{color:#fff}.brand:focus-visible{outline:2px solid var(--gold);outline-offset:5px}.hdr-top{position:relative;padding-right:62px}.refresh-app{position:absolute;z-index:21;right:12px;top:10px;display:flex;align-items:center;justify-content:center;width:34px;height:34px;padding:7px;border:1px solid rgba(166,181,214,.32);border-radius:9px;background:rgba(8,24,58,.28);color:var(--grey);opacity:.72;cursor:pointer}.refresh-app:hover,.refresh-app:focus-visible{opacity:1;color:#fff;border-color:var(--line);background:rgba(36,66,127,.75)}.refresh-app svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}.refresh-app.refreshing svg{animation:refresh-spin .8s linear infinite}@keyframes refresh-spin{to{transform:rotate(360deg)}}@media(max-width:900px){body .hdr-top{padding-right:54px}}@media(max-width:600px){.refresh-app{right:9px;top:9px;width:32px;height:32px;padding:7px;opacity:.62}}
-.stat.account-access{min-width:190px;background:rgba(31,191,106,.2);border-color:var(--green);color:inherit;text-decoration:none}.stat.account-access .v{color:#fff;font-size:16px;padding-top:4px}.stat.admin-access{background:rgba(31,191,106,.3)}.stat.signout-access{color:inherit;font:inherit}.participation-summary{display:grid;grid-template-columns:repeat(6,minmax(92px,1fr));gap:9px;margin:16px 0}.participation-summary>div{padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--deep);text-align:center}.participation-summary b{display:block;font:700 30px/1 var(--font-head);color:#fff}.participation-summary span{display:block;margin-top:5px;color:var(--grey);font-size:10px;text-transform:uppercase;letter-spacing:.12em}.participation-summary .paid b{color:var(--green)}.participation-summary .unpaid b,.participation-summary .topick b{color:var(--gold)}@media(max-width:900px){.participation-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.stat.account-access{min-width:0;grid-column:span 2}}@media(max-width:520px){.participation-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.stat.account-access .v{font-size:13px}}
+.stat.account-access{min-width:76px;background:rgba(31,191,106,.2);border-color:var(--green);color:inherit;text-decoration:none}.stat.account-access .v{color:#fff;font-size:16px;padding-top:4px}.stat.signout-access{color:inherit;font:inherit}.participation-summary{display:grid;grid-template-columns:repeat(6,minmax(92px,1fr));gap:9px;margin:16px 0}.participation-summary>div{padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--deep);text-align:center}.participation-summary b{display:block;font:700 30px/1 var(--font-head);color:#fff}.participation-summary span{display:block;margin-top:5px;color:var(--grey);font-size:10px;text-transform:uppercase;letter-spacing:.12em}.participation-summary .paid b{color:var(--green)}.participation-summary .unpaid b,.participation-summary .topick b{color:var(--gold)}.admin-nav .admin-exit{margin-left:auto;background:rgba(31,191,106,.2);border-color:var(--green)}@media(max-width:900px){.participation-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.stat.account-access{min-width:0}}@media(max-width:520px){.participation-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.stat.account-access .v{font-size:13px}.admin-nav .admin-exit{margin-left:0}}
 </style>
 </head>
 <body>
@@ -763,17 +762,12 @@ function render(){
   if(S.ui.view==='entries') wireDrop();
 }
 function renderHeader(r,comp){
-  const pot=prizePot(r,comp),entries=roundEntries(r);
-  const paid=entries.filter(e=>entryPaid(e,r,comp)).length,missing=missingEntries(S.ui.week||defaultWeek(),r,comp).length;
+  const entries=roundEntries(r);
   document.getElementById('hdrStats').innerHTML=`
     <div class="stat"><div class="v">R${r.n}</div><div class="l">Round</div></div>
-    <div class="stat"><div class="v">WK ${S.ui.week||defaultWeek()}</div><div class="l">Selected</div></div>
+    <div class="stat"><div class="v">WK ${S.ui.week||defaultWeek()}</div><div class="l">Week</div></div>
     <div class="stat"><div class="v">${entries.length}</div><div class="l">Entries</div></div>
     <div class="stat alive"><div class="v">${comp.alive.size}</div><div class="l">Still In</div></div>
-    <div class="stat pot"><div class="v">${gbp(pot)}</div><div class="l">Prize Pot</div></div>
-    <div class="stat alive"><div class="v">${paid}</div><div class="l">Paid</div></div>
-    <div class="stat"><div class="v">${entries.length-paid}</div><div class="l">Unpaid</div></div>
-    <div class="stat pot"><div class="v">${missing}</div><div class="l">Still to pick</div></div>
     ${REMOTE?remoteHeader():SHARED?(ADMIN?`<div class="stat pub ${isDirty()?'dirty':''}" onclick="${HOSTED?'publishLive()':'exportLivePage()'}" title="${HOSTED?'Publish the current state so everyone with the link sees it':'Download an updated index.html to upload to your web host'}"><div class="v">${HOSTED?(isDirty()?'⬆ Publish':'✓ Live'):'⬇ Download'}</div><div class="l">${isDirty()?'unpublished changes':'up to date'}</div></div><div class="stat pub" style="border-color:var(--line);background:transparent" onclick="toggleAdmin()"><div class="v" style="color:#fff">Admin</div><div class="l">exit</div></div>`:`<div class="stat pub" style="border-color:var(--line);background:transparent;opacity:.6" onclick="toggleAdmin()" title="Organiser only"><div class="v" style="color:#fff">🔒</div><div class="l">organiser</div></div>`):''}`;
 }
 
@@ -795,6 +789,7 @@ function renderFixturesCard(w){
 function renderHome(r,comp){
   const pot=prizePot(r,comp),entries=roundEntries(r);
   const w=defaultWeek();
+  const paid=entries.filter(e=>entryPaid(e,r,comp)).length,missing=missingEntries(w,r,comp).length;
   const first=GAMES.slice().sort((a,b)=>a.date.localeCompare(b.date))[0];
   const wkCur=gamesByWeek(w);
   const last=GAMES.slice().sort((a,b)=>b.date.localeCompare(a.date))[0];
@@ -805,15 +800,16 @@ function renderHome(r,comp){
     <h1 class="big">Last Man <span>Standing</span></h1>
     <p>Pick One team per week. Win to stay in, losers go out. Last man standing take the pot.</p>
     <div class="herostats">
-      <div class="herostat gold"><div class="v">${gbp(S.settings.fee)}</div><div class="l">Per entry</div></div>
       <div class="herostat gold"><div class="v">${gbp(pot)}</div><div class="l">Current pot</div></div>
-      <div class="herostat green"><div class="v">${comp.alive.size}</div><div class="l">Still standing</div></div>
-      <div class="herostat"><div class="v">Wk ${w}</div><div class="l">${weekSettled(w)?'Settled':weekHasResults(w)?'In progress':'Up next'}</div></div>
+      <div class="herostat green"><div class="v">${paid}</div><div class="l">Paid</div></div>
+      <div class="herostat gold"><div class="v">${entries.length-paid}</div><div class="l">Unpaid</div></div>
+      <div class="herostat"><div class="v">${missing}</div><div class="l">Still to pick</div></div>
     </div>
     <div class="hero-actions">
       <button class="btn gold" onclick="setView('standings')">View standings</button>
       <button class="btn" onclick="setView('picks')">Picks and history</button>
       <button class="btn primary" onclick="${accountUser?`setWeek(${w});setView('picks')`:`location.href='/signup'`}">${accountUser?`Enter Week ${w} picks`:'Register or sign in'}</button>
+      ${accountUser&&['owner','admin'].includes(accountUser.role)?'<a class="btn" style="border-color:var(--green);background:rgba(31,191,106,.2)" href="/admin">Admin area</a>':''}
       <a class="btn" href="/help">How to guide</a>
     </div>
   </div>
@@ -1502,7 +1498,7 @@ let accountUser=null,accountEntries=[],accountParticipation='not_entered',accoun
 const accountCall=(action,body)=>apiRequest('/api/account?action='+action,body);
 function accountBar(){if(location.protocol==='file:')return '';if(accountPage==='/admin')return adminNavigation();return ['/login','/signup','/reset-password'].includes(accountPage)?'<div class="row account-bar"><a class="btn" href="/">Dashboard</a></div>':'';}
 const adminSections=[['adminhome','Admin home'],['entries','Entries & payments'],['members','Members & roles'],['picks','Manage picks'],['results','Results'],['settings','Settings'],['dash','Overview'],['adminhelp','Admin guide']];
-function adminNavigation(){return accountPage==='/admin'&&ADMIN?`<div class="admin-nav" role="navigation" aria-label="Admin tools">${adminSections.map(([view,label])=>`<button class="btn ${S.ui.view===view?'gold':''}" aria-current="${S.ui.view===view?'page':'false'}" onclick="setView('${view}')">${view==='members'&&accountUser?.role!=='owner'?'Members':label}</button>`).join('')}</div>`:'';}
+function adminNavigation(){return accountPage==='/admin'&&ADMIN?`<div class="admin-nav" role="navigation" aria-label="Admin tools">${adminSections.map(([view,label])=>`<button class="btn ${S.ui.view===view?'gold':''}" aria-current="${S.ui.view===view?'page':'false'}" onclick="setView('${view}')">${view==='members'&&accountUser?.role!=='owner'?'Members':label}</button>`).join('')}<a class="btn admin-exit" href="/dashboard">Exit admin</a></div>`:'';}
 function renderAdminHome(r,comp){
  const entries=roundEntries(r),paid=entries.filter(e=>entryPaid(e,r,comp)).length,missing=missingEntries(defaultWeek(),r,comp).length,summary=accountSummary||{members:0,participating:0,entries:entries.length,paid,unpaid:entries.length-paid};
  const tools=[['entries','Entries & payments',accountUser?.role==='owner'?'Mark payments, add people manually and use the owner-only spreadsheet importer.':'Mark payments and add individual entries. New members should register and set their own password.'],['members',accountUser?.role==='owner'?'Members & roles':'Members',accountUser?.role==='owner'?'Correct names, assign admins, manage access, link entries and reset passwords.':'Correct member names and reset member passwords.'],['picks','Manage picks','Add, replace or clear picks for any entry, including your own and deadline overrides.'],['results','Results','Fetch scores, enter results and settle the week.'],['settings','Competition settings','Manage rounds, rules, entry fees and backups.'],['dash','Competition overview','Check the prize pot, standings, missing picks and fixtures.'],['adminhelp','Admin how-to guide','Search the complete guide to payments, accounts, picks, results, rollovers and settings.']];
@@ -1512,9 +1508,9 @@ function participationSummary(summary,missing){return `<div class="participation
 
 function deadlineBanner(w){const d=L.weekDeadline(w);return `<div class="card deadline"><b>Week ${w} pick deadline: ${d?new Date(d).toLocaleString('en-GB',{weekday:'long',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/London'}):'Awaiting fixtures'} (UK time)</b><div class="small muted">All picks and changes close one hour before the first kick-off.${d&&d<=serverNow()?' This week is now locked.':''}</div></div>`;}
 function remoteHeader(){
- if(!accountUser)return '<a class="stat pub" style="color:inherit;font:inherit;text-decoration:none" href="/signup"><div class="v" style="font-size:18px">Register</div><div class="l">or sign in</div></a>';
- const staff=['owner','admin'].includes(accountUser.role),inAdmin=accountPage==='/admin',inAccount=accountPage==='/account';
- return `<a class="stat pub account-access" href="${inAccount?'/dashboard':'/account'}"><div class="v">${inAccount?'Exit account settings':'Account settings'}</div><div class="l">${esc(accountUser.name)}</div></a>${staff?`<a class="stat pub account-access admin-access" href="${inAdmin?'/dashboard':'/admin'}"><div class="v">${inAdmin?'Exit admin':'Admin area'}</div><div class="l">${accountUser.role}</div></a>`:''}<button type="button" class="stat pub signout-access" onclick="accountLogout()"><div class="v">Sign out</div><div class="l">account</div></button>`;
+ if(!accountUser)return '<a class="stat pub" style="color:inherit;font:inherit;text-decoration:none" href="/login"><div class="v" style="font-size:18px">Sign in</div><div class="l">account</div></a>';
+ const inAccount=accountPage==='/account';
+ return `<a class="stat pub account-access" href="${inAccount?'/dashboard':'/account'}"><div class="v">${inAccount?'Exit account settings':'Account'}</div><div class="l">${esc(accountUser.name)}</div></a><button type="button" class="stat pub signout-access" onclick="accountLogout()"><div class="v">Sign out</div><div class="l">account</div></button>`;
 }
 async function remoteAdmin(){location.href=accountUser&&['admin','owner'].includes(accountUser.role)?'/admin':'/login';}
 async function accountLogout(){try{await flushRemote();await remoteQueue;if(remoteDirty)return;await accountCall('logout',{});location.href='/';}catch(e){toast(esc(e.message));}}
@@ -1552,7 +1548,7 @@ function noEntryBanner(){
  const staff=['owner','admin'].includes(accountUser.role);
  const sittingOut=accountParticipation==='not_participating';return `<div class="card join-round"><div class="kick">Round ${currentRound().n}</div><h2>${sittingOut?'You are not participating':'Join this round'}</h2><p>${sittingOut?'You are currently marked as not participating. Add an entry whenever you decide to join.':'Your member account is ready. You are not counted as an entry until you choose to join this round.'}</p><div class="row"><button class="btn gold" onclick="addAccountEntry()">Add an entry</button>${!sittingOut?`<button class="btn" onclick="setAccountParticipation('not_participating')">I’m not participating</button>`:''}${sittingOut?`<button class="btn" onclick="setAccountParticipation('not_entered')">Clear this status</button>`:''}${staff?'<a class="btn" href="/admin">Open Admin area</a>':''}</div></div>`;
 }
-function memberDashboardControls(e){const paid=e&&entryPaid(e),name=e?entryName(e.id):'';return `<div class="card entry-controls"><h2>Your round entries <span class="tag">${accountEntries.length} ${accountEntries.length===1?'entry':'entries'}</span></h2>${memberEntrySwitcher()}<div class="row"><button class="btn gold" onclick="addAccountEntry()">Add another entry</button>${e&&!paid?`<button class="btn danger" onclick="removeAccountEntry('${e.id}','${esc(name)}')">Remove this unpaid entry</button>`:''}<button class="btn" onclick="setAccountParticipation('not_participating')">Sit out this round</button></div><p class="small muted">Every entry must be approved and marked paid by an administrator before it can make a pick. Paid entries must be marked unpaid by an administrator before removal.</p></div>`;}
+function memberDashboardControls(e){const paid=e&&entryPaid(e),name=e?entryName(e.id):'',staff=['owner','admin'].includes(accountUser?.role);return `<div class="card entry-controls"><h2>Your round entries <span class="tag">${accountEntries.length} ${accountEntries.length===1?'entry':'entries'}</span></h2>${memberEntrySwitcher()}<div class="row"><button class="btn gold" onclick="addAccountEntry()">Add another entry</button>${e&&!paid?`<button class="btn danger" onclick="removeAccountEntry('${e.id}','${esc(name)}')">Remove this unpaid entry</button>`:''}<button class="btn" onclick="setAccountParticipation('not_participating')">Sit out this round</button>${staff?'<a class="btn" style="border-color:var(--green);background:rgba(31,191,106,.2)" href="/admin">Open Admin area</a>':''}</div><p class="small muted">Every entry must be approved and marked paid by an administrator before it can make a pick. Paid entries must be marked unpaid by an administrator before removal.</p></div>`;}
 function renderAccountPage(){
  document.body.classList.add('ro','player');document.getElementById('nav').classList.remove('hidden');const r=currentRound(),comp=computeRound(r),w=defaultWeek();renderHeader(r,comp);document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
  document.getElementById('main').innerHTML=memberTools()+`<div class="card"><h2>Round participation</h2><p>${accountEntries.length?`You have ${accountEntries.length} ${accountEntries.length===1?'entry':'entries'} in Round ${r.n}. Manage entries and picks from your Dashboard.`:accountParticipation==='not_participating'?`You are marked as not participating in Round ${r.n}. You can join from your Dashboard.`:`You have not joined Round ${r.n}. Add an entry from your Dashboard if you want to play.`}</p><a class="btn gold" href="/dashboard">Go to Dashboard</a></div>`;const foot=document.getElementById('foot');if(foot)foot.textContent='Your NFL LMS account settings.';
