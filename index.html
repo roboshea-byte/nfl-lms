@@ -296,6 +296,15 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
   .game .meta{font-size:10px}
 }
 @media(max-width:1100px) and (max-height:600px){header{position:static}}
+
+/* Keep mobile text and focus sizing stable in iPhone Safari. */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+@media(max-width:900px){
+  html,body{width:100%;max-width:100%;overflow-x:clip}
+  input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{font-size:16px}
+  label.f{min-width:0;max-width:100%}
+  label.f input,label.f select,label.f textarea{max-width:100%;min-width:0}
+}
 </style>
 </head>
 <body>

@@ -79,3 +79,10 @@ An initial direct database probe exposed an idle Neon connection closing unexpec
 - Removed the original 120% body zoom at widths up to 900px. Header scrolls away on phones and short landscape screens; buttons and navigation remain usable.
 - Fixed phone overflow in Picks and Entries with independently scrollable tables. Results stack teams, scores and fixture details on smaller screens.
 - Browser checks at 320, 390, 430, 768, 844 (landscape), 1024 and 1440px: home, dashboard, picks, results and history stay within the viewport. Checked organiser Entries/Settings/Results and the 390px player page with 32 team buttons. Phone home hero is about 381px high at 390px width, with both primary actions visible above the fold.
+
+## iPhone Safari clipping report — 6 September 2026
+
+- Rob supplied an iPhone Safari screenshot showing enlarged content panned/clipped on the left. A fresh WebKit session did not reproduce that zoom state; the organiser password field was confirmed at 11px, a likely automatic input-zoom trigger.
+- Mobile editable fields now use at least 16px; text-size-adjust is fixed at 100%. Mobile document width is constrained and horizontal page overflow clipped while navigation/table containers remain scrollable. User pinch zoom remains enabled.
+- WebKit iPhone emulation exposed 16px of transient document overflow on the 320px Settings screen after rotation; the width constraint fixed it. Verified all organiser/public views at 320, 393, 430, 768 and 852px landscape after opening/filling/closing the organiser modal, with no document overflow, horizontal visual offset or sub-16px editable fields. Chromium check and all 20 existing tests pass.
+- These are browser-engine checks, not a physical iPhone test. A fresh WebKit page already fitted before the fix, so the exact on-device zoom state remains unconfirmed.
