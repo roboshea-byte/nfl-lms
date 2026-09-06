@@ -110,3 +110,11 @@ Chromium browser flows passed locally and against a protected Vercel preview wit
 Production read-only/denied-request checks confirm account service availability, empty real competition, owner email protected against public signup, admin API protection and unauthenticated admin redirects. Chromium and WebKit production home/signup checks confirm the Week 1 deadline is 10 September at 00:20 UK time and there is no document overflow at the tested widths. Safari and Chromium use slightly different locale punctuation; both show the same date and time.
 
 No production owner password was generated or requested. Rob completes owner registration through the private setup instructions.
+
+## Combined member navigation - 6 September 2026
+
+- Dashboard is now the home page and retains the 32-team grid. It combines the previous home content with the competition overview and weekly deadline.
+- Member navigation is Dashboard, Picks, Results and Standings. Picks includes pick history, while Standings separates active, awaiting-payment and eliminated entries.
+- The account toolbar was removed. Staff use the header Admin control and the header shows Exit admin inside the admin area. The internal admin tools remain together on `/admin`.
+- Password signup, reset and change flows now enforce 7-256 characters in both browser forms and the server.
+- All 21 automated tests pass. Isolated Chromium checks passed at 390px for public Dashboard, Picks, member signup, unpaid and paid member Picks, owner admin entry/exit and persisted pick submission. No document overflow or browser errors were found.

@@ -4,7 +4,7 @@
 
 - `/signup`: name (optional), email, password. Immediate sign-in; no confirmation email.
 - `/login`: email/password login and organiser-assisted recovery instructions.
-- `/dashboard`: owned entries, payment status, team selection, saved picks and password changes.
+- `/dashboard`: the member home page, with owned entries, payment status, weekly deadline, competition overview, rules, team directory and password changes. Its member navigation is Dashboard, Picks, Results and Standings.
 - `/admin`: dedicated Admin home with direct cards and persistent controls for Entries & payments, Members & roles, Manage picks, Results, Settings and Overview.
 - `/reset-password#token=...`: one-time password reset. Links last one hour.
 
@@ -22,6 +22,8 @@ The owner sees account-entry linking and the recent admin activity log. Admin ac
 
 The owner can promote/demote admins and disable/enable other accounts. These actions sign the affected user out. Admins can generate resets for members; only the owner can generate resets for admins. Neither can generate an owner reset through the website. Trusted database access is required for owner recovery. Users can change their own password by entering the existing one.
 
+Staff enter the admin area from the Admin control in the top header. The same position becomes Exit admin inside `/admin`. Account and sign-out controls no longer appear as a separate toolbar above page content.
+
 Admins retain result fetching/manual scores, pick overrides, new rounds, rollover/payment controls and import/export tools. The owner can review the resulting audit trail in Members & roles.
 
 ## Deadlines and payments
@@ -36,4 +38,4 @@ Run `npm test` for API, SQL and domain regression checks. Run `npm run build` af
 
 Production uses the normal public database schema. Preview uses `DB_SCHEMA=nfl_accounts_preview`, isolated from real entries and accounts. Never point test/seed scripts at the production schema. Legacy ADMIN_KEY and player-code authentication are disabled by the live handlers.
 
-Authentication uses salted scrypt, opaque hashed sessions, secure HttpOnly cookies, origin/custom-header checks and database-backed throttling. Email addresses are unverified by design. No automatic email or online payment integration is configured.
+Authentication uses salted scrypt, opaque hashed sessions, secure HttpOnly cookies, origin/custom-header checks and database-backed throttling. Passwords must contain 7-256 characters. Email addresses are unverified by design. No automatic email or online payment integration is configured.

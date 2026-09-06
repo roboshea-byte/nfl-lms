@@ -204,7 +204,7 @@ body.ro nav button[data-v=entries],body.ro nav button[data-v=settings]{display:n
 .rules li:before{font-size:12.8px}
 .brand .nfl-logo{width:46px;height:52px;object-fit:contain;flex:none}
 input[type=password]{background:var(--deep);border:1px solid var(--line);color:#fff;border-radius:8px;padding:8px 10px}
-body.player nav{display:none}
+body.player nav{display:flex}
 body.player main{max-width:900px}
 body.player .teamgrid button{color:var(--white);font:inherit}
 body.player .season{display:flex;flex-wrap:wrap;gap:10px}
@@ -320,13 +320,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <div class="hdr-stats" id="hdrStats"></div>
   </div>
   <nav id="nav">
-    <button data-v="home" class="active">Home</button>
-    <button data-v="dash">Dashboard</button>
+    <button data-v="dash" class="active">Dashboard</button>
     <button data-v="picks">Picks</button>
     <button data-v="results">Results</button>
-    <button data-v="history">Pick History</button>
-    <button data-v="entries">Entries</button>
-    <button data-v="settings">Settings</button>
+    <button data-v="standings">Standings</button>
   </nav>
 </header>
 <main id="main"></main>
@@ -475,7 +472,7 @@ function defaultState(){
     picks:{},            // picks[entryId][week] = abbr
     results:{},          // results[gameId] = {hs,as,final}
     rounds:[{n:1,startWeek:1,endWeek:null,winnerIds:null}],
-    ui:{view:'home',week:null},
+    ui:{view:'dash',week:null},
     updatedAt:0
   };
 }
@@ -497,7 +494,7 @@ function save(opts={}){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){ toast('Could not save to browser storage: '+e.message); }
 }
 function isDirty(){ if(REMOTE) return remoteDirty; return SHARED && ADMIN && (S.updatedAt||0) > PUBLISHED_AT; }
-function stateForPublish(){ const c=JSON.parse(JSON.stringify(REMOTE?remotePublicSnapshot():S)); c.ui={view:'home',week:null}; return c; }
+function stateForPublish(){ const c=JSON.parse(JSON.stringify(REMOTE?remotePublicSnapshot():S)); c.ui={view:'dash',week:null}; return c; }
 async function publishLive(){
   if(!HOSTED) return toast('Publishing only works on the hosted version.');
   if(!artifactNS){ artifactNS = await window.claude.use('artifact'); }
@@ -581,13 +578,17 @@ function render(){
   if(PLAYER_CODE) return renderPlayer();
   const r=currentRound(); const comp=computeRound(r);
   if(!S.ui.week) S.ui.week=defaultWeek();
+  if(S.ui.view==='home')S.ui.view='dash';
+  if(S.ui.view==='history')S.ui.view='picks';
+  if(isRO()&&!['dash','picks','results','standings'].includes(S.ui.view))S.ui.view='dash';
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===S.ui.view));
   renderHeader(r,comp);
   const main=document.getElementById('main');
   document.body.classList.toggle('ro', isRO());
-  if(isRO() && (S.ui.view==='entries'||S.ui.view==='settings')) S.ui.view='home';
-  const views={adminhome:renderAdminHome,home:renderHome,dash:renderDash,picks:renderPicks,results:renderResults,history:renderHistory,entries:renderEntries,settings:renderSettings};
-  main.innerHTML=accountBar()+(['home','dash'].includes(S.ui.view)?deadlineBanner(S.ui.view==='home'?defaultWeek():S.ui.week):'')+(views[S.ui.view]||renderHome)(r,comp);
+  const memberViews={dash:renderDashboard,picks:renderPicksPage,results:renderResults,standings:renderStandings};
+  const adminViews={adminhome:renderAdminHome,dash:renderDash,picks:renderPicks,results:renderResults,entries:renderEntries,settings:renderSettings};
+  const views=ADMIN?adminViews:memberViews;
+  main.innerHTML=accountBar()+(S.ui.view==='dash'?deadlineBanner(defaultWeek()):'')+(views[S.ui.view]||views.dash)(r,comp);
   const foot=document.getElementById('foot'); if(foot) foot.innerHTML = SHARED ? (ADMIN?(HOSTED?'Admin mode. Changes are saved in this browser until you press Publish.':'Admin mode. Changes are saved in this browser; press Download and upload the new index.html to update the shared page.'):'Live standings. Updated by the organiser after each round of games.') : 'Last Man Standing. Data is saved in this browser. Use Settings &rarr; Backup to export a copy.';
   if(REMOTE && foot) foot.textContent=ADMIN?'Admin mode. Changes are saved to the shared competition.':'Live standings. Refreshes every 45 seconds.';
   if(S.ui.view==='entries') wireDrop();
@@ -605,7 +606,7 @@ function renderHeader(r,comp){
     ${REMOTE?remoteHeader():SHARED?(ADMIN?`<div class="stat pub ${isDirty()?'dirty':''}" onclick="${HOSTED?'publishLive()':'exportLivePage()'}" title="${HOSTED?'Publish the current state so everyone with the link sees it':'Download an updated index.html to upload to your web host'}"><div class="v">${HOSTED?(isDirty()?'⬆ Publish':'✓ Live'):'⬇ Download'}</div><div class="l">${isDirty()?'unpublished changes':'up to date'}</div></div><div class="stat pub" style="border-color:var(--line);background:transparent" onclick="toggleAdmin()"><div class="v" style="color:#fff">Admin</div><div class="l">exit</div></div>`:`<div class="stat pub" style="border-color:var(--line);background:transparent;opacity:.6" onclick="toggleAdmin()" title="Organiser only"><div class="v" style="color:#fff">🔒</div><div class="l">organiser</div></div>`):''}`;
 }
 
-/* ---- Home ---- */
+/* ---- Dashboard ---- */
 function renderHome(r,comp){
   const pot=prizePot(r,comp);
   const w=defaultWeek();
@@ -626,9 +627,9 @@ function renderHome(r,comp){
       <div class="herostat"><div class="v">Wk ${w}</div><div class="l">${weekSettled(w)?'Settled':weekHasResults(w)?'In progress':'Up next'}</div></div>
     </div>
     <div class="hero-actions">
-      <button class="btn gold" onclick="setView('dash')">View standings</button>
-      <button class="btn" onclick="setView('history')">Pick history</button>
-      <button class="btn primary edit" onclick="setWeek(${w});setView('picks')">Enter Week ${w} picks</button>
+      <button class="btn gold" onclick="setView('standings')">View standings</button>
+      <button class="btn" onclick="setView('picks')">Picks and history</button>
+      <button class="btn primary" onclick="${accountUser?`setWeek(${w});setView('picks')`:`location.href='/login'`}">${accountUser?`Enter Week ${w} picks`:'Sign in to pick'}</button>
     </div>
   </div>
   <div class="card"><h2>The 32 teams <span class="tag">each team once until a rollover or new round</span></h2>
@@ -661,7 +662,9 @@ function renderHome(r,comp){
   </div>`;
 }
 
-/* ---- Dashboard ---- */
+function renderDashboard(r,comp){return renderHome(r,comp)+renderDash(r,comp);}
+
+/* ---- Competition overview ---- */
 function renderDash(r,comp){
   const pot=prizePot(r,comp);
   const w=defaultWeek();
@@ -676,7 +679,7 @@ function renderDash(r,comp){
   if(!S.entries.length) banner+=`<div class="banner">No entries yet <button class="btn gold edit" onclick="setView('entries')">Add or import entries</button></div>`;
 
   const aliveList=S.entries.filter(e=>comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
-  const pendingList=S.entries.filter(e=>comp.resetWeek===r.startWeek&&!entryPaid(e,r,comp));
+  const pendingList=S.entries.filter(e=>!entryPaid(e,r,comp));
   const outList=S.entries.filter(e=>!comp.alive.has(e.id)&&!pendingList.includes(e)).sort((a,b)=>a.name.localeCompare(b.name));
   const missing=aliveList.filter(e=>!S.picks[e.id]?.[w] && !weekSettled(w) && isAliveForWeek(comp,w,e.id));
   const feed=comp.events.slice().reverse().slice(0,25).map(ev=>{
@@ -699,7 +702,7 @@ function renderDash(r,comp){
         <button class="btn primary edit" onclick="setWeek(${w});setView('picks')">Make Week ${w} picks</button>
         <button class="btn edit" onclick="setWeek(${w});setView('results')">Enter results</button>
         ${HOSTED?'':`<button class="btn edit" onclick="fetchWeekResults(${w})">⟳ Fetch Week ${w} scores</button>`}
-        <button class="btn" onclick="setView('history')">Pick history</button>
+        <button class="btn" onclick="setView('picks')">Picks and history</button>
       </div>
     </div>
     <div class="card" style="margin:0">
@@ -735,6 +738,19 @@ function renderDash(r,comp){
         <span style="${hw?'color:var(--green);font-weight:700':''}">${TEAMS[g.home].short}</span>${logoImg(g.home)}
         <span class="muted" style="margin-left:auto">${fin?'FINAL':fmtDate(g.date)}</span></div>`;}).join('')}
     </div>
+  </div>`;
+}
+
+function renderStandings(r,comp){
+  const w=defaultWeek();
+  const aliveList=S.entries.filter(e=>comp.alive.has(e.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  const pendingList=S.entries.filter(e=>!entryPaid(e,r,comp)).sort((a,b)=>a.name.localeCompare(b.name));
+  const outList=S.entries.filter(e=>!comp.alive.has(e.id)&&!pendingList.includes(e)).sort((a,b)=>a.name.localeCompare(b.name));
+  const list=(entries,cls='')=>entries.length?`<div class="avatars">${entries.map(e=>{const vp=visiblePick(e.id,w),p=vp==='HIDDEN'?null:vp;return `<span class="av ${cls}">${p?logoImg(p):''}${esc(e.name)}${e.label?` <span class="muted">${esc(e.label)}</span>`:''}</span>`;}).join('')}</div>`:'<div class="empty">Nobody in this group.</div>';
+  return `<div class="card"><h1 style="font-family:var(--font-head);margin-top:0">Standings</h1><p class="muted">Round ${r.n}. Current Week ${w} picks stay hidden until kick-off.</p>
+    <h2>Still standing <span class="tag">${aliveList.length}</span></h2>${list(aliveList)}
+    ${pendingList.length?`<h2 style="margin-top:22px">Awaiting payment <span class="tag">${pendingList.length}</span></h2>${list(pendingList)}`:''}
+    <h2 style="margin-top:22px">Eliminated <span class="tag">${outList.length}</span></h2>${list(outList,'out')}
   </div>`;
 }
 
@@ -780,6 +796,8 @@ function renderPicks(r,comp){
     ${others.length?`<div class="muted small" style="margin-top:12px">Eliminated before this week (${others.length}): ${others.map(e=>esc(e.name)).join(', ')}</div>`:''}
   </div>`;
 }
+
+function renderPicksPage(r,comp){return renderPicks(r,comp)+renderHistory(r,comp);}
 function openPicker(entryId, w){
   const r=currentRound(); const comp=computeRound(r);
   const e=S.entries.find(x=>x.id===entryId);
@@ -1225,29 +1243,33 @@ window.addEventListener('beforeunload',event=>{if(REMOTE && (remoteDirty||remote
 function acceptMe(data){const ui=S.ui;playerMe=data;S=hydrate(data.state);S.ui=ui;S.picks[data.entry.id]={...data.picks};ADMIN=false;playerError='';}
 function choosePlayerWeek(w){S.ui.week=w;playerSelected=null;playerChanging=false;renderPlayer();}
 function playerLock(w){return L.weekDeadline(w)===null||L.weekDeadline(w)<=serverNow();}
-function playerStatus(comp,e){if(comp.resetWeek===currentRound().startWeek&&!entryPaid(e,currentRound(),comp))return '<span class="pill pending">Inactive</span>';const out=comp.events.filter(x=>x.type==='out'&&x.id===e.id).at(-1);return comp.winnerIds?.includes(e.id)?'<span class="pill win">Winner</span>':comp.alive.has(e.id)?'<span class="pill alive">In</span>':`<span class="pill out">Out wk ${out?.week||'?'}</span>`;}
-function renderPlayer(){
-  document.body.classList.add('player');document.body.classList.remove('ro');document.getElementById('nav').classList.add('hidden');
-  const main=document.getElementById('main');document.getElementById('foot').textContent='Your account. All deadlines and kick-off times are UK time.';
-  if(!playerMe){document.getElementById('hdrStats').innerHTML='';main.innerHTML=`<div class="card"><h2>Your competition</h2><p>${esc(playerError||'Loading your personal link…')}</p><a href="/">View standings</a></div>`;return;}
-  const e=playerMe.entry,r=currentRound(),comp=computeRound(r),first=defaultWeek(),end=roundEndWeek(r);
-  if(!S.ui.week||S.ui.week<first||S.ui.week>end)S.ui.week=first;
-  const w=S.ui.week,p=playerMe.picks[w],g=p?teamGame(p,w):null,locked=playerLock(w),used=usedTeams(e.id,r,comp,w),eligible=isAliveForWeek(comp,w,e.id)&&!comp.complete;
-  renderHeader(r,comp);
-  const usedAll=usedTeams(e.id,r,comp,null);
-  let html=memberTools()+deadlineBanner(w)+`<div class="card"><h2>Hi ${esc(e.name)} ${playerStatus(comp,e)}</h2><p class="pill ${entryPaid(e,r,comp)?'alive':'pending'}">${entryPaid(e,r,comp)?'Active (paid)':'Inactive (not paid)'} · Round ${r.n}${comp.resetWeek>r.startWeek?' · Rollover':''}</p>${e.label?`<p class="muted">${esc(e.label)}</p>`:''}<p>Current pot <b style="color:var(--gold)">${gbp(prizePot(r,comp))}</b></p><div class="small muted">Already used since the last reset</div><div class="avatars" style="margin-top:8px">${Object.keys(usedAll).map(t=>logoImg(t)).join('')||'<span class="muted small">No teams used yet.</span>'}</div></div>`;
-  if(!entryPaid(e,r,comp)){main.innerHTML=html+`<div class="card"><h2>${comp.resetWeek>r.startWeek?'Rollover payment required':'Payment pending'}</h2><p>${comp.resetWeek>r.startWeek?`You must pay ${gbp(S.settings.fee)} again after rollover. You are eliminated until the organiser confirms your new payment. Pay and submit your pick before the next deadline.`:`You're not marked as paid yet, contact the organiser. You can pick once payment is confirmed.`}</p></div><a href="/">View standings</a>`;return;}
+function playerStatus(comp,e){if(!entryPaid(e,currentRound(),comp))return '<span class="pill pending">Inactive</span>';const out=comp.events.filter(x=>x.type==='out'&&x.id===e.id).at(-1);return comp.winnerIds?.includes(e.id)?'<span class="pill win">Winner</span>':comp.alive.has(e.id)?'<span class="pill alive">In</span>':`<span class="pill out">Out wk ${out?.week||'?'}</span>`;}
+function renderMemberPicks(e,r,comp){
+  const first=defaultWeek(),end=roundEndWeek(r),w=S.ui.week,p=playerMe.picks[w],g=p?teamGame(p,w):null,locked=playerLock(w),used=usedTeams(e.id,r,comp,w),eligible=isAliveForWeek(comp,w,e.id)&&!comp.complete;
+  const entrySwitcher=memberEntrySwitcher();let html=(entrySwitcher?`<div class="card"><div class="row">${entrySwitcher}</div></div>`:'')+deadlineBanner(w);
+  if(!entryPaid(e,r,comp))return html+`<div class="card"><h2>${comp.resetWeek>r.startWeek?'Rollover payment required':'Payment pending'}</h2><p>${comp.resetWeek>r.startWeek?`You must pay ${gbp(S.settings.fee)} again after rollover. You are eliminated until the organiser confirms your new payment. Pay and submit your pick before the next deadline.`:`You're not marked as paid yet. Contact the organiser and you can pick once payment is confirmed.`}</p></div>`+renderHistory(r,comp);
   html+=`<div class="card"><h2>Choose your week <span class="tag">Round ${r.n}</span></h2><div class="weeks">${Array.from({length:end-first+1},(_,i)=>i+first).map(week=>`<button class="${week===w?'active':''}" onclick="choosePlayerWeek(${week})" title="Week ${week}${L.weekDeadline(week)<=serverNow()?' · picks locked':''}">${week}${L.weekDeadline(week)<=serverNow()?' 🔒':''}</button>`).join('')}</div></div>`;
   html+=`<div class="card"><h2>Your pick <span class="tag">Week ${w}</span></h2>${p?`<div class="row">${teamChip(p,'logo lg')}</div><p class="muted">${g?`${TEAMS[g.away].name} @ ${TEAMS[g.home].name}<br>${fmtDate(g.date)} (UK time)`:'No fixture this week'}</p>`:'<p class="muted">No team selected yet.</p>'}<p id="playerCountdown" class="small" role="status"></p>${locked?'<span class="pill pending">Locked</span>':!eligible?'<p class="muted">'+(comp.complete?'This round is complete.':'You are out for this week.')+'</p>':p&&!playerChanging?'<button class="btn" onclick="playerChanging=true;renderPlayer()">Change pick</button>':''}</div>`;
-  if(!locked&&eligible&&(!p||playerChanging)){
-    html+=`<div class="card"><h2>Pick a team</h2><p class="muted small">Tap a team, then confirm your pick.</p><div class="teamgrid">${TEAM_LIST.map(t=>{
-      const game=teamGame(t.abbr,w),bye=!game,isUsed=used[t.abbr]!=null,started=game&&(new Date(game.date).getTime()<=serverNow()||S.results[game.id]?.final),disabled=bye||isUsed||started||playerSending;
-      const reason=isUsed?`Used wk ${used[t.abbr]}`:bye?'Bye':started?'Locked':'';
-      return `<button type="button" class="tcard ${isUsed?'used':bye?'bye':started?'final':''} ${playerSelected===t.abbr?'selected':''}" ${disabled?'disabled':''} aria-label="Pick ${esc(t.name)}${reason?' — '+reason:''}" aria-pressed="${playerSelected===t.abbr}" onclick="selectPlayerTeam('${t.abbr}')">${reason?`<span class="badge">${reason}</span>`:''}${logoImg(t.abbr,'logo xl')}<div class="nm">${esc(t.short)}</div><div class="opp">${game?`${game.home===t.abbr?'vs '+TEAMS[game.away].short:'@ '+TEAMS[game.home].short} · ${fmtDay(game.date)}`:'BYE WEEK'}</div></button>`;
-    }).join('')}</div>${playerSelected?`<div class="row" style="margin-top:14px"><button id="confirmPlayerPick" class="btn primary" onclick="submitPlayerPick(playerSelected)" ${playerSending?'disabled':''}>${playerSending?'Saving…':'Confirm '+esc(TEAMS[playerSelected].name)}</button><button class="btn" onclick="playerSelected=null;renderPlayer()" ${playerSending?'disabled':''}>Cancel</button></div>`:''}${p?`<button class="btn ghost sm" style="margin-top:14px" onclick="submitPlayerPick(null)" ${playerSending?'disabled':''}>Clear pick</button>`:''}</div>`;
-  }
-  html+=`<div class="card"><h2>Your season so far</h2><div class="season">${Array.from({length:18},(_,i)=>i+1).filter(week=>playerMe.picks[week]||weekSettled(week)).map(week=>{const pick=playerMe.picks[week],result=pick?teamResult(pick,week).code:'NP';return `<div><div class="muted small">Wk ${week}</div><span class="hcell ${result}" title="${pick?esc(TEAMS[pick]?.name):'No pick'} · ${result}">${pick?logoImg(pick):'NP'}</span><div class="small res ${result}">${result==='P'?'–':result}</div></div>`;}).join('')||'<span class="muted small">Your picks will appear here.</span>'}</div></div><a href="/">View standings</a>`;
-  main.innerHTML=html;updateCountdown();
+  if(!locked&&eligible&&(!p||playerChanging))html+=`<div class="card"><h2>Pick a team</h2><p class="muted small">Tap a team, then confirm your pick.</p><div class="teamgrid">${TEAM_LIST.map(t=>{
+    const game=teamGame(t.abbr,w),bye=!game,isUsed=used[t.abbr]!=null,started=game&&(new Date(game.date).getTime()<=serverNow()||S.results[game.id]?.final),disabled=bye||isUsed||started||playerSending;
+    const reason=isUsed?`Used wk ${used[t.abbr]}`:bye?'Bye':started?'Locked':'';
+    return `<button type="button" class="tcard ${isUsed?'used':bye?'bye':started?'final':''} ${playerSelected===t.abbr?'selected':''}" ${disabled?'disabled':''} aria-label="Pick ${esc(t.name)}${reason?' - '+reason:''}" aria-pressed="${playerSelected===t.abbr}" onclick="selectPlayerTeam('${t.abbr}')">${reason?`<span class="badge">${reason}</span>`:''}${logoImg(t.abbr,'logo xl')}<div class="nm">${esc(t.short)}</div><div class="opp">${game?`${game.home===t.abbr?'vs '+TEAMS[game.away].short:'@ '+TEAMS[game.home].short} · ${fmtDay(game.date)}`:'BYE WEEK'}</div></button>`;
+  }).join('')}</div>${playerSelected?`<div class="row" style="margin-top:14px"><button id="confirmPlayerPick" class="btn primary" onclick="submitPlayerPick(playerSelected)" ${playerSending?'disabled':''}>${playerSending?'Saving…':'Confirm '+esc(TEAMS[playerSelected].name)}</button><button class="btn" onclick="playerSelected=null;renderPlayer()" ${playerSending?'disabled':''}>Cancel</button></div>`:''}${p?`<button class="btn ghost sm" style="margin-top:14px" onclick="submitPlayerPick(null)" ${playerSending?'disabled':''}>Clear pick</button>`:''}</div>`;
+  return html+renderHistory(r,comp);
+}
+function renderPlayer(){
+  document.body.classList.add('player','ro');document.getElementById('nav').classList.remove('hidden');
+  const main=document.getElementById('main');document.getElementById('foot').textContent='Your account. All deadlines and kick-off times are UK time.';
+  if(!playerMe){document.getElementById('nav').classList.add('hidden');document.getElementById('hdrStats').innerHTML='';main.innerHTML=`<div class="card"><h2>Your competition</h2><p>${esc(playerError||'Loading your personal link…')}</p><a href="/">Dashboard</a></div>`;return;}
+  const e=playerMe.entry,r=currentRound(),comp=computeRound(r),first=defaultWeek(),end=roundEndWeek(r);
+  if(!S.ui.week||S.ui.week<first||S.ui.week>end)S.ui.week=first;
+  if(S.ui.view==='home')S.ui.view='dash';if(S.ui.view==='history')S.ui.view='picks';if(!['dash','picks','results','standings'].includes(S.ui.view))S.ui.view='dash';
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===S.ui.view));
+  renderHeader(r,comp);
+  const usedAll=usedTeams(e.id,r,comp,null);
+  const accountSummary=`<div class="card"><h2>Hi ${esc(e.name)} ${playerStatus(comp,e)}</h2><p class="pill ${entryPaid(e,r,comp)?'alive':'pending'}">${entryPaid(e,r,comp)?'Active (paid)':'Inactive (not paid)'} · Round ${r.n}${comp.resetWeek>r.startWeek?' · Rollover':''}</p>${e.label?`<p class="muted">${esc(e.label)}</p>`:''}<p>Current pot <b style="color:var(--gold)">${gbp(prizePot(r,comp))}</b></p><div class="small muted">Already used since the last reset</div><div class="avatars" style="margin-top:8px">${Object.keys(usedAll).map(t=>logoImg(t)).join('')||'<span class="muted small">No teams used yet.</span>'}</div></div>`;
+  const pages={dash:()=>memberTools()+deadlineBanner(first)+accountSummary+renderDashboard(r,comp),picks:()=>renderMemberPicks(e,r,comp),results:()=>renderResults(r,comp),standings:()=>renderStandings(r,comp)};
+  main.innerHTML=pages[S.ui.view]();updateCountdown();
 }
 function updateCountdown(){const el=document.getElementById('playerCountdown');if(!el||!playerMe)return;const w=S.ui.week,p=playerMe.picks[w],time=L.weekDeadline(w);let minutes=Math.max(0,Math.ceil((time-serverNow())/60000));el.textContent=minutes?`Locks in ${Math.floor(minutes/1440)}d ${Math.floor(minutes%1440/60)}h ${minutes%60}m`:'Pick deadline has passed.';}
 function selectPlayerTeam(team){playerSelected=team;renderPlayer();document.getElementById('confirmPlayerPick')?.scrollIntoView({behavior:'smooth',block:'center'});}
@@ -1266,7 +1288,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 /* ACCOUNT:START */
 let accountUser=null,accountEntries=[],accountPage=['/login','/signup','/dashboard','/admin','/reset-password'].includes(location.pathname)?location.pathname:null;
 const accountCall=(action,body)=>apiRequest('/api/account?action='+action,body);
-function accountBar(){if(location.protocol==='file:')return '';return `<div class="row account-bar"><a class="btn" href="/">Standings</a>${accountUser?`<a class="btn" href="/dashboard">My dashboard</a>${['owner','admin'].includes(accountUser.role)?'<a class="btn" href="/admin">Admin area</a>':''}<button class="btn" onclick="accountLogout()">Sign out</button>`:'<a class="btn" href="/login">Sign in</a><a class="btn gold" href="/signup">Join the competition</a>'}</div>`+adminNavigation();}
+function accountBar(){if(location.protocol==='file:')return '';if(accountPage==='/admin')return adminNavigation();return ['/login','/signup','/reset-password'].includes(accountPage)?'<div class="row account-bar"><a class="btn" href="/">Dashboard</a></div>':'';}
 const adminSections=[['adminhome','Admin home'],['entries','Entries & payments'],['members','Members & roles'],['picks','Manage picks'],['results','Results'],['settings','Settings'],['dash','Overview']];
 function adminNavigation(){return accountPage==='/admin'&&ADMIN?`<div class="admin-nav" role="navigation" aria-label="Admin tools">${adminSections.map(([view,label])=>`<button class="btn ${S.ui.view===view?'gold':''}" aria-current="${S.ui.view===view?'page':'false'}" onclick="setView('${view}')">${view==='members'&&accountUser?.role!=='owner'?'Members':label}</button>`).join('')}</div>`:'';}
 function renderAdminHome(r,comp){
@@ -1276,13 +1298,17 @@ function renderAdminHome(r,comp){
 }
 
 function deadlineBanner(w){const d=L.weekDeadline(w);return `<div class="card deadline"><b>Week ${w} pick deadline: ${d?new Date(d).toLocaleString('en-GB',{weekday:'long',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/London'}):'Awaiting fixtures'} (UK time)</b><div class="small muted">All picks and changes close one hour before the first kick-off.${d&&d<=serverNow()?' This week is now locked.':''}</div></div>`;}
-function remoteHeader(){return `<div class="stat pub" onclick="location.href='${accountUser?'/dashboard':'/login'}'"><div class="v" style="font-size:18px">${accountUser?'Account':'Sign in'}</div><div class="l">${accountUser?esc(accountUser.role):'join / login'}</div></div>`;}
+function remoteHeader(){
+ if(!accountUser)return '<a class="stat pub" style="color:inherit;font:inherit;text-decoration:none" href="/login"><div class="v" style="font-size:18px">Sign in</div><div class="l">join / login</div></a>';
+ const staff=['owner','admin'].includes(accountUser.role),inAdmin=accountPage==='/admin';
+ return `<a class="stat pub" style="color:inherit;font:inherit;text-decoration:none" href="${staff?(inAdmin?'/dashboard':'/admin'):'/dashboard'}"><div class="v" style="font-size:18px">${staff?(inAdmin?'Exit admin':'Admin'):'Account'}</div><div class="l">${staff?(inAdmin?'dashboard':accountUser.role):'dashboard'}</div></a><button type="button" class="stat pub" style="color:inherit;font:inherit" onclick="accountLogout()"><div class="v" style="font-size:18px">Sign out</div><div class="l">account</div></button>`;
+}
 async function remoteAdmin(){location.href=accountUser&&['admin','owner'].includes(accountUser.role)?'/admin':'/login';}
 async function accountLogout(){try{await flushRemote();await remoteQueue;if(remoteDirty)return;await accountCall('logout',{});location.href='/';}catch(e){toast(esc(e.message));}}
 function authForm(){
  const signup=accountPage==='/signup',reset=accountPage==='/reset-password';
  document.body.classList.add('ro');document.getElementById('nav').classList.add('hidden');document.getElementById('hdrStats').innerHTML='';document.getElementById('foot').textContent='Manual payments. Play responsibly. 18+.';
- document.getElementById('main').innerHTML=accountBar()+`<div class="card auth-card"><h2>${reset?'Set a new password':signup?'Join Last Man Standing':'Welcome back'}</h2><p class="muted">${reset?'Your reset link works once and expires after one hour.':signup?'Create your account and you’re in. No confirmation email. The organiser will activate your entry once you have paid.':'Sign in to manage your weekly picks.'}</p><form id="accountForm">${reset?'':`${signup?'<label>Your name <span class="muted">(optional)</span><input type="text" name="name" autocomplete="name" maxlength="100"></label>':''}<label>Email address<input name="email" type="email" autocomplete="email" required maxlength="320" ${signup&&location.hash.startsWith('#setup=')?'value="roboshea@gmail.com"':''}></label>`}<label>Password<input name="password" type="password" autocomplete="${signup||reset?'new-password':'current-password'}" ${signup||reset?'minlength="12"':''} maxlength="256" required></label>${signup||reset?'<p class="small muted">At least 12 characters. A few memorable words work well.</p>':''}<p id="accountError" role="alert"></p><button class="btn gold" type="submit">${reset?'Save password':signup?'Create account':'Sign in'}</button></form><p>${reset?'<a href="/login">Back to sign in</a>':signup?'Already registered? <a href="/login">Sign in</a>':'New here? <a href="/signup">Create an account</a>'}</p>${!signup&&!reset?'<details><summary>Forgotten your password?</summary><p>Contact the organiser for a private password reset link.</p></details>':''}</div>`;
+ document.getElementById('main').innerHTML=accountBar()+`<div class="card auth-card"><h2>${reset?'Set a new password':signup?'Join Last Man Standing':'Welcome back'}</h2><p class="muted">${reset?'Your reset link works once and expires after one hour.':signup?'Create your account and you’re in. No confirmation email. The organiser will activate your entry once you have paid.':'Sign in to manage your weekly picks.'}</p><form id="accountForm">${reset?'':`${signup?'<label>Your name <span class="muted">(optional)</span><input type="text" name="name" autocomplete="name" maxlength="100"></label>':''}<label>Email address<input name="email" type="email" autocomplete="email" required maxlength="320" ${signup&&location.hash.startsWith('#setup=')?'value="roboshea@gmail.com"':''}></label>`}<label>Password<input name="password" type="password" autocomplete="${signup||reset?'new-password':'current-password'}" ${signup||reset?'minlength="7"':''} maxlength="256" required></label>${signup||reset?'<p class="small muted">At least 7 characters.</p>':''}<p id="accountError" role="alert"></p><button class="btn gold" type="submit">${reset?'Save password':signup?'Create account':'Sign in'}</button></form><p>${reset?'<a href="/login">Back to sign in</a>':signup?'Already registered? <a href="/login">Sign in</a>':'New here? <a href="/signup">Create an account</a>'}</p>${!signup&&!reset?'<details><summary>Forgotten your password?</summary><p>Contact the organiser for a private password reset link.</p></details>':''}</div>`;
  document.getElementById('accountForm').onsubmit=async event=>{
   event.preventDefault();const form=event.currentTarget,button=form.querySelector('button'),error=document.getElementById('accountError');button.disabled=true;error.textContent='';
   try{const body=Object.fromEntries(new FormData(form));if(signup)body.setupToken=new URLSearchParams(location.hash.slice(1)).get('setup');if(reset)body.token=new URLSearchParams(location.hash.slice(1)).get('token');await accountCall(reset?'reset':signup?'signup':'login',body);history.replaceState(null,'',location.pathname);location.href=reset?'/login':'/dashboard';}catch(e){error.textContent=e.message;button.disabled=false;}
@@ -1299,10 +1325,11 @@ async function accountBoot(){
  if(accountPage==='/admin'&&(!accountUser||!['owner','admin'].includes(accountUser.role))){location.replace('/login');return true;}
  return false;
 }
-function memberTools(){return accountBar()+`<div class="card"><h2>My account <span class="tag">${esc(accountUser?.email||'')}</span></h2><div class="row"><label>Entry <select onchange="location.href='/dashboard?entry='+encodeURIComponent(this.value)">${accountEntries.map(e=>`<option value="${esc(e.id)}" ${e.id===PLAYER_CODE?'selected':''}>${esc(e.name+(e.label?' - '+e.label:''))}</option>`).join('')}</select></label><button class="btn" onclick="addAccountEntry()">Add another entry</button><button class="btn" onclick="changeAccountPassword()">Change password</button></div></div>`;}
+function memberEntrySwitcher(){return accountEntries.length>1?`<label>Entry <select onchange="location.href='/dashboard?entry='+encodeURIComponent(this.value)">${accountEntries.map(e=>`<option value="${esc(e.id)}" ${e.id===PLAYER_CODE?'selected':''}>${esc(e.name+(e.label?' - '+e.label:''))}</option>`).join('')}</select></label>`:'';}
+function memberTools(){return `<div class="card"><h2>My account <span class="tag">${esc(accountUser?.email||'')}</span></h2><div class="row">${memberEntrySwitcher()}<button class="btn" onclick="addAccountEntry()">Add another entry</button><button class="btn" onclick="changeAccountPassword()">Change password</button></div></div>`;}
 async function addAccountEntry(){try{const data=await accountCall('entry',{});location.href='/dashboard?entry='+encodeURIComponent(data.entryId);}catch(e){toast(esc(e.message));}}
 function changeAccountPassword(){
- modal('<h2>Change password</h2>'+ `<form id="passwordForm"><label>Current password<input name="currentPassword" type="password" autocomplete="current-password" required></label><label>New password<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="256" required></label><p id="passwordError" role="alert"></p><button class="btn gold">Save password</button></form>`);
+ modal('<h2>Change password</h2>'+ `<form id="passwordForm"><label>Current password<input name="currentPassword" type="password" autocomplete="current-password" required></label><label>New password<input name="password" type="password" autocomplete="new-password" minlength="7" maxlength="256" required></label><p class="small muted">At least 7 characters.</p><p id="passwordError" role="alert"></p><button class="btn gold">Save password</button></form>`);
  document.getElementById('passwordForm').onsubmit=async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button');btn.disabled=true;try{await accountCall('password',Object.fromEntries(new FormData(e.currentTarget)));closeModal();toast('Password updated. Other sessions have been signed out.');}catch(error){document.getElementById('passwordError').textContent=error.message;btn.disabled=false;}};
 }
 async function renderMembers(){

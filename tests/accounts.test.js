@@ -5,6 +5,8 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  const auth=createAccounts({db,secure:false,now:()=>time,ownerEmail:()=> 'owner@example.test',ownerToken:()=> 'private-setup'});const h=createHandlers({db,auth,now:()=>time});
  const request=async(handler,action,body,cookie='',headers={})=>{let status,data;const out={};await handler({url:'/api/test',method:body===undefined?'GET':'POST',query:typeof action==='string'?{action}:action,body,headers:{host:'localhost',origin:'http://localhost','x-lms-request':'1',cookie,...headers}}, {setHeader:(k,v)=>out[k]=v,status(n){status=n;return this;},json(v){data=v;}});return {status,data,cookie:out['Set-Cookie']?.split(';')[0],headers:out};};
  const post=(action,body,cookie)=>request(auth.handler,action,body,cookie);const pw='several memorable words here';
+ assert.equal((await post('signup',{email:'short-password@example.test',password:'123456'})).status,400);
+ assert.equal((await post('signup',{email:'seven-characters@example.test',password:'1234567'})).status,200);
  assert.equal((await post('signup',{email:'owner@example.test',password:pw})).status,400);
  const owner=await post('signup',{email:'owner@example.test',password:pw,setupToken:'private-setup'});assert.equal(owner.status,200,JSON.stringify(owner.data));assert.equal(owner.data.user.role,'owner');assert.match(owner.headers['Set-Cookie'],/HttpOnly/);
  const member=await post('signup',{email:'player@example.test',name:'Player',password:pw,role:'owner'});assert.equal(member.status,200,JSON.stringify(member.data));assert.equal(member.data.user.role,'member');
