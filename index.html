@@ -627,7 +627,7 @@ function memberHelpItems(){
     ['Results and standings','What do Active, Inactive and Eliminated mean?',`<ul><li><strong>Active:</strong> paid and still eligible in the current round.</li><li><strong>Inactive:</strong> not paid for the current round or rollover, so no pick can be submitted.</li><li><strong>Eliminated:</strong> knocked out by a losing, tied or missed pick under the competition rules.</li></ul>`],
     ['Results and standings','Where will I see competition announcements?',`<p>Payment reminders, deadline changes and competition updates appear in a highlighted banner near the top of member pages. Refresh the app if an administrator tells you a new notice has been posted.</p>`],
     ['Rollover','What happens in a rollover?',`<p>If every remaining player loses in the same week, the competition rolls over. Everyone comes back in, including people eliminated earlier, and all 32 teams become available again.</p><p>Every entry must pay ${fee} again. Contact Connor or Havo. Anyone not marked paid for the rollover stays eliminated and cannot submit the next pick.</p>`],
-    ['Account and phone','How do I change my password or sign out?',`<p>On the Dashboard, use <strong>Change password</strong> in My account. Enter your current password and a new password of at least seven characters.</p><p>Use <strong>Sign out</strong> at the top of the app when you have finished, especially on a shared device.</p>`],
+    ['Account and phone','How do I change my password or sign out?',`<p>Choose <strong>Account</strong> at the top of the app, then use <strong>Change password</strong>. Enter your current password and a new password of at least seven characters.</p><p>Use <strong>Sign out</strong> at the top of the app when you have finished, especially on a shared device.</p>`],
     ['Account and phone','What if I forget my password?',`<p>Contact an administrator. They can create a private reset link that works once and expires after one hour. Open the link, set a new password of at least seven characters, then sign in normally.</p>`],
     ['Account and phone','How do I save NFL LMS to my phone?',`<p><strong>iPhone or iPad:</strong> open the site in Safari, tap Share, choose <strong>Add to Home Screen</strong>, then tap Add.</p><p><strong>Android:</strong> open the site in Chrome, open the browser menu, choose <strong>Add to Home screen</strong> or <strong>Install app</strong>, then confirm.</p><p>The NFL LMS icon and name will appear with your other apps.</p>`],
     ['Troubleshooting','My pick does not appear to have saved. What should I do?',`<ol><li>Check that you pressed <strong>Confirm pick</strong>.</li><li>Check that the entry is Active and the deadline has not passed.</li><li>Refresh Picks and look for the team badge in the selected week.</li><li>If it is still missing, contact Connor or Havo before the deadline and tell them the entry name, week and team.</li></ol>`]
@@ -729,6 +729,7 @@ function render(){
   if(accountPage && ['/login','/signup','/reset-password'].includes(accountPage))return authForm();
   if(accountPage==='/help')return renderMemberHelpPage();
   if(accountPage==='/privacy')return renderPrivacyPage();
+  if(accountPage==='/account')return renderAccountPage();
   if(S.ui.view==='members' && ADMIN)return renderMembers();
   if(PLAYER_CODE) return renderPlayer();
   const r=currentRound(); const comp=computeRound(r);
@@ -1452,7 +1453,7 @@ function renderPlayer(){
   renderHeader(r,comp);
   const usedAll=usedTeams(e.id,r,comp,null);
   const accountSummary=`<div class="card"><h2>Hi ${esc(e.name)} ${playerStatus(comp,e)}</h2><p class="pill ${entryPaid(e,r,comp)?'alive':'pending'}">${entryPaid(e,r,comp)?'Active (paid)':'Inactive (not paid)'} · Round ${r.n}${comp.resetWeek>r.startWeek?' · Rollover':''}</p>${e.label?`<p class="muted">${esc(e.label)}</p>`:''}<p>Current pot <b style="color:var(--gold)">${gbp(prizePot(r,comp))}</b></p><div class="small muted">Already used since the last reset</div><div class="avatars" style="margin-top:8px">${Object.keys(usedAll).map(t=>logoImg(t)).join('')||'<span class="muted small">No teams used yet.</span>'}</div></div>`;
-  const pages={dash:()=>memberTools()+deadlineBanner(first)+accountSummary+renderDashboard(r,comp),picks:()=>renderMemberPicks(e,r,comp),results:()=>renderResults(r,comp),standings:()=>renderStandings(r,comp)};
+  const pages={dash:()=>deadlineBanner(first)+accountSummary+renderDashboard(r,comp),picks:()=>renderMemberPicks(e,r,comp),results:()=>renderResults(r,comp),standings:()=>renderStandings(r,comp)};
   main.innerHTML=announcementBanner()+pages[S.ui.view]();updateCountdown();
 }
 function updateCountdown(){const el=document.getElementById('playerCountdown');if(!el||!playerMe)return;const w=S.ui.week,p=playerMe.picks[w],time=L.weekDeadline(w);let minutes=Math.max(0,Math.ceil((time-serverNow())/60000));el.textContent=minutes?`Locks in ${Math.floor(minutes/1440)}d ${Math.floor(minutes%1440/60)}h ${minutes%60}m`:'Pick deadline has passed.';}
@@ -1470,7 +1471,7 @@ setInterval(()=>{if(!PLAYER_CODE||!playerMe)return;const boundary=String(playerL
 document.getElementById('nav').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) setView(b.dataset.v); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 /* ACCOUNT:START */
-let accountUser=null,accountEntries=[],accountPage=['/login','/signup','/dashboard','/admin','/reset-password','/help','/privacy'].includes(location.pathname)?location.pathname:null;
+let accountUser=null,accountEntries=[],accountPage=['/login','/signup','/dashboard','/account','/admin','/reset-password','/help','/privacy'].includes(location.pathname)?location.pathname:null;
 const accountCall=(action,body)=>apiRequest('/api/account?action='+action,body);
 function accountBar(){if(location.protocol==='file:')return '';if(accountPage==='/admin')return adminNavigation();return ['/login','/signup','/reset-password'].includes(accountPage)?'<div class="row account-bar"><a class="btn" href="/">Dashboard</a></div>':'';}
 const adminSections=[['adminhome','Admin home'],['entries','Entries & payments'],['members','Members & roles'],['picks','Manage picks'],['results','Results'],['settings','Settings'],['dash','Overview'],['adminhelp','Admin guide']];
@@ -1478,14 +1479,14 @@ function adminNavigation(){return accountPage==='/admin'&&ADMIN?`<div class="adm
 function renderAdminHome(r,comp){
  const paid=S.entries.filter(e=>entryPaid(e,r,comp)).length;
  const tools=[['entries','Entries & payments','Mark any competition entry as paid, including owner and admin entries, add people manually and import entries.'],['members',accountUser?.role==='owner'?'Members & roles':'Members',accountUser?.role==='owner'?'Assign admins, manage access, link entries and reset passwords.':'View members and reset member passwords.'],['picks','Manage picks','Add or change picks for any member, including corrections after the deadline.'],['results','Results','Fetch scores, enter results and settle the week.'],['settings','Competition settings','Manage rounds, rules, entry fees and backups.'],['dash','Competition overview','Check the prize pot, standings, missing picks and fixtures.'],['adminhelp','Admin how-to guide','Search the complete guide to payments, accounts, picks, results, rollovers and settings.']];
- return `<div class="card admin-intro"><div class="kick">${accountUser?.role==='owner'?'Owner':'Administrator'} access</div><h1>Admin area</h1><p>Manage your competition here. Your own entry and picks are in <a href="/dashboard">My dashboard</a>.</p><div class="row"><span class="pill">Round ${r.n}</span><span class="pill paid">${paid} paid</span><span class="pill unpaid">${S.entries.length-paid} awaiting payment</span></div></div><div class="admin-tools">${tools.map(([view,label,description])=>`<button class="card admin-tool" onclick="setView('${view}')"><strong>${label}</strong><span>${description}</span><span class="admin-tool-open">Open →</span></button>`).join('')}</div>${deadlineBanner(defaultWeek())}`;
+ return `<div class="card admin-intro"><div class="kick">${accountUser?.role==='owner'?'Owner':'Administrator'} access</div><h1>Admin area</h1><p>Manage your competition here. Your own entry and picks are in <a href="/dashboard">My dashboard</a>, with password and entry controls in <a href="/account">Account settings</a>.</p><div class="row"><span class="pill">Round ${r.n}</span><span class="pill paid">${paid} paid</span><span class="pill unpaid">${S.entries.length-paid} awaiting payment</span></div></div><div class="admin-tools">${tools.map(([view,label,description])=>`<button class="card admin-tool" onclick="setView('${view}')"><strong>${label}</strong><span>${description}</span><span class="admin-tool-open">Open →</span></button>`).join('')}</div>${deadlineBanner(defaultWeek())}`;
 }
 
 function deadlineBanner(w){const d=L.weekDeadline(w);return `<div class="card deadline"><b>Week ${w} pick deadline: ${d?new Date(d).toLocaleString('en-GB',{weekday:'long',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/London'}):'Awaiting fixtures'} (UK time)</b><div class="small muted">All picks and changes close one hour before the first kick-off.${d&&d<=serverNow()?' This week is now locked.':''}</div></div>`;}
 function remoteHeader(){
  if(!accountUser)return '<a class="stat pub" style="color:inherit;font:inherit;text-decoration:none" href="/login"><div class="v" style="font-size:18px">Sign in</div><div class="l">join / login</div></a>';
  const staff=['owner','admin'].includes(accountUser.role),inAdmin=accountPage==='/admin';
- return `<a class="stat pub" style="color:inherit;font:inherit;text-decoration:none" href="${staff?(inAdmin?'/dashboard':'/admin'):'/dashboard'}"><div class="v" style="font-size:18px">${staff?(inAdmin?'Exit admin':'Admin'):'Account'}</div><div class="l">${staff?(inAdmin?'dashboard':accountUser.role):'dashboard'}</div></a><button type="button" class="stat pub" style="color:inherit;font:inherit" onclick="accountLogout()"><div class="v" style="font-size:18px">Sign out</div><div class="l">account</div></button>`;
+ return `<a class="stat pub" style="color:inherit;font:inherit;text-decoration:none" href="${staff?(inAdmin?'/dashboard':'/admin'):'/account'}"><div class="v" style="font-size:18px">${staff?(inAdmin?'Exit admin':'Admin'):'Account'}</div><div class="l">${staff?(inAdmin?'dashboard':accountUser.role):'settings'}</div></a><button type="button" class="stat pub" style="color:inherit;font:inherit" onclick="accountLogout()"><div class="v" style="font-size:18px">Sign out</div><div class="l">account</div></button>`;
 }
 async function remoteAdmin(){location.href=accountUser&&['admin','owner'].includes(accountUser.role)?'/admin':'/login';}
 async function accountLogout(){try{await flushRemote();await remoteQueue;if(remoteDirty)return;await accountCall('logout',{});location.href='/';}catch(e){toast(esc(e.message));}}
@@ -1501,16 +1502,19 @@ function authForm(){
 async function accountBoot(){
  const data=await accountCall('me');accountUser=data.user;accountEntries=data.entries;document.getElementById('homeBrand').href=accountUser?'/dashboard':'/';
  if(['/login','/signup','/reset-password'].includes(accountPage)){authForm();return true;}
- if(accountPage==='/dashboard'||location.pathname.startsWith('/play/')){
+ if(accountPage==='/dashboard'||accountPage==='/account'||location.pathname.startsWith('/play/')){
   if(!accountUser){location.replace('/login');return true;}
-  if(!accountEntries.length){document.getElementById('main').innerHTML=accountBar()+'<div class="card"><h2>Your entries</h2><p>You have no entries yet.</p><button class="btn gold" onclick="addAccountEntry()">Add an entry</button></div>';return true;}
-  PLAYER_CODE=accountEntries.find(e=>e.id===new URLSearchParams(location.search).get('entry'))?.id||accountEntries[0].id;
+  if(accountPage==='/dashboard'||location.pathname.startsWith('/play/')){
+   if(!accountEntries.length){document.getElementById('main').innerHTML=accountBar()+'<div class="card"><h2>Your entries</h2><p>You have no entries yet.</p><button class="btn gold" onclick="addAccountEntry()">Add an entry</button></div>';return true;}
+   PLAYER_CODE=accountEntries.find(e=>e.id===new URLSearchParams(location.search).get('entry'))?.id||accountEntries[0].id;
+  }
  }
  if(accountPage==='/admin'&&(!accountUser||!['owner','admin'].includes(accountUser.role))){location.replace('/login');return true;}
  return false;
 }
 function memberEntrySwitcher(){return accountEntries.length>1?`<label>Entry <select onchange="location.href='/dashboard?entry='+encodeURIComponent(this.value)">${accountEntries.map(e=>`<option value="${esc(e.id)}" ${e.id===PLAYER_CODE?'selected':''}>${esc(e.name+(e.label?' - '+e.label:''))}</option>`).join('')}</select></label>`:'';}
-function memberTools(){return `<div class="card"><h2>My account <span class="tag">${esc(accountUser?.email||'')}</span></h2><div class="row">${memberEntrySwitcher()}<button class="btn" onclick="addAccountEntry()">Add another entry</button><button class="btn" onclick="changeAccountPassword()">Change password</button><a class="btn" href="/help">How to use the app</a></div></div>`;}
+function memberTools(){return `<div class="card"><h2>My account <span class="tag">${esc(accountUser?.email||'')}</span></h2><p class="muted">Manage your entries, password and account help here.</p><div class="row">${memberEntrySwitcher()}<button class="btn" onclick="addAccountEntry()">Add another entry</button><button class="btn" onclick="changeAccountPassword()">Change password</button><a class="btn" href="/help">How to use the app</a><a class="btn gold" href="/dashboard">Back to Dashboard</a></div></div>`;}
+function renderAccountPage(){document.body.classList.add('ro');document.body.classList.remove('player');document.getElementById('nav').classList.remove('hidden');const r=currentRound(),comp=computeRound(r);renderHeader(r,comp);document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));document.getElementById('main').innerHTML=memberTools();const foot=document.getElementById('foot');if(foot)foot.textContent='Your NFL LMS account settings.';}
 async function addAccountEntry(){try{const data=await accountCall('entry',{});location.href='/dashboard?entry='+encodeURIComponent(data.entryId);}catch(e){toast(esc(e.message));}}
 function changeAccountPassword(){
  modal('<h2>Change password</h2>'+ `<form id="passwordForm"><label>Current password<input name="currentPassword" type="password" autocomplete="current-password" required></label><label>New password<input name="password" type="password" autocomplete="new-password" minlength="7" maxlength="256" required></label><p class="small muted">At least 7 characters.</p><p id="passwordError" role="alert"></p><button class="btn gold">Save password</button></form>`);

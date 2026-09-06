@@ -52,7 +52,9 @@ test('mobile navigation, refresh, help, privacy and announcements stay wired',()
   assert.match(current,/How to use NFL LMS/);assert.match(current,/Admin how-to guide/);assert.match(current,/Connor or Havo/);assert.match(current,/function filterHelp\(/);
   assert.match(current,/function renderPrivacyPage\(/);assert.match(current,/function announcementBanner\(/);assert.match(current,/Member announcement/);
   assert.match(current,/function renderDashboard\(r,comp\)\{return renderHome\(r,comp\);\}/);
+  assert.match(current,/function renderAccountPage\(/);assert.doesNotMatch(current,/dash:\(\)=>memberTools\(\)\+deadlineBanner/);
   assert.ok(current.indexOf('The 32 teams')<current.indexOf('${renderFixturesCard(w)}'));
   const config=JSON.parse(fs.readFileSync('vercel.json','utf8'));assert.ok(config.rewrites.some(route=>route.source==='/help'&&route.destination==='/index.html'));
   assert.ok(config.rewrites.some(route=>route.source==='/privacy'&&route.destination==='/index.html'));
+  assert.ok(config.rewrites.some(route=>route.source==='/account'&&route.destination==='/index.html'));
 });

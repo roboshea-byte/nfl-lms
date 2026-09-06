@@ -4,7 +4,8 @@
 
 - `/signup`: first name, last name, email and password. Both name fields are required. Sign-in is immediate; there is no confirmation email.
 - `/login`: email/password login and organiser-assisted recovery instructions.
-- `/dashboard`: the member home page, with owned entries, payment status, weekly deadline, rules, team directory, current fixtures and password changes. Its member navigation is Dashboard, Picks, Results and Standings.
+- `/dashboard`: the member home page, with owned entries, payment status, weekly deadline, rules, team directory and current fixtures. Its member navigation is Dashboard, Picks, Results and Standings.
+- `/account`: separate account settings for switching or adding entries, changing the password and opening help. Regular members reach it from the Account control in the header; staff can also open it from Admin home.
 - `/admin`: dedicated Admin home with direct cards and persistent controls for Entries & payments, Members & roles, Manage picks, Results, Settings and Overview.
 - `/help`: public searchable member guide with expandable answers for signup, payments, selections, deadlines, results, standings, rollovers, passwords and phone installation.
 - `/privacy`: public privacy information covering member names, email addresses, password storage, competition records and access.

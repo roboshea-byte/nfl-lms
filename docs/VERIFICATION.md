@@ -2,6 +2,7 @@
 
 ## Dashboard order, Standings summary, announcements, privacy and fixture containment
 
+- My Account controls have their own authenticated `/account` page and no longer occupy the top of the member Dashboard. The regular member header opens Account settings; staff can also reach them from Admin home.
 - Member Dashboard contains the hero, 32-team grid, then the current week’s 16 fixtures. The previous competition-overview block, separate Still standing panel and Live feed are no longer duplicated on Dashboard.
 - Standings now contains the round prize pot, paid totals, week status, outstanding-pick count, most-picked teams, complete player lists and Live feed.
 - Admin Settings can publish or hide a validated 1,000-character member announcement in four styles: competition update, payment reminder, deadline update and important update. Public API state includes the announcement while retaining existing pick and email privacy.
