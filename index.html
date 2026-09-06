@@ -229,6 +229,90 @@ const SCHEDULE = {"season":2026,"teams":{"SEA":{"abbr":"SEA","name":"Seattle Sea
 </script>
 <script id="lms-state" type="application/json">null</script>
 <script>
+/* Shared Last Man Standing rules engine. Used by the browser app and the Vercel API.
+   All functions take the state object S explicitly so the same code runs server-side. */
+function createLMSLogic(SCHEDULE){
+  const GAMES = SCHEDULE.games;
+  const WEEKS = 18;
+  const byWeek = {};
+  GAMES.forEach(g=>{ (byWeek[g.week]=byWeek[g.week]||[]).push(g); });
+  Object.values(byWeek).forEach(a=>a.sort((x,y)=>x.date.localeCompare(y.date)));
+  const gamesByWeek = w => byWeek[w] || [];
+  const teamGame = (abbr,w) => gamesByWeek(w).find(g=>g.home===abbr||g.away===abbr);
+
+  function teamResult(S, abbr, w){
+    const g = teamGame(abbr,w);
+    if(!g) return {code:'BYE'};
+    const r = S.results[g.id];
+    if(!r || !r.final) return {code:'P', game:g, live:!!(r&&(r.hs!=null||r.as!=null))};
+    const my = g.home===abbr? +r.hs : +r.as, opp = g.home===abbr? +r.as : +r.hs;
+    return {code: my>opp?'W': my<opp?'L':'T', game:g, my, opp};
+  }
+  const weekSettled = (S,w) => { const gs=gamesByWeek(w); return gs.length>0 && gs.every(g=>S.results[g.id]?.final); };
+  const weekHasResults = (S,w) => gamesByWeek(w).some(g=>S.results[g.id]?.final);
+  const currentRound = S => S.rounds[S.rounds.length-1];
+  const roundEndWeek = r => r.endWeek || WEEKS;
+  function defaultWeek(S){
+    const r=currentRound(S);
+    for(let w=r.startWeek; w<=roundEndWeek(r); w++){ if(!weekSettled(S,w)) return w; }
+    return roundEndWeek(r);
+  }
+  const isPickLost = (S,code) => code==='L' || code==='BYE' || (code==='T' && S.settings.tieRule==='loss');
+
+  /* Walk the round week by week. Returns {weeks, alive:Set, events, winnerIds, complete, resetWeek, finalWeek} */
+  function computeRound(S, r){
+    r = r || currentRound(S);
+    const all = S.entries.map(e=>e.id);
+    let alive = new Set(all);
+    const out = {weeks:{}, events:[], winnerIds:null, complete:false, resetWeek:r.startWeek, finalWeek:null};
+    for(let w=r.startWeek; w<=roundEndWeek(r); w++){
+      const settled = weekSettled(S,w);
+      const aliveBefore=[...alive];
+      const losers=[];
+      for(const id of alive){
+        const pick = S.picks[id]?.[w];
+        if(!pick || pick==='HIDDEN'){ if(!pick && settled && S.settings.missedPick==='eliminate') losers.push({id,reason:'No pick made',pick:null}); continue; }
+        const res = teamResult(S,pick,w);
+        if(res.code==='BYE'){ if(settled) losers.push({id,reason:'Picked a team on a bye',pick}); continue; }
+        if(isPickLost(S,res.code)) losers.push({id,reason:(res.code==='T'?'Tied ':'Lost ')+res.my+'-'+res.opp,pick,res});
+      }
+      let wipeout=false;
+      if(settled && alive.size>0 && losers.length===alive.size){
+        wipeout=true;
+        alive = new Set(all);
+        if(S.settings.wipeoutResetTeams) out.resetWeek = w+1;
+        out.events.push({week:w,type:'wipeout',count:losers.length});
+      } else {
+        losers.forEach(l=>{ alive.delete(l.id); out.events.push({week:w,type:'out',...l}); });
+      }
+      out.weeks[w]={aliveBefore,aliveAfter:[...alive],losers,settled,wipeout};
+      if(settled && alive.size===1 && all.length>1){ out.winnerIds=[...alive]; out.complete=true; out.finalWeek=w; out.events.push({week:w,type:'winner',ids:[...alive]}); break; }
+      if(settled && w===WEEKS && alive.size>1){ out.winnerIds=[...alive]; out.complete=true; out.finalWeek=w; out.events.push({week:w,type:'split',ids:[...alive]}); }
+    }
+    out.alive=alive;
+    return out;
+  }
+  function usedTeams(S, entryId, r, comp, uptoWeek){
+    const used={};
+    for(let w=comp.resetWeek; w<=roundEndWeek(r); w++){
+      if(w===uptoWeek) continue;
+      const p=S.picks[entryId]?.[w]; if(p && p!=='HIDDEN') used[p]=w;
+    }
+    return used;
+  }
+  function aliveAtWeek(S, comp, w){
+    const prev = comp.weeks[w-1];
+    if(prev) return new Set(prev.aliveAfter);
+    return new Set(S.entries.map(e=>e.id));
+  }
+  const isAliveForWeek = (S,comp,w,id) => aliveAtWeek(S,comp,w).has(id);
+  const kickoff = (abbr,w) => { const g=teamGame(abbr,w); return g? new Date(g.date).getTime() : null; };
+  const weekFirstKickoff = w => { const gs=gamesByWeek(w); return gs.length? new Date(gs[0].date).getTime() : null; };
+
+  return {WEEKS, GAMES, gamesByWeek, teamGame, teamResult, weekSettled, weekHasResults, currentRound, roundEndWeek, defaultWeek, isPickLost, computeRound, usedTeams, aliveAtWeek, isAliveForWeek, kickoff, weekFirstKickoff};
+}
+if(typeof module!=='undefined' && module.exports) module.exports = { createLMSLogic };
+
 /* ===================== BOOTSTRAP ===================== */
 // Capture the page source before anything renders, so the hosted version can republish itself with new state embedded.
 const SRC = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
@@ -243,15 +327,14 @@ const STATIC = !HOSTED && /^https?:$/.test(location.protocol) && embeddedHasData
 const SHARED = HOSTED || STATIC;
 function isRO(){ return SHARED && !ADMIN; }
 // Read-only viewers only see a pick once that game has a score against it (so nobody copies picks before kick-off).
-function visiblePick(id,w){ const p=S.picks?.[id]?.[w]; if(!p) return null; if(!isRO()) return p; const g=teamGame(p,w); return (g && S.results[g.id]) ? p : 'HIDDEN'; }
+function visiblePick(id,w){ const p=S.picks?.[id]?.[w]; if(!p) return null; if(p==='HIDDEN') return 'HIDDEN'; if(!isRO()) return p; const g=teamGame(p,w); return (g && S.results[g.id]) ? p : 'HIDDEN'; }
 
 /* ===================== DATA ===================== */
 const TEAMS = SCHEDULE.teams;
 const GAMES = SCHEDULE.games;
 const WEEKS = 18;
 const TEAM_LIST = Object.values(TEAMS).sort((a,b)=>a.name.localeCompare(b.name));
-const gamesByWeek = w => GAMES.filter(g=>g.week===w).sort((a,b)=>a.date.localeCompare(b.date));
-const teamGame = (abbr,w) => GAMES.find(g=>g.week===w && (g.home===abbr||g.away===abbr));
+let gamesByWeek, teamGame; // bound after L is created below
 const STORE_KEY = 'lms-nfl-2026-v1';
 
 function defaultState(){
@@ -315,74 +398,20 @@ const gbp = n => '£'+Number(n||0).toLocaleString('en-GB',{minimumFractionDigits
 const fmtDate = iso => new Date(iso).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/London'});
 const fmtDay = iso => new Date(iso).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'Europe/London'});
 
-/* ===================== LOGIC ===================== */
-function teamResult(abbr, w){
-  const g = teamGame(abbr,w);
-  if(!g) return {code:'BYE'};
-  const r = S.results[g.id];
-  if(!r || !r.final) return {code:'P', game:g, live:r&&(r.hs!=null||r.as!=null)};
-  const my = g.home===abbr? +r.hs : +r.as, opp = g.home===abbr? +r.as : +r.hs;
-  return {code: my>opp?'W': my<opp?'L':'T', game:g, my, opp};
-}
-function weekSettled(w){ const gs=gamesByWeek(w); return gs.length>0 && gs.every(g=>S.results[g.id]?.final); }
-function weekHasResults(w){ return gamesByWeek(w).some(g=>S.results[g.id]?.final); }
-function currentRound(){ return S.rounds[S.rounds.length-1]; }
-function roundEndWeek(r){ return r.endWeek || WEEKS; }
-function defaultWeek(){
-  const r=currentRound();
-  for(let w=r.startWeek; w<=roundEndWeek(r); w++){ if(!weekSettled(w)) return w; }
-  return roundEndWeek(r);
-}
-function isPickLost(code){ return code==='L' || code==='BYE' || (code==='T' && S.settings.tieRule==='loss'); }
-
-/* Compute the state of a round week by week.
-   Returns { weeks:{[w]:{aliveBefore,aliveAfter,losers,settled,wipeout}}, alive:Set, events:[], winnerIds, complete, resetWeek } */
-function computeRound(r){
-  const all = S.entries.map(e=>e.id);
-  let alive = new Set(all);
-  const out = {weeks:{}, events:[], winnerIds:null, complete:false, resetWeek:r.startWeek, finalWeek:null};
-  for(let w=r.startWeek; w<=roundEndWeek(r); w++){
-    const settled = weekSettled(w);
-    const aliveBefore=[...alive];
-    const losers=[];
-    for(const id of alive){
-      const pick = S.picks[id]?.[w];
-      if(!pick){ if(settled && S.settings.missedPick==='eliminate') losers.push({id,reason:'No pick made',pick:null}); continue; }
-      const res = teamResult(pick,w);
-      if(res.code==='BYE'){ if(settled) losers.push({id,reason:'Picked a team on a bye',pick}); continue; }
-      if(isPickLost(res.code)) losers.push({id,reason:(res.code==='T'?'Tied ':'Lost ')+res.my+'-'+res.opp,pick,res});
-    }
-    let wipeout=false;
-    if(settled && alive.size>0 && losers.length===alive.size){
-      wipeout=true;
-      alive = new Set(all);
-      if(S.settings.wipeoutResetTeams) out.resetWeek = w+1;
-      out.events.push({week:w,type:'wipeout',count:losers.length});
-    } else {
-      losers.forEach(l=>{ alive.delete(l.id); out.events.push({week:w,type:'out',...l}); });
-    }
-    out.weeks[w]={aliveBefore,aliveAfter:[...alive],losers,settled,wipeout};
-    if(settled && alive.size===1 && all.length>1){ out.winnerIds=[...alive]; out.complete=true; out.finalWeek=w; out.events.push({week:w,type:'winner',ids:[...alive]}); break; }
-    if(settled && w===WEEKS && alive.size>1){ out.winnerIds=[...alive]; out.complete=true; out.finalWeek=w; out.events.push({week:w,type:'split',ids:[...alive]}); }
-  }
-  out.alive=alive;
-  return out;
-}
-function usedTeams(entryId, r, comp, uptoWeek){
-  const used={};
-  const from = comp.resetWeek;
-  for(let w=from; w<=roundEndWeek(r); w++){
-    if(w===uptoWeek) continue;
-    const p=S.picks[entryId]?.[w]; if(p) used[p]=w;
-  }
-  return used;
-}
-function aliveAtWeek(comp, w){ // entries eligible to pick in week w
-  const prev = comp.weeks[w-1];
-  if(prev) return new Set(prev.aliveAfter);
-  return new Set(S.entries.map(e=>e.id));
-}
-function isAliveForWeek(comp,w,id){ return aliveAtWeek(comp,w).has(id); }
+/* ===================== LOGIC (shared with the API, see logic.js) ===================== */
+const L = createLMSLogic(SCHEDULE);
+gamesByWeek = L.gamesByWeek; teamGame = L.teamGame;
+const teamResult = (abbr,w) => L.teamResult(S,abbr,w);
+const weekSettled = w => L.weekSettled(S,w);
+const weekHasResults = w => L.weekHasResults(S,w);
+const currentRound = () => L.currentRound(S);
+const roundEndWeek = r => L.roundEndWeek(r);
+const defaultWeek = () => L.defaultWeek(S);
+const isPickLost = code => L.isPickLost(S,code);
+const computeRound = r => L.computeRound(S,r);
+const usedTeams = (entryId,r,comp,uptoWeek) => L.usedTeams(S,entryId,r,comp,uptoWeek);
+const aliveAtWeek = (comp,w) => L.aliveAtWeek(S,comp,w);
+const isAliveForWeek = (comp,w,id) => L.isAliveForWeek(S,comp,w,id);
 
 /* ===================== UI HELPERS ===================== */
 function badge(abbr, cls='logo'){
