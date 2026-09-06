@@ -37,7 +37,7 @@ A new account/entry starts unpaid. Current-round and rollover payments remain se
 
 Account role and payment status are independent. Owner and admin entries appear in Entries & payments and use the same Paid/Unpaid control as member entries. Marking a staff entry paid never changes its account permissions.
 
-The global Refresh control appears on Mac/PC, tablet and phone. On small screens it sits above the four-tab bottom navigation. In the admin area it waits for pending changes to finish saving before it reloads the app.
+The quiet Refresh icon appears at the top right on Mac/PC, tablet and phone. In the admin area it waits for pending changes to finish saving before it reloads the app. The NFL LMS header logo is also a home link: it opens the member Dashboard when signed in and the public home page when signed out.
 
 ## Runtime and verification
 

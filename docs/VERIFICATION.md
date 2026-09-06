@@ -147,3 +147,9 @@ No production owner password was generated or requested. Rob completes owner reg
 - Fixed the signed-in phone tab bar by overriding the higher-specificity player navigation rule at the phone breakpoint. Device emulation at 390 CSS pixels reports a 390px grid with four equal 90.5px columns at x 8, 103, 197 and 292.
 - Added a global Refresh control. It is labelled on desktop, compact on mobile and waits for pending remote admin saves before reloading.
 - The full automated suite passes with 23 tests. Browser checks confirm member search, admin search, all 30 admin questions, the staff payment control, no 390px horizontal overflow and the compact refresh control.
+
+## Header home link and quieter refresh - 6 September 2026
+
+- Converted the complete NFL LMS brand into an accessible home link. Account loading points it to `/dashboard` for signed-in users and `/` for signed-out visitors.
+- Replaced the floating labelled Refresh control with a muted icon in the top-right header. It retains the pending-admin-save protection and keyboard label.
+- Browser checks at 390px and 1,440px confirm the icon remains clear of the brand, account controls and stat cards, and the page has no horizontal overflow. All 23 tests pass.

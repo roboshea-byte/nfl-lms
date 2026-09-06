@@ -48,6 +48,7 @@ test('home-screen install metadata and icon files are complete',()=>{
 test('mobile navigation, refresh and searchable member/admin help stay wired',()=>{
  const current=fs.readFileSync('index.html','utf8');
  assert.match(current,/body\.player nav\{display:grid\}/);assert.match(current,/id="refreshApp"/);assert.match(current,/function refreshApp\(/);
+ assert.match(current,/<a class="brand" id="homeBrand" href="\/"/);assert.match(current,/\.refresh-app\{position:absolute/);assert.doesNotMatch(current,/\.refresh-app\{position:fixed/);
  assert.match(current,/How to use NFL LMS/);assert.match(current,/Admin how-to guide/);assert.match(current,/Connor or Havo/);assert.match(current,/function filterHelp\(/);
  const config=JSON.parse(fs.readFileSync('vercel.json','utf8'));assert.ok(config.rewrites.some(route=>route.source==='/help'&&route.destination==='/index.html'));
 });
