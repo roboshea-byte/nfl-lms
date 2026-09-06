@@ -30,7 +30,7 @@ Used an isolated local development server with fictional data. No live entrants 
 - Saved an isolated sample score at 11:21:48 BST. A separate public Results tab received it through its normal poll by 11:22:23 BST, within 35 seconds.
 - Direct `file://` opening remains editable, with REMOTE false, SHARED false and the original 1.2 zoom.
 
-## Remaining live verification
+## Initial deployment status (before production setup)
 
 No Vercel project appeared in the connected account during the read-only check. No live project/database was provisioned, no production secrets were set, no GitHub push was made and no deployment was published. Follow the README to configure Vercel, Postgres and ADMIN_KEY, then smoke-test the real database connection and a private test entry before inviting entrants.
 
@@ -39,3 +39,21 @@ HOSTED publication requires the Claude artifact environment and was not exercise
 ## Local workspace note
 
 The Documents workspace is backed by iCloud. During verification, iCloud offloaded source and dependency files and blocked reads. The project folder was set to Keep Downloaded. For this Mac, `node_modules` points to the ignored local dependency cache `/Users/Rob/Library/Caches/nfl-lms-runtime/node_modules`; an ignored `.node_modules-icloud/` preserves the initially installed dependency directory. These machine-specific directories and the symlink are not committed. Fresh clones use ordinary `npm install`.
+
+
+## Production verification — completed 6 September 2026
+
+- Live URL: https://nfl-lms.vercel.app
+- GitHub `main` and `codex/postgres-player-links` contain the application. Vercel is linked to `roboshea-byte/nfl-lms`; main publishes production and the feature branch publishes previews.
+- Vercel project: `nfl-lms`, project ID `prj_04fpq2lHVLireiSHPdpF2A7xNYmr`.
+- Dedicated Neon resource: `nfl-lms-db`, Free plan `free_v3`, London `lhr1`, authentication product disabled (the app uses its own personal links).
+- Database variables and ADMIN_KEY are configured for Production, Preview and Development. Environment files are ignored and restricted locally; no credentials were committed or included in this record.
+- Node 24 replaces the brief's Node 20 because Vercel's first build explicitly warned that Node 20 builds stop on 1 October 2026. Functions run in London alongside Postgres. Seventeen automated tests pass on Node 24, including the added idle-pool-disconnection regression test.
+- Live API verification passed: public/private state separation, actual Postgres writes, unpaid rejection, paid picks, pick changes, used-team rejection, unauthorised admin-write rejection, and public masking of unstarted picks.
+- Server-side ESPN fetch succeeded and returned zero started games; no artificial live scores were inserted.
+- Live browser: organiser passphrase modal authenticated successfully. At 390 × 844, personal view has zoom 1, no horizontal overflow and no navigation tabs. Selecting a new team left the saved pick unchanged until Confirm; Confirm saved the replacement through the production API.
+- Temporary test entry and cascading picks were removed. Final public API response: HTTP 200, zero entries, zero picks, Round 1, £20 fee, admin false, Cache-Control no-store.
+- Production deployment `dpl_dyTBDzZrKnmqLQt6rSf37D5Tu7tz` / commit `983340b` was Ready and owned the production aliases during the live checks. A subsequent documentation-only commit records these results.
+- Production 5xx log scan over the preceding 15 minutes completed with zero records. No recurring monitor or external log drain was added.
+
+An initial direct database probe exposed an idle Neon connection closing unexpectedly. The pool now handles idle errors without crashing or dumping connection objects into logs, and explicit SSL certificate verification is retained.
