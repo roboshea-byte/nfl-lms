@@ -12,7 +12,7 @@ The original competition app, with its original layout, fonts, colours, 32 teams
 6. Optionally, use **Settings → Domains** to attach a custom domain.
 7. For local development, run `npm install`, then `vercel env pull .env.local` and `vercel dev` using the Vercel CLI. Alternatively, use `npm run dev` with `DATABASE_URL` (or `POSTGRES_URL`) and `ADMIN_KEY` in `.env.local`.
 
-No production project, database, credentials or deployment are bundled with this repository.
+Live competition: https://nfl-lms.vercel.app. Vercel is connected to this repository and its dedicated Neon database in London. Credentials are managed separately and are never bundled with the source.
 
 ## Build and development
 
@@ -21,7 +21,7 @@ No production project, database, credentials or deployment are bundled with this
 - `node scripts/dev.js --demo` starts an isolated local preview with fictional entries at `http://localhost:3000`. Its public sample organiser passphrase is `preview-only`, and the sample player link is `/play/alice12345`. The sample data exists only in memory and resets on restart. This mode is never used by Vercel.
 - `npm run dev` uses real Postgres; it does not fall back to demo data. The local server binds to `127.0.0.1`.
 
-Node 20 is selected in `package.json`, matching the brief. The API uses the permitted `pg` driver with a small connection pool, parameterised queries and transactions.
+Node 24 is selected in `package.json`: the first live build warned that Node 20 deployments will stop building on 1 October 2026, during this competition. The unchanged application and rules are tested on the supported runtime. The API uses the permitted `pg` driver with a small connection pool, parameterised queries and transactions.
 
 ## How the modes work
 
@@ -64,6 +64,6 @@ ESPN scores update only when the organiser presses **Fetch live scores from ESPN
 
 Automated checks cover the original schedule and rules function byte-for-byte, player validation and deadlines, private data masking and timed reveal, admin authentication, code generation, removal and cascading picks, backup replacement, ESPN mapping, concurrent submissions, and schema/upsert/read-back through PostgreSQL emulation.
 
-Browser acceptance uses an isolated local competition. A live Neon/Vercel smoke test still needs the production setup above; emulation is not a substitute for confirming the live database connection.
+Browser acceptance uses an isolated local competition. The production setup and live verification are recorded in `docs/VERIFICATION.md`.
 
 Official references: [Vercel Node.js versions](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions), [Vercel Postgres integrations](https://vercel.com/docs/postgres), [node-postgres transactions](https://node-postgres.com/features/transactions).

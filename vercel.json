@@ -1,12 +1,33 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "public",
-  "rewrites": [{ "source": "/play/:code", "destination": "/index.html" }],
-  "headers": [
-    { "source": "/(.*)", "headers": [
-      { "key": "Referrer-Policy", "value": "no-referrer" },
-      { "key": "X-Content-Type-Options", "value": "nosniff" }
-    ] }
+  "rewrites": [
+    {
+      "source": "/play/:code",
+      "destination": "/index.html"
+    }
   ],
-  "functions": { "api/**/*.js": { "includeFiles": "db/schema.sql" } }
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
+  ],
+  "functions": {
+    "api/**/*.js": {
+      "includeFiles": "db/schema.sql"
+    }
+  },
+  "regions": [
+    "lhr1"
+  ]
 }
