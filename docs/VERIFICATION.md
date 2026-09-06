@@ -93,3 +93,8 @@ An initial direct database probe exposed an idle Neon connection closing unexpec
 - Removed every CSS zoom declaration, including the original body zoom of 1.2, rather than relying on breakpoint overrides. Preservation test allows that explicit deletion and still checks the rest of the original CSS.
 - Added an opt-in `?display-check=1` panel to copy screen/viewport/visual zoom/body bounds/browser version and a build marker. It appears only via that query; measurements stay local unless the user copies them, and contain no account or entry details.
 - WebKit checks pass at 320–852px including landscape. Verified the diagnostic panel shows accurate measurements and closes correctly; all 20 tests pass. Physical-device measurements are needed before calling the reported problem resolved.
+
+## Hero annotations — 6 September 2026
+
+- Removed the hero stripe overlay, kept the full Last Man Standing title on one mobile line with responsive type, applied Rob’s exact replacement description and expanded the final-week date to Sunday 10 Jan 2027.
+- WebKit and Chromium checks at 320, 375, 393, 430, 758 and 1440px confirmed a single-line title without overflow, no stripe pseudo-element, exact description text and the full final-week date.

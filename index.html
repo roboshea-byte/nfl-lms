@@ -223,6 +223,7 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
 .stat .v{font-size:20px}
 .stat .l{font-size:9px;letter-spacing:.12em}
 .homehero{padding:22px 24px}
+.homehero::before{content:none}
 .homehero .kick{font-size:10px;letter-spacing:.22em}
 .homehero h1.big{font-size:44px;line-height:1.08;margin:8px 0 12px;text-shadow:0 3px 0 rgba(0,0,0,.3)}
 .homehero p{font-size:14px;line-height:1.5;max-width:680px;margin-bottom:14px}
@@ -258,8 +259,8 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
   main,body.player main{padding:12px}
   .homehero{padding:18px 16px;border-radius:12px;margin-bottom:14px}
   .homehero .kick{font-size:9px;letter-spacing:.16em;line-height:1.5}
-  .homehero h1.big{font-size:32px;margin:8px 0 10px}
-  .homehero h1.big span{display:block}
+  .homehero h1.big{font-size:clamp(22px,7vw,32px);white-space:nowrap;margin:8px 0 10px}
+  .homehero h1.big span{display:inline}
   .homehero p{font-size:13px;line-height:1.5;margin-bottom:14px}
   .herostats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .herostat{padding:8px 10px;border-radius:9px}
@@ -611,7 +612,7 @@ function renderHome(r,comp){
   <div class="homehero"><div class="heroflag"></div>
     <div class="kick">NFL 2026 Season · ${S.entries.length?`${S.entries.length} entries`:'Entries open'}</div>
     <h1 class="big">Last Man <span>Standing</span></h1>
-    <p>Pick one NFL winner each week. Win to stay in, lose and you're out. Choose your teams wisely - the last player standing wins the pot.</p>
+    <p>Pick One team per week. Win to stay in, losers go out. Last man standing take the pot.</p>
     <div class="herostats">
       <div class="herostat gold"><div class="v">${gbp(S.settings.fee)}</div><div class="l">Per entry</div></div>
       <div class="herostat gold"><div class="v">${gbp(pot)}</div><div class="l">Current pot</div></div>
@@ -644,7 +645,7 @@ function renderHome(r,comp){
         <div class="datebox">
           <div class="date"><div class="l">Season kick-off</div><div class="d">${fmtDate(first.date)}</div><div class="small muted">${TEAMS[first.away].short} @ ${TEAMS[first.home].short}</div></div>
           <div class="date"><div class="l">Week ${w} first game</div><div class="d">${wkCur.length?fmtDate(wkCur[0].date):'-'}</div><div class="small muted">Picks in before this</div></div>
-          <div class="date"><div class="l">Final week</div><div class="d">${fmtDay(last.date)}</div><div class="small muted">Week 18</div></div>
+          <div class="date"><div class="l">Final week</div><div class="d">${new Date(last.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short',year:'numeric',timeZone:'Europe/London'}).replace(',','')}</div><div class="small muted">Week 18</div></div>
         </div>
       </div>
       <div class="card" style="margin:0"><h2>Still standing <span class="tag">${aliveList.length} of ${S.entries.length}</span></h2>
