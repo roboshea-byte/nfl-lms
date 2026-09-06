@@ -1,0 +1,17 @@
+Welcome to NFL Last Man Standing. This quick guide shows administrators how to set up an account and run the competition from week to week.
+
+If you are new, choose Register. Enter your first name, last name, email address and a password of at least seven characters. Registration is immediate, so there is no email confirmation. Sign in, then select Admin in the top-right of the header.
+
+The Admin home brings every organiser tool together. Start with Entries and payments. Each player can have one or more numbered entries. New entries begin unpaid and cannot pick. When payment arrives, press Mark paid beside the correct entry. The status updates straight away. Owners and admins can also be marked paid without affecting their staff access.
+
+Use Members and roles to correct first and last names, reset member passwords and, if you are the owner, appoint another admin. The hidden member ID keeps every payment, pick and result attached even when a name changes.
+
+Manage picks shows every entry and every week. An administrator can add, replace or clear a pick for any player, including themselves. Choose the team, check the member, entry number and week, then save. If the normal deadline has passed, the admin override remains available and the change is recorded. Used teams and bye teams still cannot be selected.
+
+After the games, open Results. Fetch the latest scores, review them, correct anything necessary and settle the week. Winners continue, losers are eliminated, and a tie counts as a loss unless the competition settings say otherwise.
+
+Use Settings to publish an announcement for payment reminders, deadline changes or competition updates. The weekly deadline is shown on the member Dashboard and closes one hour before the first kick-off.
+
+If every remaining player loses in the same week, apply the rollover. Everyone returns, all teams become available again, and every entry must pay again before making another pick.
+
+Use the refresh icon for the latest shared data, and open the searchable Admin guide whenever you need detailed help. That is everything you need to register players, manage payments and picks, and keep NFL Last Man Standing running smoothly.
