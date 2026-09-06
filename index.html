@@ -211,6 +211,91 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
 .personal-link{overflow-wrap:anywhere;min-width:180px}
 .personal-link.unpaid-link{opacity:.55}
 @media(max-width:900px){body.player{zoom:1}body.player .hdr-top{padding:12px;gap:12px}body.player .brand h1{font-size:25px}body.player .hdr-stats{margin-left:0;gap:6px}body.player .stat{min-width:76px;padding:6px 8px}body.player main{padding:14px}body.player .card{padding:16px}body.player .teamgrid{grid-template-columns:repeat(2,minmax(0,1fr))}body.player .card h2{flex-wrap:wrap}}
+
+/* Compact branding and hero, with layouts sized for each viewport. */
+.brand{gap:10px;min-width:0}
+.brand h1{font-size:25px}
+.brand h1 small{font-size:10px;letter-spacing:.25em;margin-top:3px}
+.brand .nfl-logo{width:36px;height:42px}
+.hdr-top{gap:14px;padding:10px 22px}
+.hdr-stats{gap:7px;min-width:0}
+.stat{min-width:76px;padding:6px 10px}
+.stat .v{font-size:20px}
+.stat .l{font-size:9px;letter-spacing:.12em}
+.homehero{padding:22px 24px}
+.homehero .kick{font-size:10px;letter-spacing:.22em}
+.homehero h1.big{font-size:44px;line-height:1.08;margin:8px 0 12px;text-shadow:0 3px 0 rgba(0,0,0,.3)}
+.homehero p{font-size:14px;line-height:1.5;max-width:680px;margin-bottom:14px}
+.herostats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));max-width:660px;gap:10px;margin-top:0}
+.herostat{min-width:0;padding:10px 12px}
+.herostat .v{font-size:26px;overflow-wrap:anywhere}
+.herostat .l{font-size:9px;letter-spacing:.12em}
+.hero-actions{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+@media(max-width:900px){
+  body{zoom:1}
+  body .hdr-top{padding:12px 16px;display:block}
+  body .brand h1,body.player .brand h1{font-size:24px}
+  body .hdr-stats{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));margin:12px 0 0;gap:6px}
+  body.player .hdr-stats{grid-template-columns:repeat(6,minmax(0,1fr))}
+  body .stat,body.player .stat{min-width:0;padding:6px 4px}
+  nav{padding:0 12px}
+  nav button{padding:12px 14px;font-size:13px;min-height:44px}
+  main{padding:18px}
+  .homehero h1.big{font-size:38px}
+  .card h2{flex-wrap:wrap}
+  .card h2 .tag{margin-left:0}
+}
+@media(max-width:600px){
+  header{position:static}
+  body .hdr-top{padding:10px 12px}
+  body .brand h1,body.player .brand h1{font-size:22px}
+  .brand h1 small{font-size:9px;letter-spacing:.2em}
+  .brand .nfl-logo{width:30px;height:36px}
+  body .hdr-stats,body.player .hdr-stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:10px}
+  .stat .v{font-size:18px}
+  .stat .l{font-size:8px;letter-spacing:.08em}
+  nav{padding:0 6px}
+  nav button{padding:12px 11px;font-size:12px;letter-spacing:.08em}
+  main,body.player main{padding:12px}
+  .homehero{padding:18px 16px;border-radius:12px;margin-bottom:14px}
+  .homehero .kick{font-size:9px;letter-spacing:.16em;line-height:1.5}
+  .homehero h1.big{font-size:32px;margin:8px 0 10px}
+  .homehero h1.big span{display:block}
+  .homehero p{font-size:13px;line-height:1.5;margin-bottom:14px}
+  .herostats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .herostat{padding:8px 10px;border-radius:9px}
+  .herostat .v{font-size:23px}
+  .herostat .l{font-size:8px}
+  .hero-actions{margin-top:12px;gap:8px}
+  .hero-actions .btn{min-height:40px;font-size:12px;padding:8px 12px}
+  .card,body.player .card{padding:14px}
+  .card h2{font-size:18px;gap:6px}
+  .card h2 .tag{font-size:9px;line-height:1.5;letter-spacing:.06em}
+  .logowall{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .logowall .logo.xl{width:46px;height:46px}
+  .logowall .lw .ab{font-size:10px}
+  .banner{font-size:15px;flex-wrap:wrap}
+}
+
+.table-scroll{max-width:100%;overflow-x:auto}
+.table-scroll table{min-width:620px}
+.card,.grid>*{min-width:0}
+@media(max-width:900px){
+  .game{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 52px;gap:10px;padding:14px 0}
+  .game>:nth-child(1){grid-area:1/1/2/3}
+  .game>:nth-child(2){grid-area:1/3/2/4}
+  .game>:nth-child(3){display:none}
+  .game>:nth-child(4){grid-area:2/3/3/4}
+  .game>:nth-child(5){grid-area:2/1/3/3}
+  .game>:nth-child(6){grid-area:3/1/4/4;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .game .t{min-width:0;gap:8px}
+  .game .t.home{flex-direction:row-reverse;justify-content:flex-end;text-align:left}
+  .game .logo.lg{width:34px;height:34px;flex:none}
+  .game input{width:52px}
+  .game input[type=checkbox]{width:auto}
+  .game .meta{font-size:10px}
+}
+@media(max-width:1100px) and (max-height:600px){header{position:static}}
 </style>
 </head>
 <body>
@@ -518,14 +603,14 @@ function renderHome(r,comp){
   <div class="homehero"><div class="heroflag"></div>
     <div class="kick">NFL 2026 Season · ${S.entries.length?`${S.entries.length} entries`:'Entries open'}</div>
     <h1 class="big">Last Man <span>Standing</span></h1>
-    <p>One pick a week. Pick an NFL team to win their game. Get it right and you're through to next week. Get it wrong and you're out. Each team can only be used once between resets, so choose wisely - the last player standing takes the whole pot.</p>
+    <p>Pick one NFL winner each week. Win to stay in, lose and you're out. Choose your teams wisely - the last player standing wins the pot.</p>
     <div class="herostats">
       <div class="herostat gold"><div class="v">${gbp(S.settings.fee)}</div><div class="l">Per entry</div></div>
       <div class="herostat gold"><div class="v">${gbp(pot)}</div><div class="l">Current pot</div></div>
       <div class="herostat green"><div class="v">${comp.alive.size}</div><div class="l">Still standing</div></div>
       <div class="herostat"><div class="v">Wk ${w}</div><div class="l">${weekSettled(w)?'Settled':weekHasResults(w)?'In progress':'Up next'}</div></div>
     </div>
-    <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
+    <div class="hero-actions">
       <button class="btn gold" onclick="setView('dash')">View standings</button>
       <button class="btn" onclick="setView('history')">Pick history</button>
       <button class="btn primary edit" onclick="setWeek(${w});setView('picks')">Enter Week ${w} picks</button>
@@ -673,7 +758,7 @@ function renderPicks(r,comp){
       <button class="btn sm edit" onclick="setView('results')">Go to results →</button>
     </div>
     ${REMOTE && ADMIN?chaseStrip(w,r,comp):''}
-    ${eligible.length? `<table><thead><tr><th>Player</th><th>Pick</th><th>Fixture</th><th>Result</th><th>Already used since the last reset</th></tr></thead><tbody>${rows}</tbody></table>`
+    ${eligible.length? `<div class="table-scroll" tabindex="0" role="region" aria-label="Weekly picks"><table><thead><tr><th>Player</th><th>Pick</th><th>Fixture</th><th>Result</th><th>Already used since the last reset</th></tr></thead><tbody>${rows}</tbody></table></div>`
       : `<div class="empty">${S.entries.length?'Nobody is eligible to pick in this week.':'No entries yet - add some on the Entries tab.'}</div>`}
     ${others.length?`<div class="muted small" style="margin-top:12px">Eliminated before this week (${others.length}): ${others.map(e=>esc(e.name)).join(', ')}</div>`:''}
   </div>`;
@@ -852,7 +937,7 @@ function renderEntries(r,comp){
   <div class="card" style="margin-top:18px">
     <h2>Entries <span class="tag">${S.entries.length} entries · ${S.entries.filter(e=>entryPaid(e,r,comp)).length} paid · pot ${gbp(prizePot(r,comp))}</span></h2>
     ${comp.resetWeek>r.startWeek?`<p class="muted small">Rollover: each player must pay ${gbp(S.settings.fee)} again for Week ${comp.resetWeek}. Mark the new fee paid here. Unpaid players are eliminated and cannot pick.</p>`:''}
-    ${rows?`<table><thead><tr><th>Name</th><th>Label</th><th>Email</th><th>${comp.resetWeek>r.startWeek?'Rollover fee · Wk '+comp.resetWeek:'Payment'}</th><th>Status</th>${REMOTE?'<th>Personal link</th>':''}<th></th></tr></thead><tbody>${rows}</tbody></table>`:'<div class="empty">No entries yet.</div>'}
+    ${rows?`<div class="table-scroll" tabindex="0" role="region" aria-label="Competition entries"><table><thead><tr><th>Name</th><th>Label</th><th>Email</th><th>${comp.resetWeek>r.startWeek?'Rollover fee · Wk '+comp.resetWeek:'Payment'}</th><th>Status</th>${REMOTE?'<th>Personal link</th>':''}<th></th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty">No entries yet.</div>'}
     ${S.entries.length?`<div style="margin-top:10px"><button class="btn sm danger" onclick="clearEntries()">Remove all entries</button></div>`:''}
   </div>`;
 }

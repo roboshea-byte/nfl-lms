@@ -72,3 +72,10 @@ An initial direct database probe exposed an idle Neon connection closing unexpec
 - Separate per-entry payment records persist in the new JSONB column, with backward-compatible handling of older saves and public exports. Only organiser writes can confirm fees. Confirmed fees accumulate in the current round pot.
 - All 20 tests pass on Node 24, including repeated repayments, unpaid exclusion, payment validation/authorisation, SQL persistence, and score corrections.
 - Isolated browser test advanced the server clock to before Week 2: all three players became unpaid/out after Week 1 rollover, while the original £60 remained in the pot. The organiser payment button saved Alice’s new £20 fee; a separate player browser showed In, all 32 teams available and a £80 pot. Confirming a team saved the Week 2 pick. At 390 × 844, the unpaid screen showed the new fee requirement and no horizontal overflow. No live entries were used for these checks.
+
+## Compact responsive layout — 6 September 2026
+
+- Reduced header title/logo/stats and hero typography, padding and copy. Hero title uses 32px on phones, 38px on tablets and 44px on desktop; hero stats use two columns on phones and four on wider screens.
+- Removed the original 120% body zoom at widths up to 900px. Header scrolls away on phones and short landscape screens; buttons and navigation remain usable.
+- Fixed phone overflow in Picks and Entries with independently scrollable tables. Results stack teams, scores and fixture details on smaller screens.
+- Browser checks at 320, 390, 430, 768, 844 (landscape), 1024 and 1440px: home, dashboard, picks, results and history stay within the viewport. Checked organiser Entries/Settings/Results and the 390px player page with 32 team buttons. Phone home hero is about 381px high at 390px width, with both primary actions visible above the fold.
