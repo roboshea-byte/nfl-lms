@@ -5,7 +5,7 @@
 - `/signup`: first name, last name, email and password. Both name fields are required. Sign-in is immediate; there is no confirmation email.
 - `/login`: email/password login and organiser-assisted recovery instructions.
 - `/dashboard`: the member home page, with owned entries, payment status, weekly deadline, rules, team directory and current fixtures. Its member navigation is Dashboard, Picks, Results and Standings.
-- `/account`: separate account settings for switching or adding entries, changing the password and opening help. Regular members reach it from the Account control in the header; staff can also open it from Admin home.
+- `/account`: the member hub. It shows the person’s name, payment and playing status, weekly deadline, current pick, a direct make/change-pick action, personal pick history, teams available this week and all unused teams remaining. When an account controls more than one competition entry, explicit full-name entry buttons such as `Rob O’Shea 1` and `Rob O’Shea 2` switch every panel to that individual entry. Entry creation, password changes and help also live here. Regular members reach it from the Account control in the header; staff can open it from Admin home.
 - `/admin`: dedicated Admin home with direct cards and persistent controls for Entries & payments, Members & roles, Manage picks, Results, Settings and Overview.
 - `/help`: public searchable member guide with expandable answers for signup, payments, selections, deadlines, results, standings, rollovers, passwords and phone installation.
 - `/privacy`: public privacy information covering member names, email addresses, password storage, competition records and access.
@@ -35,7 +35,7 @@ The Admin home includes a searchable Admin guide for weekly operations and troub
 
 All member pick creation, changes and clears lock at the first kickoff of the selected week minus one hour. The server clock is authoritative. Public/member dashboards show the deadline in Europe/London time. Admin overrides bypass that lock.
 
-A new account/entry starts unpaid. Current-round and rollover payments remain separate. Each rollover requires a new payment, and unpaid entries cannot pick. Existing losing picks still eliminate paid members.
+A new account/entry starts unpaid. A member can create multiple entries from Account; each is numbered beneath their full name and keeps independent payment status, picks, history and available-team list. Admin must mark every entry paid separately before it can pick. Current-round and rollover payments remain separate. Each rollover requires a new payment, and unpaid entries cannot pick. Existing losing picks still eliminate paid members.
 
 Account role and payment status are independent. Owner and admin entries appear in Entries & payments and use the same Paid/Unpaid control as member entries. Marking a staff entry paid never changes its account permissions.
 

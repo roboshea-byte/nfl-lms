@@ -23,7 +23,9 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  assert.equal((await request(auth.handler,'logout',{},member.cookie,{'x-lms-request':''})).status,403);
  assert.equal((await request(h.adminState,{}, {},member.cookie)).status,401);
  assert.equal((await request(h.state,{},undefined,'',{'x-admin-key':'private-setup'})).data.admin,false);
- let me=(await request(auth.handler,'me',undefined,member.cookie)).data;assert.equal(me.entries.length,1);const id=me.entries[0].id;
+ let me=(await request(auth.handler,'me',undefined,member.cookie)).data;assert.equal(me.entries.length,1);const id=me.entries[0].id;assert.equal(me.entries[0].label,'1');
+ const extra=await post('entry',{},member.cookie);assert.equal(extra.status,200);me=(await request(auth.handler,'me',undefined,member.cookie)).data;assert.equal(me.entries.length,2);assert.deepEqual(me.entries.map(e=>e.label),['1','2']);const extraId=extra.data.entryId;
+ assert.equal((await request(h.pick,{}, {entryId:extraId,week:1,team:L.gamesByWeek(1)[0].home},member.cookie)).data.error,'unpaid');
  const pick=team=>request(h.pick,{}, {entryId:id,week:1,team},member.cookie);
  assert.equal((await pick(L.gamesByWeek(1)[0].home)).data.error,'unpaid');
  assert.equal((await request(h.pick,{}, {entryId:id,week:1,team:'SEA'},stranger.cookie)).data.error,'unknown_code');

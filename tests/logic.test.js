@@ -53,6 +53,8 @@ test('mobile navigation, refresh, help, privacy and announcements stay wired',()
   assert.match(current,/function renderPrivacyPage\(/);assert.match(current,/function announcementBanner\(/);assert.match(current,/Member announcement/);
   assert.match(current,/function renderDashboard\(r,comp\)\{return renderHome\(r,comp\);\}/);
   assert.match(current,/function renderAccountPage\(/);assert.doesNotMatch(current,/dash:\(\)=>memberTools\(\)\+deadlineBanner/);
+  assert.match(current,/Available to pick in Week/);assert.match(current,/Teams you have left/);assert.match(current,/Your pick history/);assert.match(current,/accountUser\?\.name/);assert.match(current,/Add another entry/);assert.match(current,/Manage an entry/);assert.match(current,/must mark this entry paid/);
+  assert.match(current,/Rob O’Shea 1/);assert.match(current,/function entryName\(id\)/);assert.match(current,/accountPage==='\/account'\)return renderAccountPage/);
   assert.ok(current.indexOf('The 32 teams')<current.indexOf('${renderFixturesCard(w)}'));
   const config=JSON.parse(fs.readFileSync('vercel.json','utf8'));assert.ok(config.rewrites.some(route=>route.source==='/help'&&route.destination==='/index.html'));
   assert.ok(config.rewrites.some(route=>route.source==='/privacy'&&route.destination==='/index.html'));

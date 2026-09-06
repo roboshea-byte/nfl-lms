@@ -13,6 +13,11 @@ function createStore(pool) {
       try {
         await client.query('BEGIN');
         await client.query(fs.readFileSync(path.join(__dirname, '../db/schema.sql'), 'utf8'));
+        // Older account entries pre-date automatic numbering. Fill only blank
+        // labels so existing custom admin labels remain untouched.
+        const owned=(await client.query('SELECT id,account_id,label FROM entries WHERE account_id IS NOT NULL ORDER BY account_id,created_at,id')).rows;
+        const numbers=new Map();
+        for(const entry of owned){const number=(numbers.get(entry.account_id)||0)+1;numbers.set(entry.account_id,number);if(!entry.label)await client.query('UPDATE entries SET label=$1 WHERE id=$2',[String(number),entry.id]);}
         await client.query('COMMIT');
       } catch (error) { await client.query('ROLLBACK'); throw error; }
       finally { client.release(); }
