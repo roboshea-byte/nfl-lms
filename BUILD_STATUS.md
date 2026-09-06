@@ -2,7 +2,7 @@
 
 Live at https://nfl-lms.vercel.app.
 
-Production application commit: 44793c3. Deployment dpl_6yDKwwov4SdJHb9WcMxqYU8PHSj4 is Ready.
+The current production application includes feature commit 9acf016. Its Vercel production deployment is Ready.
 
 - Immediate email/password signup, owner/admin/member roles and server permissions implemented.
 - Admin payments, manual entries, member linkage, pick overrides, roles, access controls and reset links work with the existing results/round tools.
