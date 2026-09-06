@@ -1,3 +1,7 @@
+# Accounts update (6 September 2026)
+
+The live app now uses owner, admin and member accounts. See [account setup and operations](docs/ACCOUNTS.md). Account instructions supersede the legacy passphrase and personal-link workflow documented below.
+
 # NFL Last Man Standing — 2026
 
 The original competition app, with its original layout, fonts, colours, 32 teams, 272 fixtures and a shared rules engine. The rollover rule makes all teams available again from the following week. Every player must pay a fresh entry fee to return; unpaid players are eliminated and cannot pick. Vercel serves the page and six Node.js API endpoints; Postgres holds the competition. Paid players pick through private `/play/<code>` links, with no accounts or login system.

@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS entries (
   paid boolean DEFAULT false,
   created_at timestamptz DEFAULT now()
 );
-ALTER TABLE entries ADD COLUMN IF NOT EXISTS rollover_payments jsonb NOT NULL DEFAULT '{}';
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS rollover_payments jsonb NOT NULL DEFAULT '{}'::jsonb;
 CREATE TABLE IF NOT EXISTS picks (
   entry_id text REFERENCES entries(id) ON DELETE CASCADE,
   week int NOT NULL,
@@ -35,3 +35,23 @@ CREATE TABLE IF NOT EXISTS results (
 );
 INSERT INTO settings(id, data) VALUES (1, '{"fee":20,"tieRule":"loss","wipeoutResetTeams":true,"missedPick":"eliminate","title":"Last Man Standing"}') ON CONFLICT (id) DO NOTHING;
 INSERT INTO rounds(n, start_week) SELECT 1, 1 WHERE NOT EXISTS (SELECT 1 FROM rounds) ON CONFLICT (n) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS accounts (
+ id text PRIMARY KEY, email text UNIQUE NOT NULL, name text NOT NULL,
+ password_hash text NOT NULL, role text NOT NULL DEFAULT 'member' CHECK(role IN ('owner','admin','member')),
+ disabled boolean NOT NULL DEFAULT false, created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS account_id text REFERENCES accounts(id);
+CREATE TABLE IF NOT EXISTS account_sessions (
+ token_hash text PRIMARY KEY, account_id text NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+ expires_at timestamptz NOT NULL
+);
+CREATE TABLE IF NOT EXISTS account_resets (
+ token_hash text PRIMARY KEY, account_id text NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+ expires_at timestamptz NOT NULL
+);
+CREATE TABLE IF NOT EXISTS auth_limits (key text PRIMARY KEY, hits int NOT NULL, expires_at timestamptz NOT NULL);
+CREATE TABLE IF NOT EXISTS audit_log (
+ id text PRIMARY KEY, actor_id text, action text NOT NULL, target_id text,
+ details jsonb NOT NULL DEFAULT '{}'::jsonb, created_at timestamptz NOT NULL DEFAULT now()
+);

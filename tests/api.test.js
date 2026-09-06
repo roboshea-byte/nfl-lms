@@ -1,6 +1,6 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');
 const {createHandlers}=require('../lib/api');const {defaults,memoryStore,call,schedule,L}=require('./helpers');
-const before=L.weekFirstKickoff(1)-3600000;
+const before=L.weekDeadline(1)-1;
 function setup(state=defaults(),time=before){const db=memoryStore(state);let clock=time;return {db,handlers:createHandlers({db,now:()=>clock,adminKey:()=> 'test-admin'}),clock:t=>clock=t};}
 const post=(handler,body,key)=>call(handler,{method:'POST',body,key});
 const pick=(ctx,week,team,code='alice12345')=>post(ctx.handlers.pick,{code,week,team});
@@ -26,9 +26,9 @@ test('before kick-off save, me privacy, public masking, server clock reveal with
 });
 test('deadline boundaries: first pick, existing pick, target, change and clear',async()=>{
   const later=L.gamesByWeek(1).at(-1),c=setup();assert.equal((await pick(c,1,later.home)).status,200);
-  c.clock(L.weekFirstKickoff(1));assert.equal((await pick(c,1,first.home,'bob1234567')).body.error,'locked');
+  c.clock(L.weekDeadline(1));assert.equal((await pick(c,1,first.home,'bob1234567')).body.error,'locked');
   assert.equal((await pick(c,1,first.home)).body.error,'locked');
-  assert.equal((await pick(c,1,later.away)).status,200);
+  assert.equal((await pick(c,1,later.away)).body.error,'locked');
   c.clock(new Date(later.date).getTime());assert.equal((await pick(c,1,null)).body.error,'locked');
   const d=setup();await pick(d,1,later.home);assert.equal((await pick(d,1,null)).status,200);assert.equal((await d.db.read()).picks.alice[1],undefined);
 });
@@ -70,7 +70,7 @@ test('rollover permits old teams again, blocks reuse afterwards, and resets agai
  S.settings.wipeoutResetTeams=false; // Existing saved competitions must adopt the new rule.
  S.picks={alice:{1:g1.away},bob:{1:g1.home,2:g2.away},charlie:{1:g1.home,2:g2.away}};
  for(const g of L.gamesByWeek(1))S.results[g.id]={hs:24,as:10,final:true};
- const c=setup(S,L.weekFirstKickoff(3)-3600000);
+ const c=setup(S,L.weekDeadline(3)-1);
  assert.equal((await pick(c,3,g1.away)).body.error,'eliminated');
  await c.db.mutate(s=>{for(const g of L.gamesByWeek(2))s.results[g.id]={hs:24,as:10,final:true};});
  assert.equal((await pick(c,3,g1.away)).body.error,'unpaid');
