@@ -146,6 +146,9 @@ No production owner password was generated or requested. Rob completes owner reg
 
 - Standings now gives every active entry its own row. Each row shows the complete saved name and one badge for every revealed pick from the current round through the current week. Unstarted picks retain the existing privacy lock.
 - Signup requires separate first-name and last-name fields in the browser and API. The server stores the combined full name for the account and its initial entry.
+- Signed-out calls to action lead with Register. `/login` presents a prominent new-player registration panel before the existing-member form, while `/signup` explicitly requests first name, last name, email and password.
+- Owner/admin name corrections require first and last name, preserve the hidden account UUID, and update every linked entry without changing payment or pick records. Admins cannot rename the owner.
+- A legacy account missing either name cannot submit or change a pick until an admin corrects it.
 - Added an original LMS football-shield app icon, a manifest with the `NFL LMS` short label, Apple home-screen metadata, standalone display settings and 32, 180, 192, 512 and 1,024 pixel assets.
 - All 22 automated tests pass. An isolated two-account browser flow at 390 × 844 showed both complete names on separate lines, two historical team badges for each player, fixed bottom navigation, no horizontal overflow and no browser errors. The browser loaded the manifest and `NFL LMS` Apple title.
 

@@ -11,6 +11,7 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  assert.equal((await post('signup',{email:'owner@example.test',firstName:'Test',lastName:'Owner',password:pw})).status,400);
  const owner=await post('signup',{email:'owner@example.test',firstName:'Test',lastName:'Owner',password:pw,setupToken:'private-setup'});assert.equal(owner.status,200,JSON.stringify(owner.data));assert.equal(owner.data.user.role,'owner');assert.equal(owner.data.user.name,'Test Owner');assert.match(owner.headers['Set-Cookie'],/HttpOnly/);
  const member=await post('signup',{email:'player@example.test',firstName:'Test',lastName:'Player',password:pw,role:'owner'});assert.equal(member.status,200,JSON.stringify(member.data));assert.equal(member.data.user.role,'member');assert.equal(member.data.user.name,'Test Player');
+ assert.equal((await post('name',{userId:member.data.user.id,firstName:'Changed',lastName:'Member'},member.cookie)).status,403);
  await db.mutate(S=>S.entries.push({id:'manual-entry',code:'manual-code',name:'Manual member',email:'stranger@example.test',label:'',paid:false,created:time}));
  const stranger=await post('signup',{email:'stranger@example.test',firstName:'Manual',lastName:'Member',password:pw});assert.equal(stranger.status,200);
  assert.equal((await request(auth.handler,'me',undefined,stranger.cookie)).data.entries.length,1);
@@ -32,9 +33,16 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  assert.equal((await request(h.me,{entryId:id},undefined,stranger.cookie)).status,404);
  let state=(await request(h.state,{},undefined,owner.cookie)).data;state.entries.find(e=>e.id===id).paid=true;
  let paid=await request(h.adminState,{}, {...state,baseRevision:state.revision},owner.cookie);assert.equal(paid.status,200,JSON.stringify(paid.data));
+ await db.withClient(c=>c.query('UPDATE accounts SET name=$1 WHERE id=$2',['Test',member.data.user.id]));
+ assert.equal((await pick(L.gamesByWeek(1)[0].home)).data.error,'name_required');
+ await db.withClient(c=>c.query('UPDATE accounts SET name=$1 WHERE id=$2',['Test Player',member.data.user.id]));
  assert.equal((await pick(L.gamesByWeek(1)[0].home)).status,200);
  const latestPick=L.gamesByWeek(1).at(-1).home;assert.equal((await pick(latestPick)).status,200);
  const memberPickView=await request(h.me,{entryId:id},undefined,member.cookie);assert.equal(memberPickView.data.picks[1],latestPick);assert.equal(memberPickView.data.state.picks[id][1],'HIDDEN');
+ const memberId=member.data.user.id,memberEntryIds=me.entries.map(e=>e.id);assert.equal((await post('name',{userId:memberId,firstName:'Taylor',lastName:'Player'},owner.cookie)).status,200);
+ const renamedMember=(await request(auth.handler,'me',undefined,member.cookie)).data;assert.equal(renamedMember.user.id,memberId);assert.equal(renamedMember.user.name,'Taylor Player');assert.deepEqual(renamedMember.entries.map(e=>e.id),memberEntryIds);
+ const afterRename=await db.read();assert.ok(afterRename.entries.filter(e=>e.accountId===memberId).every(e=>e.name==='Taylor Player'));assert.equal(afterRename.picks[id][1],latestPick);assert.equal(afterRename.entries.find(e=>e.id===id).paid,true);
+ const publicAfterRename=(await request(h.state,{},undefined,'')).data;assert.equal(JSON.stringify(publicAfterRename).includes(memberId),false);assert.ok(publicAfterRename.entries.every(e=>e.accountId===undefined));
  const ownerEntry=(await request(auth.handler,'me',undefined,owner.cookie)).data.entries[0].id;
  state=(await request(h.state,{},undefined,owner.cookie)).data;state.entries.find(e=>e.id===ownerEntry).paid=true;
  const ownerPaid=await request(h.adminState,{}, {...state,baseRevision:state.revision},owner.cookie);assert.equal(ownerPaid.status,200);
@@ -45,6 +53,10 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  assert.equal((await post('role',{userId:member.data.user.id,role:'admin'},owner.cookie)).status,200);
  assert.equal((await request(auth.handler,'me',undefined,member.cookie)).data.user,null);
  const admin=await post('login',{email:'player@example.test',password:pw});assert.equal(admin.status,200);
+ assert.equal((await post('name',{userId:owner.data.user.id,firstName:'Wrong',lastName:'Owner'},admin.cookie)).status,403);
+ assert.equal((await post('name',{userId:stranger.data.user.id,firstName:'Only',lastName:''},admin.cookie)).status,400);
+ assert.equal((await post('name',{userId:stranger.data.user.id,firstName:'Jordan',lastName:'Smith'},admin.cookie)).status,200);
+ const renamedStranger=(await request(auth.handler,'me',undefined,stranger.cookie)).data;assert.equal(renamedStranger.user.id,stranger.data.user.id);assert.equal(renamedStranger.user.name,'Jordan Smith');assert.ok((await db.read()).entries.filter(e=>e.accountId===stranger.data.user.id).every(e=>e.name==='Jordan Smith'));
  const adminPickView=await request(h.me,{entryId:id},undefined,admin.cookie);assert.equal(adminPickView.data.state.picks[id][1],L.gamesByWeek(1)[0].home);
  const adminMembers=await request(auth.handler,'members',undefined,admin.cookie);assert.equal(adminMembers.status,200);assert.deepEqual(adminMembers.data.entries,[]);assert.deepEqual(adminMembers.data.audit,[]);
  assert.equal((await post('role',{userId:owner.data.user.id,role:'member'},owner.cookie)).status,403);

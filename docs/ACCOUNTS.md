@@ -2,8 +2,9 @@
 
 ## User routes
 
-- `/signup`: first name, last name, email and password. Both name fields are required. Sign-in is immediate; there is no confirmation email.
-- `/login`: email/password login and organiser-assisted recovery instructions.
+- `/signup`: the primary route for new players. It requires first name, last name, email and password. Sign-in is immediate; there is no confirmation email.
+- Accounts must have both names before submitting or changing a pick. Admins can correct a legacy single-name account without changing its hidden member ID or linked competition records.
+- `/login`: existing-member email/password login with a prominent registration panel for new players and organiser-assisted recovery instructions.
 - `/dashboard`: the member home page, with owned entries, payment status, weekly deadline, rules, team directory and current fixtures. Its member navigation is Dashboard, Picks, Results and Standings.
 - `/account`: the member hub. It shows the person’s name, payment and playing status, weekly deadline, current pick, a direct make/change-pick action, personal pick history, teams available this week and all unused teams remaining. When an account controls more than one competition entry, explicit full-name entry buttons such as `Rob O’Shea 1` and `Rob O’Shea 2` switch every panel to that individual entry. Entry creation, password changes and help also live here. Regular members reach it from the Account control in the header; staff can open it from Admin home.
 - `/admin`: dedicated Admin home with direct cards and persistent controls for Entries & payments, Members & roles, Manage picks, Results, Settings and Overview.
@@ -19,15 +20,19 @@ Rob's private setup file is outside the repository at `/Users/Rob/.config/nfl-lm
 
 ## Admin workflows
 
-Use Entries to add/import people manually, record the current fee as paid/unpaid and remove entries. Use Members & roles to connect an entry to a registered account explicitly. An email match never automatically transfers an entry. A member's automatically created unpaid entry can be removed if an older manual entry is connected instead.
+Use Entries to add people individually, record the current fee as paid/unpaid and remove entries. The owner alone can use the legacy spreadsheet importer. Use Members & roles to connect an entry to a registered account explicitly. An email match never automatically transfers an entry. A member's automatically created unpaid entry can be removed if an older manual entry is connected instead.
 
 The owner sees account-entry linking and the recent admin activity log. Admin accounts have a simpler Members page and do not see those owner controls; they retain member password resets and the day-to-day entries, payments, picks and results tools.
 
 The owner can promote/demote admins and disable/enable other accounts. These actions sign the affected user out. Admins can generate resets for members; only the owner can generate resets for admins. Neither can generate an owner reset through the website. Trusted database access is required for owner recovery. Users can change their own password by entering the existing one.
 
+Every registered account has an internal UUID that is never shown as a member-facing identifier. Owners can correct any account name; admins can correct their own name and member/admin names but cannot rename the owner. Name edits require separate first-name and last-name values and update every entry linked to that account. Account ID, email, roles, payments, picks and history remain unchanged. Account-owned entry names are read-only in Entries & payments and must be corrected in Members & roles.
+
 Staff enter the admin area from the Admin control in the top header. The same position becomes Exit admin inside `/admin`. Account and sign-out controls no longer appear as a separate toolbar above page content.
 
-Admins retain result fetching/manual scores, pick overrides, new rounds, rollover/payment controls and import/export tools. The owner can review the resulting audit trail in Members & roles.
+Admins retain result fetching/manual scores, pick overrides, new rounds and rollover/payment controls. The owner can review the resulting audit trail in Members & roles.
+
+Spreadsheet import is shown only to the owner. Admins can manage registered members and individual entries, but bulk spreadsheet import remains an owner-controlled legacy tool because imported rows do not create passwords; new members should register themselves.
 
 The Admin home includes a searchable Admin guide for weekly operations and troubleshooting. It covers the complete entries, payments, roles, accounts, picks, results, rollover, rounds, announcements, settings and backup workflow. Staff can open the separate member guide from the Admin guide when helping a player. Member announcement settings publish a highlighted shared notice for payment reminders, deadline changes, important messages or general competition updates.
 
