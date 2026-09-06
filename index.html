@@ -308,6 +308,8 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
 
 .table-scroll{max-width:100%;overflow-x:auto}
 .table-scroll table{min-width:620px}
+.entries-table .entry-label{width:76px;max-width:76px;white-space:nowrap}
+.entries-table .entry-label input{width:62px;min-width:62px}
 .card,.grid>*{min-width:0}
 @media(max-width:900px){
   .game{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 52px;gap:10px;padding:14px 0}
@@ -645,7 +647,7 @@ function adminHelpItems(){
     ['Access and roles','Can owners and admins also enter and be marked paid?',`<p>Yes. Account role and competition payment are separate. An owner or admin can have one or more competition entries and each of those entries can be marked Paid or Unpaid exactly like a member entry.</p><p>Open <strong>Entries & payments</strong>, find the staff member’s competition entry and press its payment status. Their owner or admin access remains unchanged.</p>`],
     ['Entries and payments','How do I add one person manually?',`<ol><li>Open <strong>Entries & payments</strong>.</li><li>Enter the player’s full name.</li><li>Add an entry label if they have more than one entry.</li><li>Add their email if known and choose whether they have paid.</li><li>Press <strong>Add</strong>.</li></ol><p>An admin can manage the entry as soon as it is active. The owner can later connect it to the member’s account.</p>`],
     ['Entries and payments','How do I add several entries quickly?',`<p>Use <strong>Quick paste</strong> for one entry per line. Each line can contain Name, Label, Email and Paid, separated by commas or tabs.</p><p><strong>Owner only:</strong> the spreadsheet importer is kept in the owner area for controlled legacy imports. Ordinary admins do not see it because new members should register and set their own password.</p>`],
-    ['Entries and payments','How do I mark an entry paid or unpaid?',`<p>Open <strong>Entries & payments</strong> and press the Paid or Unpaid badge in the Payment column. The entry becomes Active as soon as it is paid and eligible.</p><p>This works for members, admins and the owner. If one person has several entries, mark each entry separately.</p>`],
+    ['Entries and payments','How do I mark an entry paid or unpaid?',`<p>Open <strong>Entries & payments</strong>. An unpaid entry shows a clear <strong>Mark paid</strong> button in the Payment column. The entry becomes Active as soon as it is paid.</p><p>A paid entry shows a Paid control, which you can press to correct it back to unpaid. This works for members, admins and the owner. If one person has several entries, mark each entry separately.</p>`],
     ['Entries and payments','How are rollover payments recorded?',`<p>After a rollover, the Payment column changes to the rollover fee for the reset week. Mark every ${fee} repayment there. Only repaid entries return to active play.</p><p>Previous fees remain in the prize pot. An unpaid rollover entry stays eliminated and cannot submit a pick.</p>`],
     ['Entries and payments','How do I edit or remove an entry?',`<p>Edit the name, label or email directly in the Entries table. Changes save when you leave the field.</p><p>Use <strong>Remove</strong> only when the entry should be deleted. Removing it also deletes all of its picks. Export a backup first if there is any doubt.</p>`],
     ['Entries and payments','How do extra entries work?',`<p>A member uses <strong>Add another entry</strong> in Account. The app numbers every account entry under the member’s full name for the round, such as <strong>Rob O’Shea 1</strong> and <strong>Rob O’Shea 2</strong>.</p><p>Each entry costs ${fee}, starts unpaid and has its own payment badge, weekly picks, history and remaining-team list. Approve payment by marking each new entry Paid in <strong>Entries & payments</strong>. Until then, that entry cannot submit or change a pick. Check every numbered entry separately when taking payments and chasing missing picks.</p>`],
@@ -955,7 +957,7 @@ function renderPicks(r,comp){
     const opp=g?(g.home===p?`vs ${TEAMS[g.away].short}`:`@ ${TEAMS[g.home].short}`):'';
     const used=usedTeams(e.id,r,comp,w);
     const lost = res && (isPickLost(res.code));
-    const paidNow=entryPaid(e,r,comp),status=paidNow?(isAliveForWeek(comp,w,e.id)?'<span class="pill alive">Eligible</span>':'<span class="pill out">Eliminated</span>'):`<div class="row"><span class="pill pending">Unpaid</span><button class="btn sm gold" onclick="setEntryPayment('${e.id}',true)">Mark paid</button></div>`;
+    const paidNow=entryPaid(e,r,comp),status=paidNow?(isAliveForWeek(comp,w,e.id)?'<span class="pill alive">Paid</span>':'<span class="pill out">Eliminated</span>'):`<div class="row"><span class="pill pending">Unpaid</span><button class="btn sm gold" onclick="setEntryPayment('${e.id}',true)">Mark paid</button></div>`;
     return `<tr class="${lost?'out':''}">
       <td><b>${esc(e.name)}</b>${e.label?`<div class="muted small">${esc(e.label)}</div>`:''}</td>
       ${ADMIN?`<td>${status}</td>`:''}
@@ -1134,15 +1136,15 @@ async function download(name, content, type){
 /* ---- Entries ---- */
 function renderEntries(r,comp){
   const list=S.entries.slice().sort((a,b)=>a.name.localeCompare(b.name)||(a.label||'').localeCompare(b.label||''));
-  const rows=list.map(e=>`<tr>
+  const rows=list.map(e=>{const paid=entryPaid(e,r,comp);return `<tr>
     <td>${e.accountId?`<b>${esc(entryName(e.id))}</b><div class="small muted">Edit account name in Members</div>`:`<input type="text" value="${esc(e.name)}" onchange="updEntry('${e.id}','name',this.value)" style="width:100%">`}</td>
-    <td><input type="text" value="${esc(e.label||'')}" placeholder="e.g. Team 2" onchange="updEntry('${e.id}','label',this.value)" style="width:100%"></td>
+    <td class="entry-label"><input type="text" inputmode="numeric" value="${esc(e.label||'')}" placeholder="#" aria-label="Entry number for ${esc(entryName(e.id))}" onchange="updEntry('${e.id}','label',this.value)"></td>
     <td><input type="email" value="${esc(e.email||'')}" placeholder="optional" onchange="updEntry('${e.id}','email',this.value)" style="width:100%"></td>
-    <td><button class="pill ${entryPaid(e,r,comp)?'paid':'unpaid'}" style="border:0;cursor:pointer" onclick="setEntryPayment('${e.id}',${!entryPaid(e,r,comp)})">${entryPaid(e,r,comp)?'Paid':'Unpaid'}</button></td>
+    <td>${paid?`<button class="pill paid" style="border:0;cursor:pointer" title="Mark unpaid" onclick="setEntryPayment('${e.id}',false)">Paid</button>`:`<div class="row"><span class="pill unpaid">Unpaid</span><button class="btn sm gold" onclick="setEntryPayment('${e.id}',true)">Mark paid</button></div>`}</td>
     <td>${playerStatus(comp,e)}</td>
     ${REMOTE?personalLinkCell(e,r,comp):''}
     <td><button class="btn sm danger" onclick="delEntry('${e.id}')">Remove</button></td>
-  </tr>`).join('');
+  </tr>`}).join('');
   const owner=accountUser?.role==='owner';
   return `<div class="${owner?'grid two':''}">
     <div class="card" style="margin:0">
@@ -1170,7 +1172,7 @@ function renderEntries(r,comp){
     <h2>Entries <span class="tag">${S.entries.length} entries · ${S.entries.filter(e=>entryPaid(e,r,comp)).length} paid · pot ${gbp(prizePot(r,comp))}</span></h2>
     <p class="muted small">Payment belongs to the competition entry. Owner and admin entries can be marked paid here without changing their staff access.</p>
     ${comp.resetWeek>r.startWeek?`<p class="muted small">Rollover: each player must pay ${gbp(S.settings.fee)} again for Week ${comp.resetWeek}. Mark the new fee paid here. Unpaid players are eliminated and cannot pick.</p>`:''}
-    ${rows?`<div class="table-scroll" tabindex="0" role="region" aria-label="Competition entries"><table><thead><tr><th>Name</th><th>Label</th><th>Email</th><th>${comp.resetWeek>r.startWeek?'Rollover fee · Wk '+comp.resetWeek:'Payment'}</th><th>Status</th>${REMOTE?'<th>Account</th>':''}<th></th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty">No entries yet.</div>'}
+    ${rows?`<div class="table-scroll" tabindex="0" role="region" aria-label="Competition entries"><table class="entries-table"><thead><tr><th>Name</th><th class="entry-label">Label</th><th>Email</th><th>${comp.resetWeek>r.startWeek?'Rollover fee · Wk '+comp.resetWeek:'Payment'}</th><th>Status</th>${REMOTE?'<th>Account</th>':''}<th></th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty">No entries yet.</div>'}
     ${S.entries.length?`<div style="margin-top:10px"><button class="btn sm danger" onclick="clearEntries()">Remove all entries</button></div>`:''}
   </div>`;
 }
