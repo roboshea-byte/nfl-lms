@@ -1,6 +1,6 @@
 # NFL Last Man Standing — 2026
 
-The original competition app, with its original layout, fonts, colours, 32 teams, 272 fixtures and a shared rules engine. The rollover rule restores every player and makes all teams available again from the following week. Vercel serves the page and six Node.js API endpoints; Postgres holds the competition. Paid players pick through private `/play/<code>` links, with no accounts or login system.
+The original competition app, with its original layout, fonts, colours, 32 teams, 272 fixtures and a shared rules engine. The rollover rule makes all teams available again from the following week. Every player must pay a fresh entry fee to return; unpaid players are eliminated and cannot pick. Vercel serves the page and six Node.js API endpoints; Postgres holds the competition. Paid players pick through private `/play/<code>` links, with no accounts or login system.
 
 ## Vercel and Postgres setup
 
@@ -69,3 +69,5 @@ Browser acceptance uses an isolated local competition. The production setup and 
 Official references: [Vercel Node.js versions](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions), [Vercel Postgres integrations](https://vercel.com/docs/postgres), [node-postgres transactions](https://node-postgres.com/features/transactions).
 
 The legacy `wipeoutResetTeams` setting and internal `wipeout` event identifiers remain compatible with saved data. Rollover resets are now mandatory; older false settings cannot disable them. Previous picks remain visible in history.
+
+Rollover fees are recorded separately per entry in `entries.rollover_payments` (JSON keyed by the first week after each rollover). The existing Paid button records the current fee; previous fees remain recorded. The prize pot includes confirmed initial payments and confirmed payments for rollovers in the current round. The schema adds the column automatically without replacing entries or picks.

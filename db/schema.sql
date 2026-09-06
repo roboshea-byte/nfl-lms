@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS entries (
   paid boolean DEFAULT false,
   created_at timestamptz DEFAULT now()
 );
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS rollover_payments jsonb NOT NULL DEFAULT '{}';
 CREATE TABLE IF NOT EXISTS picks (
   entry_id text REFERENCES entries(id) ON DELETE CASCADE,
   week int NOT NULL,

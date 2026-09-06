@@ -22,7 +22,7 @@ function createStore(pool) {
   async function load(client) {
     const settings = (await client.query('SELECT data FROM settings WHERE id=1')).rows[0].data;
     const entries = (await client.query('SELECT * FROM entries ORDER BY id')).rows.map(e => ({
-      id:e.id, code:e.code, name:e.name, label:e.label, email:e.email, paid:e.paid, created:new Date(e.created_at).getTime()
+      id:e.id, code:e.code, name:e.name, label:e.label, email:e.email, paid:e.paid, rolloverPayments:e.rollover_payments||{}, created:new Date(e.created_at).getTime()
     }));
     const rounds = (await client.query('SELECT * FROM rounds ORDER BY n')).rows.map(r => ({n:r.n,startWeek:r.start_week,endWeek:r.end_week,winnerIds:r.winner_ids}));
     const picks = {};
@@ -37,9 +37,9 @@ function createStore(pool) {
     for (const e of before.entries) if (!after.entries.some(x=>x.id===e.id)) await client.query('DELETE FROM entries WHERE id=$1',[e.id]);
     for (const e of after.entries) {
       if (same(e,before.entries.find(x=>x.id===e.id))) continue;
-      await client.query(`INSERT INTO entries(id,code,name,label,email,paid,created_at) VALUES($1,$2,$3,$4,$5,$6,$7)
-        ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,label=EXCLUDED.label,email=EXCLUDED.email,paid=EXCLUDED.paid`,
-      [e.id,e.code,e.name,e.label,e.email,e.paid,new Date(e.created)]);
+      await client.query(`INSERT INTO entries(id,code,name,label,email,paid,created_at,rollover_payments) VALUES($1,$2,$3,$4,$5,$6,$7,$8)
+        ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,label=EXCLUDED.label,email=EXCLUDED.email,paid=EXCLUDED.paid,rollover_payments=EXCLUDED.rollover_payments`,
+      [e.id,e.code,e.name,e.label,e.email,e.paid,new Date(e.created),JSON.stringify(e.rolloverPayments||{})]);
     }
     for (const r of before.rounds) if (!after.rounds.some(x=>x.n===r.n)) await client.query('DELETE FROM rounds WHERE n=$1',[r.n]);
     for (const r of after.rounds) if (!same(r,before.rounds.find(x=>x.n===r.n))) await client.query(`INSERT INTO rounds(n,start_week,end_week,winner_ids) VALUES($1,$2,$3,$4)

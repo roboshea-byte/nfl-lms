@@ -65,3 +65,10 @@ An initial direct database probe exposed an idle Neon connection closing unexpec
 - Rules list text and numbered badge text reduced by 20%.
 - All 18 automated tests pass, covering earlier eliminations, old saved settings, renewed team availability, reuse rejection after the reset, and a subsequent rollover.
 - Browser checked at 758 × 890: rules text computes to 11.2px versus the original 14px; updated rollover copy is visible, with no horizontal overflow.
+
+## Rollover re-entry payments — 6 September 2026
+
+- Each rollover requires a new fee. Unpaid players are excluded from standings, winner eligibility and server-validated picks, even with a preselected winner or missed-pick survival enabled. A rollover cannot declare an immediate winner merely because one player has repaid.
+- Separate per-entry payment records persist in the new JSONB column, with backward-compatible handling of older saves and public exports. Only organiser writes can confirm fees. Confirmed fees accumulate in the current round pot.
+- All 20 tests pass on Node 24, including repeated repayments, unpaid exclusion, payment validation/authorisation, SQL persistence, and score corrections.
+- Isolated browser test advanced the server clock to before Week 2: all three players became unpaid/out after Week 1 rollover, while the original £60 remained in the pot. The organiser payment button saved Alice’s new £20 fee; a separate player browser showed In, all 32 teams available and a £80 pot. Confirming a team saved the Week 2 pick. At 390 × 844, the unpaid screen showed the new fee requirement and no horizontal overflow. No live entries were used for these checks.

@@ -73,14 +73,29 @@ test('rollover permits old teams again, blocks reuse afterwards, and resets agai
  const c=setup(S,L.weekFirstKickoff(3)-3600000);
  assert.equal((await pick(c,3,g1.away)).body.error,'eliminated');
  await c.db.mutate(s=>{for(const g of L.gamesByWeek(2))s.results[g.id]={hs:24,as:10,final:true};});
+ assert.equal((await pick(c,3,g1.away)).body.error,'unpaid');
+ let repayment=await c.db.read();repayment.entries.forEach(e=>e.rolloverPayments={3:true});
+ assert.equal((await post(c.handlers.adminState,repayment,'test-admin')).status,200);
  assert.equal((await pick(c,3,g1.away)).status,200);
  assert.equal((await pick(c,3,g1.home,'bob1234567')).status,200);
  assert.equal((await pick(c,4,g1.away)).body.error,'used');
  await c.db.mutate(s=>{for(const g of L.gamesByWeek(3))s.results[g.id]={hs:g.home===g1.away||g.home===g1.home?0:24,as:g.away===g1.away||g.away===g1.home?0:24,final:true};});
+ assert.equal((await pick(c,4,g1.away)).body.error,'unpaid');
+ repayment=await c.db.read();repayment.entries.find(e=>e.id==='alice').rolloverPayments[4]=true;
+ assert.equal((await post(c.handlers.adminState,repayment,'test-admin')).status,200);
  assert.equal((await pick(c,4,g1.away)).status,200);
  const state=(await call(c.handlers.state)).body;assert.equal(state.settings.wipeoutResetTeams,true);
  const saved=await post(c.handlers.adminState,{...await c.db.read()},'test-admin');assert.equal(saved.status,200);assert.equal((await c.db.read()).settings.wipeoutResetTeams,true);
 });
 test('public content revisions remain stable across database key order',async()=>{
  const {statePayload,revision}=require('../lib/api');const a=defaults(),b=defaults();const [g1,g2]=L.gamesByWeek(1);const score={hs:10,as:0,final:true};a.results={[g1.id]:score,[g2.id]:score};b.results={[g2.id]:score,[g1.id]:score};assert.equal(revision(a),revision(b));assert.equal(statePayload(a,false,before).updatedAt,statePayload(b,false,before).updatedAt);
+});
+test('rollover payments require organiser authority, validate their shape and survive older client saves',async()=>{
+ const c=setup(),state=await c.db.read();state.entries[0].rolloverPayments={2:true};
+ assert.equal((await post(c.handlers.adminState,state)).status,401);
+ assert.equal((await post(c.handlers.adminState,state,'test-admin')).status,200);
+ const old=await c.db.read();delete old.entries[0].rolloverPayments;
+ assert.equal((await post(c.handlers.adminState,old,'test-admin')).status,200);assert.deepEqual((await c.db.read()).entries[0].rolloverPayments,{2:true});
+ for(const bad of [[],null,{'2':'yes'},{'19':true}]){state.entries[0].rolloverPayments=bad;assert.equal((await post(c.handlers.adminState,state,'test-admin')).body.error,'bad_state');}
+ const me=await call(c.handlers.me,{code:'alice12345'});assert.deepEqual(me.body.entry.rolloverPayments,{2:true});assert.equal(me.body.entry.code,undefined);
 });
