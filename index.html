@@ -200,6 +200,7 @@ body.ro .edit{display:none!important}
 body.ro .pickbtn{border-style:solid;cursor:default;pointer-events:none}
 body.ro nav button[data-v=entries],body.ro nav button[data-v=settings]{display:none}
 /* Remote additions reuse the original palette and components. */
+.brand .nfl-logo{width:46px;height:52px;object-fit:contain;flex:none}
 input[type=password]{background:var(--deep);border:1px solid var(--line);color:#fff;border-radius:8px;padding:8px 10px}
 body.player nav{display:none}
 body.player main{max-width:900px}
@@ -214,7 +215,7 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
 <header>
   <div class="hdr-top">
     <div class="brand">
-      <div class="shield">LMS</div>
+      <img class="nfl-logo" src="https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png" alt="NFL" width="46" height="52">
       <h1>Last Man Standing<small>NFL 2026 Season</small></h1>
     </div>
     <div class="hdr-stats" id="hdrStats"></div>
