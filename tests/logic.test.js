@@ -64,6 +64,7 @@ test('home-screen install metadata and icon files are complete',()=>{
  const manifest=JSON.parse(fs.readFileSync('manifest.webmanifest','utf8'));assert.equal(manifest.short_name,'NFL LMS');assert.equal(manifest.start_url,'/dashboard');assert.equal(manifest.display,'standalone');
  const current=fs.readFileSync('index.html','utf8');assert.match(current,/rel="manifest" href="\/manifest\.webmanifest"/);assert.match(current,/apple-mobile-web-app-title" content="NFL LMS"/);
  for(const [name,size] of [['app-icon-192.png',192],['app-icon-512.png',512],['apple-touch-icon.png',180],['favicon-32.png',32]]){const png=fs.readFileSync('assets/'+name);assert.equal(png.toString('ascii',1,4),'PNG');assert.equal(png.readUInt32BE(16),size);assert.equal(png.readUInt32BE(20),size);}
+ const share=fs.readFileSync('assets/share/nfl-lms-whatsapp-get-started.png');assert.equal(share.toString('ascii',1,4),'PNG');assert.equal(share.readUInt32BE(16),1080);assert.equal(share.readUInt32BE(20),1350);assert.match(fs.readFileSync('scripts/build.js','utf8'),/nfl-lms-whatsapp-get-started\.png/);
 });
 test('mobile navigation, refresh, help, privacy and announcements stay wired',()=>{
  const current=fs.readFileSync('index.html','utf8');

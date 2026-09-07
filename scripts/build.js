@@ -16,4 +16,6 @@ fs.copyFileSync(path.join(root, 'manifest.webmanifest'), path.join(root, 'public
 for (const name of ['app-icon-192.png','app-icon-512.png','apple-touch-icon.png','favicon-32.png']) {
   fs.copyFileSync(path.join(root, 'assets', name), path.join(root, 'public', name));
 }
+fs.mkdirSync(path.join(root,'public','assets','share'),{recursive:true});
+fs.copyFileSync(path.join(root,'assets','share','nfl-lms-whatsapp-get-started.png'),path.join(root,'public','assets','share','nfl-lms-whatsapp-get-started.png'));
 console.log('Inlined shared rules and unchanged 2026 schedule into index.html.');
