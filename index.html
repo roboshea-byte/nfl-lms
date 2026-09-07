@@ -256,6 +256,8 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
 .herostat .v{font-size:26px;overflow-wrap:anywhere}
 .herostat .l{font-size:9px;letter-spacing:.12em}
 .hero-actions{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+.dashboard-utilities{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin:18px 0 4px}.dashboard-utilities .btn{text-decoration:none;background:rgba(36,66,127,.55)}.dashboard-utilities .admin-link{border-color:var(--green);background:rgba(31,191,106,.14)}
+.bigpot:before{content:none}
 .member-week-status{position:absolute;z-index:2;top:18px;right:18px;min-width:104px;border:1px solid currentColor;border-radius:10px;padding:9px 12px;color:#fff;text-align:center;cursor:pointer;box-shadow:0 5px 18px rgba(0,0,0,.28)}
 .member-week-status span,.member-week-status strong{display:block}.member-week-status span{font:600 13px var(--font-head);letter-spacing:.08em;text-transform:uppercase}.member-week-status strong{margin-top:3px;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
 .member-week-status.paid{background:#08783d;border-color:var(--green)}.member-week-status.unpaid{background:#a80f27;border-color:var(--red-2)}.member-week-status.sitting{background:var(--gold);border-color:var(--gold);color:#1a1200}
@@ -816,10 +818,7 @@ function renderHome(r,comp,afterHero=''){
     </div>
     <div class="hero-actions">
       <button class="btn gold" onclick="setView('standings')">View standings</button>
-      <button class="btn" onclick="setView('picks')">Picks and history</button>
       <button class="btn primary" onclick="${accountUser?`setWeek(${w});setView('picks')`:`location.href='/signup'`}">${accountUser?`Enter Week ${w} picks`:'Register or sign in'}</button>
-      ${accountUser&&['owner','admin'].includes(accountUser.role)?'<a class="btn" style="border-color:var(--green);background:rgba(31,191,106,.2)" href="/admin">Admin area</a>':''}
-      <a class="btn" href="/help">How to guide</a>
     </div>
   </div>
   ${afterHero}
@@ -846,6 +845,10 @@ function renderHome(r,comp,afterHero=''){
           <div class="date"><div class="l">Final week</div><div class="d">${new Date(last.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short',year:'numeric',timeZone:'Europe/London'}).replace(',','')}</div><div class="small muted">Week 18</div></div>
         </div>
     </div>
+  </div>
+  <div class="dashboard-utilities" aria-label="Dashboard help and administration">
+    ${accountUser&&['owner','admin'].includes(accountUser.role)?'<a class="btn admin-link" href="/admin">Admin area</a>':''}
+    <a class="btn" href="/help">How to guide</a>
   </div>`;
 }
 
@@ -888,7 +891,6 @@ function renderDash(r,comp){
         <button class="btn primary edit" onclick="setWeek(${w});setView('picks')">Make Week ${w} picks</button>
         <button class="btn edit" onclick="setWeek(${w});setView('results')">Enter results</button>
         ${HOSTED?'':`<button class="btn edit" onclick="fetchWeekResults(${w})">⟳ Fetch Week ${w} scores</button>`}
-        <button class="btn" onclick="setView('picks')">Picks and history</button>
       </div>
     </div>
     <div class="card" style="margin:0">
@@ -942,7 +944,7 @@ function renderStandings(r,comp){
     return `<div class="standing-row"><div class="standing-name"><strong>${esc(entryName(e.id))}</strong></div><div class="standing-picks" aria-label="Teams picked by ${esc(entryName(e.id))}">${picks.join('')||'<span class="muted small">No picks yet</span>'}</div></div>`;
   }).join('')}</div>`:'<div class="empty">Nobody in this group.</div>';
   return `<div class="hero">
-    <div class="bigpot"><div class="lbl">Round ${r.n} prize pot</div><div class="amt">${gbp(pot)}</div><div class="muted small">Confirmed entry and rollover fees &middot; ${entries.length} round ${entries.length===1?'entry':'entries'}</div><div style="margin-top:16px"><button class="btn" onclick="setView('picks')">Picks and history</button></div></div>
+    <div class="bigpot"><div class="lbl">Round ${r.n} prize pot</div><div class="amt">${gbp(pot)}</div><div class="muted small">Confirmed entry and rollover fees &middot; ${entries.length} round ${entries.length===1?'entry':'entries'}</div></div>
     <div class="card" style="margin:0"><h2>Week ${w} status <span class="tag">${weekSettled(w)?'Settled':weekHasResults(w)?'In progress':'Upcoming'}</span></h2><div class="grid two" style="gap:10px"><div><div class="muted small">Still in</div><div style="font-family:var(--font-head);font-size:34px;color:var(--green)">${comp.alive.size}</div></div><div><div class="muted small">Picks outstanding</div><div style="font-family:var(--font-head);font-size:34px;color:${missing.length?'var(--gold)':'var(--green)'}">${missing.length}</div></div></div>${missing.length?`<div class="small muted" style="margin-top:8px">Waiting on: ${missing.slice(0,12).map(e=>esc(e.name)).join(', ')}${missing.length>12?` +${missing.length-12} more`:''}</div>`:''}<div style="margin-top:12px"><div class="muted small" style="margin-bottom:6px">Most picked this week</div>${popular.length?popular.map(([t,c])=>`<span class="av">${logoImg(t)} ${TEAMS[t].short} <b>${c}</b></span>`).join(' '):'<span class="muted small">No picks yet</span>'}</div></div>
   </div>
   <div class="card" style="margin-top:18px"><h1 style="font-family:var(--font-head);margin-top:0">Standings</h1><p class="muted">Round ${r.n}. Current Week ${w} picks stay hidden until kick-off.</p>
@@ -1552,8 +1554,7 @@ function memberEntrySwitcher(){
 function memberTools(){return `<div class="card account-identity"><div><div class="help-kicker">Account settings</div><h1>${esc(accountUser?.name||'Member')}</h1><div class="muted">${esc(accountUser?.email||'')}</div></div><div class="account-actions"><button class="btn" onclick="changeAccountPassword()">Change password</button><a class="btn" href="/help">How to use the app</a><a class="btn gold" href="/dashboard">Exit account settings</a></div></div>`;}
 function noEntryBanner(){
  if(!accountUser||accountEntries.length)return '';
- const staff=['owner','admin'].includes(accountUser.role);
- const sittingOut=accountParticipation==='not_participating';return `<div class="card join-round"><div class="kick">Round ${currentRound().n}</div><h2>${sittingOut?'You are not participating':'Join this round'}</h2><p>${sittingOut?'You are currently marked as not participating. Add an entry whenever you decide to join.':'Your member account is ready. You are not counted as an entry until you choose to join this round.'}</p><div class="row"><button class="btn gold" onclick="addAccountEntry()">Add an entry</button>${!sittingOut?`<button class="btn" onclick="setAccountParticipation('not_participating')">I’m not participating</button>`:''}${sittingOut?`<button class="btn" onclick="setAccountParticipation('not_entered')">Clear this status</button>`:''}${staff?'<a class="btn" href="/admin">Open Admin area</a>':''}</div></div>`;
+ const sittingOut=accountParticipation==='not_participating';return `<div class="card join-round"><div class="kick">Round ${currentRound().n}</div><h2>${sittingOut?'You are not participating':'Join this round'}</h2><p>${sittingOut?'You are currently marked as not participating. Add an entry whenever you decide to join.':'Your member account is ready. You are not counted as an entry until you choose to join this round.'}</p><div class="row"><button class="btn gold" onclick="addAccountEntry()">Add an entry</button>${!sittingOut?`<button class="btn" onclick="setAccountParticipation('not_participating')">I’m not participating</button>`:''}${sittingOut?`<button class="btn" onclick="setAccountParticipation('not_entered')">Clear this status</button>`:''}</div></div>`;
 }
 function memberWeekStatus(r,comp){
  if(!accountUser)return '';
@@ -1565,7 +1566,7 @@ function memberWeekStatus(r,comp){
  return `<button type="button" class="member-week-status ${state}" onclick="focusRoundStatus()" aria-label="Week ${week}: ${label}"><span>Week ${week}</span><strong>${label}</strong></button>`;
 }
 function focusRoundStatus(){document.querySelector('.entry-controls,.join-round')?.scrollIntoView({behavior:'smooth',block:'center'});}
-function memberDashboardControls(e){const paid=e&&entryPaid(e),name=e?entryName(e.id):'',staff=['owner','admin'].includes(accountUser?.role);return `<div class="card entry-controls"><h2>Your round entries <span class="tag">${accountEntries.length} ${accountEntries.length===1?'entry':'entries'}</span></h2>${memberEntrySwitcher()}<div class="row"><button class="btn gold" onclick="addAccountEntry()">Add another entry</button>${e&&!paid?`<button class="btn danger" onclick="removeAccountEntry('${e.id}','${esc(name)}')">Remove this unpaid entry</button>`:''}<button class="btn" onclick="setAccountParticipation('not_participating')">Sit out this round</button>${staff?'<a class="btn" style="border-color:var(--green);background:rgba(31,191,106,.2)" href="/admin">Open Admin area</a>':''}</div><p class="small muted">Every entry must be approved and marked paid by an administrator before it can make a pick. Paid entries must be marked unpaid by an administrator before removal.</p></div>`;}
+function memberDashboardControls(e){const paid=e&&entryPaid(e),name=e?entryName(e.id):'';return `<div class="card entry-controls"><h2>Your round entries <span class="tag">${accountEntries.length} ${accountEntries.length===1?'entry':'entries'}</span></h2>${memberEntrySwitcher()}<div class="row"><button class="btn gold" onclick="addAccountEntry()">Add another entry</button>${e&&!paid?`<button class="btn danger" onclick="removeAccountEntry('${e.id}','${esc(name)}')">Remove this unpaid entry</button>`:''}<button class="btn" onclick="setAccountParticipation('not_participating')">Sit out this round</button></div><p class="small muted">Every entry must be approved and marked paid by an administrator before it can make a pick. Paid entries must be marked unpaid by an administrator before removal.</p></div>`;}
 function renderAccountPage(){
  document.body.classList.add('ro','player');document.getElementById('nav').classList.remove('hidden');const r=currentRound(),comp=computeRound(r),w=defaultWeek();renderHeader(r,comp);document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
  document.getElementById('main').innerHTML=memberTools()+`<div class="card"><h2>Round participation</h2><p>${accountEntries.length?`You have ${accountEntries.length} ${accountEntries.length===1?'entry':'entries'} in Round ${r.n}. Manage entries and picks from your Dashboard.`:accountParticipation==='not_participating'?`You are marked as not participating in Round ${r.n}. You can join from your Dashboard.`:`You have not joined Round ${r.n}. Add an entry from your Dashboard if you want to play.`}</p><a class="btn gold" href="/dashboard">Go to Dashboard</a></div>`;const foot=document.getElementById('foot');if(foot)foot.textContent='Your NFL LMS account settings.';
