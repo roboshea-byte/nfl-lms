@@ -71,6 +71,7 @@ test('mobile navigation, refresh, help, privacy and announcements stay wired',()
   assert.match(current,/View as member/);assert.match(current,/Exit member view/);assert.match(current,/function viewAsMember\(/);assert.match(current,/id="impersonationBar"/);assert.match(current,/accountImpersonation/);
   assert.match(current,/function staffAccountTools\(/);assert.match(current,/Your owner and admin tools/);assert.match(current,/Open owner admin area/);assert.match(current,/Open admin area/);
   assert.match(current,/View weekly picks list/);assert.match(current,/function renderWeeklyPicksPage\(/);assert.match(current,/function surnameSort\(/);assert.match(current,/Export CSV/);assert.match(current,/Share \/ export PNG/);assert.match(current,/navigator\.share/);assert.match(current,/Hidden until kick-off/);
+  assert.match(current,/Select a team to see recent form and general team info\./);assert.match(current,/function openTeamInfo\(/);assert.match(current,/Recent competitive form/);assert.match(current,/Current skill-position roster/);assert.match(current,/Availability watch/);assert.match(current,/Latest injuries/);
   assert.match(current,/function noEntryBanner\(/);assert.match(current,/Join this round/);assert.match(current,/dashboard-utilities/);assert.match(current,/admin-link/);assert.match(current,/Add an entry/);assert.match(current,/not participating/);assert.doesNotMatch(current,/if\(!accountEntries\.length\).*return true/);
   assert.match(current,/Admin pick override/);assert.match(current,/function confirmAdminPick\(/);assert.match(current,/Save admin pick/);assert.match(current,/managed=ADMIN\?entries/);assert.match(current,/What if I cannot sign in before the deadline\?/);assert.match(fs.readFileSync('lib/api.js','utf8'),/deadlineOverridden/);
   assert.match(current,/Mark paid/);assert.match(current,/>Paid<\/span>/);assert.doesNotMatch(current,/Eligible<\/span>/);assert.doesNotMatch(current,/Recent admin activity/);
@@ -81,4 +82,5 @@ test('mobile navigation, refresh, help, privacy and announcements stay wired',()
   assert.ok(config.rewrites.some(route=>route.source==='/account'&&route.destination==='/index.html'));
   assert.ok(config.rewrites.some(route=>route.source==='/weekly-picks'&&route.destination==='/index.html'));
   assert.match(fs.readFileSync('scripts/dev.js','utf8'),/'\/weekly-picks'/);
+  assert.match(fs.readFileSync('scripts/dev.js','utf8'),/'\/api\/team'/);assert.ok(fs.existsSync('api/team.js'));
 });

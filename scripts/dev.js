@@ -8,8 +8,8 @@ if(demo){
   console.log('Isolated accounts demo. Owner: owner@example.test with local setup token. No live data.');
 }else db=require('../api/_db');
 const auth=require('../lib/accounts').createAccounts({db,secure:false});
-const handlers={...createHandlers({db,adminKey,auth}),...(auth?{account:auth.handler}:{})};
-const routes={'/api/account':'account','/api/state':'state','/api/me':'me','/api/pick':'pick','/api/admin/state':'adminState','/api/admin/pick':'adminPick','/api/admin/results/fetch':'fetchResults'};
+const handlers={...createHandlers({db,adminKey,auth}),...(auth?{account:auth.handler}:{}),teamInfo:require('../lib/team-info').createTeamInfoHandler()};
+const routes={'/api/account':'account','/api/state':'state','/api/me':'me','/api/pick':'pick','/api/team':'teamInfo','/api/admin/state':'adminState','/api/admin/pick':'adminPick','/api/admin/results/fetch':'fetchResults'};
 http.createServer(async(req,res)=>{
   res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');
   const url=new URL(req.url,'http://localhost');
