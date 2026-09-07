@@ -24,7 +24,7 @@ Use Entries to add people individually, record the current fee as paid/unpaid an
 
 The owner sees account-entry linking. Admin accounts have a simpler Members page and do not see that owner control; they retain member password resets and the day-to-day entries, payments, picks and results tools. The Members page does not display an admin activity history.
 
-The owner can promote/demote admins and disable/enable other accounts. These actions sign the affected user out. Admins can generate resets for members; only the owner can generate resets for admins. Neither can generate an owner reset through the website. Trusted database access is required for owner recovery. Users can change their own password by entering the existing one.
+The owner can promote or demote admins and disable or enable other accounts. Role changes preserve active sessions so the new access takes effect on the person’s next page load; disabling an account signs it out immediately. Admins can generate password resets for members; only the owner can generate resets for admins. Neither can generate an owner reset through the website. Trusted database access is required for owner recovery. Users can change their own password by entering the existing one.
 
 Every registered account has an internal UUID that is never shown as a member-facing identifier. Owners can correct any account name; admins can correct their own name and member/admin names but cannot rename the owner. Name edits require separate first-name and last-name values and update every entry linked to that account. Account ID, email, roles, payments, picks and history remain unchanged. Account-owned entry names are read-only in Entries & payments and must be corrected in Members & roles.
 
@@ -34,7 +34,7 @@ Admins retain result fetching/manual scores, pick overrides, new rounds and roll
 
 Spreadsheet import is shown only to the owner. Admins can manage registered members and individual entries, but bulk spreadsheet import remains an owner-controlled legacy tool because imported rows do not create passwords; new members should register themselves.
 
-The Admin home includes a searchable Admin guide for weekly operations and troubleshooting. It covers the complete entries, payments, roles, accounts, picks, results, rollover, rounds, announcements, settings and backup workflow. Staff can open the separate member guide from the Admin guide when helping a player. Member announcement settings publish a highlighted shared notice for payment reminders, deadline changes, important messages or general competition updates.
+The Admin home includes a searchable role-aware Admin guide for weekly operations and troubleshooting. Admins receive members, entries, payments, picks, results, rollover and competition-overview tools. The owner additionally receives role assignment, entry linking, imports, announcements, competition and round settings, backups, restore and reset controls. The API enforces those owner-only boundaries even if an ordinary admin attempts a direct request. Staff can open the separate member guide when helping a player.
 
 ## Deadlines and payments
 
