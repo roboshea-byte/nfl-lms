@@ -55,7 +55,9 @@ test('mobile navigation, refresh, help, privacy and announcements stay wired',()
  assert.match(current,/body\.player nav\{display:grid\}/);assert.match(current,/id="refreshApp"/);assert.match(current,/function refreshApp\(/);
  assert.match(current,/<a class="brand" id="homeBrand" href="\/"/);assert.match(current,/\.refresh-app\{position:absolute/);assert.doesNotMatch(current,/\.refresh-app\{position:fixed/);
   assert.match(current,/How to use NFL LMS/);assert.match(current,/Admin how-to guide/);assert.match(current,/Connor or Havo/);assert.match(current,/function filterHelp\(/);
-  assert.match(current,/function renderPrivacyPage\(/);assert.match(current,/function announcementBanner\(/);assert.match(current,/Member announcement/);
+  assert.match(current,/function renderPrivacyPage\(/);assert.match(current,/function announcementBanner\(featured=false,preview=false\)/);assert.match(current,/Member announcement/);
+  assert.match(current,/announcement-editor-grid/);assert.match(current,/id="announcementMessage"/);assert.match(current,/function updateAnnouncementDraft\(/);assert.match(current,/Dashboard preview/);assert.match(current,/announcement-editor-status \$\{s\.announcementEnabled\?'live':'off'\}/);
+  assert.match(current,/announcementBanner\(true\)\+renderDashboard/);assert.match(current,/announcement\.featured/);assert.match(current,/Show on member pages/);
   assert.match(current,/function renderDashboard\(r,comp,afterHero=''\)\{return renderHome\(r,comp,afterHero\);\}/);
   assert.match(current,/function renderAccountPage\(/);assert.doesNotMatch(current,/dash:\(\)=>memberTools\(\)\+deadlineBanner/);
   const header=current.match(/function renderHeader\(r,comp\)\{[\s\S]*?\n\}/)[0];assert.match(header,/>Round<\/div>/);assert.match(header,/>Week<\/div>/);assert.match(header,/>Entries<\/div>/);assert.match(header,/>Still In<\/div>/);assert.doesNotMatch(header,/>Prize Pot<\/div>|>Paid<\/div>|>Unpaid<\/div>|>Still to pick<\/div>/);
