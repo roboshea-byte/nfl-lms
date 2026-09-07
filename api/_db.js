@@ -33,7 +33,7 @@ function createStore(pool) {
     const picks = {};
     for (const p of (await client.query('SELECT * FROM picks ORDER BY entry_id, week')).rows) (picks[p.entry_id] ||= {})[p.week] = p.team;
     const results = {};
-    for (const r of (await client.query('SELECT * FROM results ORDER BY game_id')).rows) results[r.game_id] = {hs:r.hs,as:r.as_,final:r.final};
+    for (const r of (await client.query('SELECT * FROM results ORDER BY game_id')).rows) results[r.game_id] = {hs:r.hs,as:r.as_,final:r.final,...(r.finalised_at?{finalisedAt:new Date(r.finalised_at).toISOString()}:{})};
     return {settings,entries,picks,results,rounds};
   }
   const same = (a,b) => JSON.stringify(a) === JSON.stringify(b);
@@ -52,8 +52,8 @@ function createStore(pool) {
     }
     for (const r of before.rounds) if (!after.rounds.some(x=>x.n===r.n)) await client.query('DELETE FROM rounds WHERE n=$1',[r.n]);
     for (const id of Object.keys(before.results)) if (!after.results[id]) await client.query('DELETE FROM results WHERE game_id=$1',[id]);
-    for (const [id,r] of Object.entries(after.results)) if (!same(r,before.results[id])) await client.query(`INSERT INTO results(game_id,hs,as_,final) VALUES($1,$2,$3,$4)
-      ON CONFLICT(game_id) DO UPDATE SET hs=EXCLUDED.hs,as_=EXCLUDED.as_,final=EXCLUDED.final,updated_at=clock_timestamp()`,[id,r.hs,r.as,r.final]);
+    for (const [id,r] of Object.entries(after.results)) if (!same(r,before.results[id])) await client.query(`INSERT INTO results(game_id,hs,as_,final,finalised_at) VALUES($1,$2,$3,$4,$5)
+      ON CONFLICT(game_id) DO UPDATE SET hs=EXCLUDED.hs,as_=EXCLUDED.as_,final=EXCLUDED.final,finalised_at=EXCLUDED.finalised_at,updated_at=clock_timestamp()`,[id,r.hs,r.as,r.final,r.finalisedAt?new Date(r.finalisedAt):null]);
     for (const [id,weeks] of Object.entries(before.picks)) for (const w of Object.keys(weeks)) if (!after.picks[id]?.[w]) await client.query('DELETE FROM picks WHERE entry_id=$1 AND week=$2',[id,+w]);
     for (const [id,weeks] of Object.entries(after.picks)) for (const [w,team] of Object.entries(weeks)) if (team!==before.picks[id]?.[w]) await client.query(`INSERT INTO picks(entry_id,week,team) VALUES($1,$2,$3)
       ON CONFLICT(entry_id,week) DO UPDATE SET team=EXCLUDED.team,made_at=clock_timestamp()`,[id,+w,team]);

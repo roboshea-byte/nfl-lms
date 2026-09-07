@@ -36,7 +36,7 @@ test('deadline boundaries: first pick, existing pick, target, change and clear',
 });
 test('real bye week and current round boundaries',async()=>{
   const week=Array.from({length:18},(_,i)=>i+1).find(w=>L.gamesByWeek(w).length<16);
-  const bye=Object.keys(schedule.teams).find(t=>!L.teamGame(t,week)),S=defaults();S.settings.missedPick='survive';for(let w=1;w<week;w++)for(const g of L.gamesByWeek(w))S.results[g.id]={hs:24,as:10,final:true};const c=setup(S);assert.equal((await pick(c,week,bye)).body.error,'bye');
+  const bye=Object.keys(schedule.teams).find(t=>!L.teamGame(t,week)),S=defaults(),finalisedAt=new Date(before-L.WEEK_ADVANCE_DELAY-1).toISOString();S.settings.missedPick='survive';for(let w=1;w<week;w++)for(const g of L.gamesByWeek(w))S.results[g.id]={hs:24,as:10,final:true,finalisedAt};const c=setup(S);assert.equal((await pick(c,week,bye)).body.error,'bye');
   await c.db.mutate(S=>S.rounds=[{n:1,startWeek:4,endWeek:8,winnerIds:null}]);assert.equal((await pick(c,3,first.home)).body.error,'bad_week');assert.equal((await pick(c,9,first.home)).body.error,'bad_week');
 });
 test('admin state preserves codes and independent player picks, deletes removed entries, rejects stale revision',async()=>{
@@ -64,24 +64,24 @@ test('restore replaces picks only when requested and result deletion is supporte
 test('ESPN results are mapped by fixture, skip pre-game events, and visible publicly',async()=>{
   const db=memoryStore();let requested;
   const handlers=createHandlers({db,now:()=>before,adminKey:()=> 'test-admin',fetchImpl:async(url)=>{requested=url;return {ok:true,json:async()=>({events:[{id:first.id,status:{type:{state:'post',completed:true}},competitions:[{competitors:[{homeAway:'home',team:{abbreviation:first.home},score:'27'},{homeAway:'away',team:{abbreviation:first.away},score:'20'}]}]},{id:L.gamesByWeek(1)[1].id,status:{type:{state:'pre'}}}]})};}});
-  const response=await post(handlers.fetchResults,{week:1},'test-admin');assert.equal(response.status,200);assert.equal(response.body.fetched.count,1);assert.ok(requested.endsWith('week=1&dates=2026'));assert.deepEqual((await call(handlers.state)).body.results[first.id],{hs:27,as:20,final:true});
+  const response=await post(handlers.fetchResults,{week:1},'test-admin');assert.equal(response.status,200);assert.equal(response.body.fetched.count,1);assert.ok(requested.endsWith('week=1&dates=2026'));assert.deepEqual((await call(handlers.state)).body.results[first.id],{hs:27,as:20,final:true,finalisedAt:new Date(before).toISOString()});
 });
 test('a future-week request stays locked while the current pick saves',async()=>{const c=setup();const team=Object.keys(schedule.teams).find(t=>L.teamGame(t,1)&&L.teamGame(t,2));const responses=await Promise.all([pick(c,1,team),pick(c,2,team)]);assert.deepEqual(responses.map(r=>r.status).sort(),[200,400]);assert.equal(responses.find(r=>r.status===400).body.error,'future_week');});
 test('rollover permits old teams again, respects the next-week lock, and resets again later',async()=>{
- const S=defaults(),g1=L.gamesByWeek(1)[0],g2=L.gamesByWeek(2)[0];
+ const S=defaults(),g1=L.gamesByWeek(1)[0],g2=L.gamesByWeek(2)[0],currentTime=L.weekDeadline(3)-1,reviewedAt=new Date(currentTime-L.WEEK_ADVANCE_DELAY-1).toISOString();
  S.settings.wipeoutResetTeams=false; // Existing saved competitions must adopt the new rule.
  S.picks={alice:{1:g1.away},bob:{1:g1.home,2:g2.away},charlie:{1:g1.home,2:g2.away}};
- for(const g of L.gamesByWeek(1))S.results[g.id]={hs:24,as:10,final:true};
- const c=setup(S,L.weekDeadline(3)-1);
+ for(const g of L.gamesByWeek(1))S.results[g.id]={hs:24,as:10,final:true,finalisedAt:reviewedAt};
+ const c=setup(S,currentTime);
  assert.equal((await pick(c,3,g1.away)).body.error,'eliminated');
- await c.db.mutate(s=>{for(const g of L.gamesByWeek(2))s.results[g.id]={hs:24,as:10,final:true};});
+ await c.db.mutate(s=>{for(const g of L.gamesByWeek(2))s.results[g.id]={hs:24,as:10,final:true,finalisedAt:reviewedAt};});
  assert.equal((await pick(c,3,g1.away)).body.error,'unpaid');
  let repayment=await c.db.read();repayment.entries.forEach(e=>e.rolloverPayments={3:true});
  assert.equal((await post(c.handlers.adminState,repayment,'test-admin')).status,200);
  assert.equal((await pick(c,3,g1.away)).status,200);
  assert.equal((await pick(c,3,g1.home,'bob1234567')).status,200);
  assert.equal((await pick(c,4,g1.away)).body.error,'future_week');
- await c.db.mutate(s=>{for(const g of L.gamesByWeek(3))s.results[g.id]={hs:g.home===g1.away||g.home===g1.home?0:24,as:g.away===g1.away||g.away===g1.home?0:24,final:true};});
+ await c.db.mutate(s=>{for(const g of L.gamesByWeek(3))s.results[g.id]={hs:g.home===g1.away||g.home===g1.home?0:24,as:g.away===g1.away||g.away===g1.home?0:24,final:true,finalisedAt:reviewedAt};});
  assert.equal((await pick(c,4,g1.away)).body.error,'unpaid');
  repayment=await c.db.read();repayment.entries.find(e=>e.id==='alice').rolloverPayments[4]=true;
  assert.equal((await post(c.handlers.adminState,repayment,'test-admin')).status,200);
@@ -117,4 +117,10 @@ test('saving deciding results starts a six-hour review window, then the next vis
  c.clock(completedAt+L.ROUND_ADVANCE_DELAY-1);assert.equal((await call(c.handlers.state,{key:'test-admin'})).body.rounds.length,1);
  c.clock(completedAt+L.ROUND_ADVANCE_DELAY);const advanced=await call(c.handlers.state,{key:'test-admin'});assert.equal(advanced.body.rounds.length,2);assert.deepEqual(advanced.body.rounds[1],{n:2,startWeek:2,endWeek:null,winnerIds:null});
  const stored=await c.db.read();assert.equal(L.computeRound(stored,stored.rounds[0]).complete,true);assert.equal(L.entriesForRound(stored,stored.rounds[0]).length,3);assert.equal(L.entriesForRound(stored,stored.rounds[1]).length,0);
+});
+test('the next NFL week stays locked for six hours after the final result',async()=>{
+ const S=defaults(),finalised=Date.parse('2026-09-15T04:30:00Z');S.settings.missedPick='survive';for(const game of L.gamesByWeek(1))S.results[game.id]={hs:24,as:10,final:true};
+ const c=setup(defaults(),finalised),beforeState=(await call(c.handlers.state,{key:'test-admin'})).body,saved=await post(c.handlers.adminState,{...S,baseRevision:beforeState.revision},'test-admin');assert.equal(saved.status,200);assert.equal(saved.body.results[L.gamesByWeek(1).at(-1).id].finalisedAt,new Date(finalised).toISOString());
+ const team=L.gamesByWeek(2)[0].home;c.clock(finalised+L.WEEK_ADVANCE_DELAY-1);const waiting=await call(c.handlers.state);assert.equal((await pick(c,2,team)).body.error,'future_week');
+ c.clock(finalised+L.WEEK_ADVANCE_DELAY);const opened=await call(c.handlers.state);assert.notEqual(opened.body.updatedAt,waiting.body.updatedAt);assert.equal((await pick(c,2,team)).status,200);
 });

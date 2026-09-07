@@ -49,9 +49,11 @@ test('an admin can start within the review window without disabling later automa
  const g2=L.gamesByWeek(2)[0];S.entries.push({id:'dave',name:'Dave',paid:true,round:2},{id:'erin',name:'Erin',paid:true,round:2});S.picks.dave={2:g2.home};S.picks.erin={2:g2.away};settle(S,2);
  const secondTime=firstTime+2*60*60*1000,pending=L.advanceRound(S,secondTime);assert.equal(pending.pending,true);assert.equal(S.rounds.length,2);assert.equal(L.advanceRound(S,pending.advanceAt-1).newRound,null);assert.equal(L.advanceRound(S,pending.advanceAt).newRound.n,3);
 });
-test('future weeks open only after every earlier week is finalised',()=>{
- const S=defaults(),r=L.currentRound(S);assert.equal(L.previousWeeksFinalised(S,r,1),true);assert.equal(L.previousWeeksFinalised(S,r,2),false);
- settle(S,1);assert.equal(L.previousWeeksFinalised(S,r,2),true);assert.equal(L.previousWeeksFinalised(S,r,3),false);settle(S,2);assert.equal(L.previousWeeksFinalised(S,r,3),true);
+test('future weeks open six hours after every earlier week is finalised',()=>{
+ const S=defaults(),r=L.currentRound(S),firstFinal=Date.parse('2026-09-15T04:30:00Z');assert.equal(L.previousWeeksFinalised(S,r,1,firstFinal),true);assert.equal(L.previousWeeksFinalised(S,r,2,firstFinal),false);
+ settle(S,1);L.syncResultFinalisedAt(S,firstFinal);assert.equal(L.defaultWeek(S,firstFinal),1);assert.equal(L.previousWeeksFinalised(S,r,2,firstFinal+L.WEEK_ADVANCE_DELAY-1),false);assert.equal(L.previousWeeksFinalised(S,r,2,firstFinal+L.WEEK_ADVANCE_DELAY),true);assert.equal(L.defaultWeek(S,firstFinal+L.WEEK_ADVANCE_DELAY),2);
+ settle(S,2);const secondFinal=firstFinal+7*24*60*60*1000;L.syncResultFinalisedAt(S,secondFinal);assert.equal(L.previousWeeksFinalised(S,r,3,secondFinal+L.WEEK_ADVANCE_DELAY-1),false);assert.equal(L.previousWeeksFinalised(S,r,3,secondFinal+L.WEEK_ADVANCE_DELAY),true);
+ S.results[L.gamesByWeek(2)[0].id].final=false;L.syncResultFinalisedAt(S,secondFinal+1);assert.equal(S.results[L.gamesByWeek(2)[0].id].finalisedAt,undefined);assert.equal(L.previousWeeksFinalised(S,r,3,secondFinal+L.WEEK_ADVANCE_DELAY),false);
 });
 test('original stylesheet retained except removed body zoom; committed HTML has inline shared sources',()=>{
  const current=fs.readFileSync('index.html','utf8');const stylesheet=current.match(/<style>([\s\S]*?)<\/style>/)[1];assert.ok(!/\bzoom\s*:/.test(stylesheet));const css=stylesheet.replace('body{background:', 'body{zoom:1.2;background:').slice(0,contract.styleLength);assert.equal(hash(css),contract.styleHash);
@@ -83,7 +85,7 @@ test('mobile navigation, refresh, help, privacy and announcements stay wired',()
   const standings=current.match(/function renderStandings\(r,comp\)\{[\s\S]*?\/\* ---- Picks ---- \*\//)[0];assert.doesNotMatch(standings,/Awaiting payment|paid, .* unpaid/);
   assert.match(current,/accountUser\?\.name/);assert.match(current,/Add another entry/);assert.match(current,/Choose an entry/);assert.match(current,/must be approved and marked paid/);
   assert.match(current,/function memberWeekStatus\(r,comp\)/);assert.match(current,/Week \$\{week\}/);assert.match(current,/Sitting Out/);assert.match(current,/Not Paid/);assert.match(current,/member-week-status\.paid/);assert.match(current,/member-week-status\.unpaid/);assert.match(current,/member-week-status\.sitting/);
-  assert.match(current,/function choosePlayerWeek\(w\).*previousWeeksFinalised/);assert.match(current,/Future weeks open after the previous week has been finalised/);assert.match(current,/\.tcard\.used\{opacity:\.55;background:rgba\(111,24,42,\.5\)/);
+  assert.match(current,/function choosePlayerWeek\(w\).*previousWeeksFinalised/);assert.match(current,/Future weeks open six hours after the previous week has been finalised/);assert.match(current,/\.tcard\.used\{opacity:\.55;background:rgba\(111,24,42,\.5\)/);
   assert.match(current,/\.bigpot:before\{content:none\}/);assert.doesNotMatch(current,/Picks and history/);
   assert.match(current,/Rob O’Shea 1/);assert.match(current,/function entryName\(id\)/);assert.match(current,/accountPage==='\/account'\)return renderAccountPage/);
   assert.match(current,/New player\?/);assert.match(current,/Register before you sign in/);assert.match(current,/Register and create account/);assert.match(current,/href="\/signup"/);

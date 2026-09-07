@@ -14,3 +14,4 @@
 - Existing mobile CSS fixes are preserved. Physical iPhone clipping remains awaiting confirmation from Rob.
 - Home-screen installs use the short label `NFL LMS`, a standalone display mode and the original LMS football-shield icon in Apple and manifest sizes.
 - A completed round waits six hours after the deciding week is final before the next round starts automatically. Staff may start it early from Settings without altering the timing of later rounds. Completed rounds remain available through Results, Standings and weekly-pick exports.
+- Every ordinary NFL week also has a six-hour review window after its final result. The following week’s member picks remain locked until that window ends; staff pick overrides remain available for exceptional administration.

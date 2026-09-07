@@ -34,8 +34,10 @@ CREATE TABLE IF NOT EXISTS results (
   hs int,
   as_ int,
   final boolean DEFAULT false,
+  finalised_at timestamptz,
   updated_at timestamptz DEFAULT now()
 );
+ALTER TABLE results ADD COLUMN IF NOT EXISTS finalised_at timestamptz;
 INSERT INTO settings(id, data) VALUES (1, '{"fee":20,"tieRule":"loss","wipeoutResetTeams":true,"missedPick":"eliminate","title":"Last Man Standing","announcement":"","announcementEnabled":false,"announcementType":"update"}') ON CONFLICT (id) DO NOTHING;
 INSERT INTO rounds(n, start_week) SELECT 1, 1 WHERE NOT EXISTS (SELECT 1 FROM rounds) ON CONFLICT (n) DO NOTHING;
 
