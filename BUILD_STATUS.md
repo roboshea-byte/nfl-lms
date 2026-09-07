@@ -2,15 +2,16 @@
 
 Live at https://nfl-lms.vercel.app.
 
-The current production application includes feature commit 9acf016. Its Vercel production deployment is Ready.
+The current production application includes feature commit `5e01922`. Vercel production deployment `dpl_ELjHsGpyQFjmLXCLZhtfVzsdQbfC` is Ready.
 
 - Immediate email/password signup, owner/admin/member roles and server permissions implemented.
-- Admin payments, manual entries, member linkage, pick overrides, roles, access controls and reset links work with the existing results/round tools.
+- Admin payments, manual entries, member linkage, pick overrides, roles, access controls and reset links work with the results and round tools.
 - Member dashboard shows current payment status and allows picks/changes until the weekly deadline, one hour before the first kickoff.
-- 21 automated tests pass on Node 24. Production dependency audit reports zero vulnerabilities.
-- Local and deployed isolated-preview browser flows passed: owner setup, signup, payment activation, saved/changed picks, role promotion and session revocation.
-- Production Chromium and WebKit checks passed for home, deadline, signup, phone widths and unauthenticated admin redirects. Public owner-email registration without the private token is rejected.
-- Preview test accounts were removed. No test entrants were added to production.
+- Every finalised NFL week has a six-hour review window before the following week unlocks. A deciding week uses the same timer before the next round starts; staff retain an early-start round control in Settings.
+- Results and Standings retain completed-round entrants, picks, results, winners and eliminations through the round archive and weekly CSV/PNG exports.
+- Competition-rule inputs use larger labelled controls with phone-friendly layout.
+- All 31 automated tests pass. Isolated browser flows cover weekly and round review windows, early admin transition, archives and responsive layouts at 320–1,440px.
+- The live production page and API are healthy, have no horizontal overflow, and continue to strip member emails and entry codes from public data. No test entrants were added to production.
 
 Remaining user step: Rob opens the private owner setup file and chooses his password on the website. His earlier physical-iPhone clipping report still needs device confirmation; browser checks show no document overflow at 320-1440 CSS pixels.
 
