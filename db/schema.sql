@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS account_sessions (
  token_hash text PRIMARY KEY, account_id text NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
  expires_at timestamptz NOT NULL
 );
+ALTER TABLE account_sessions ADD COLUMN IF NOT EXISTS view_account_id text REFERENCES accounts(id) ON DELETE SET NULL;
 CREATE TABLE IF NOT EXISTS account_resets (
  token_hash text PRIMARY KEY, account_id text NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
  expires_at timestamptz NOT NULL
