@@ -58,6 +58,7 @@ test('future weeks open six hours after every earlier week is finalised',()=>{
 test('original stylesheet retained except removed body zoom; committed HTML has inline shared sources',()=>{
  const current=fs.readFileSync('index.html','utf8');const stylesheet=current.match(/<style>([\s\S]*?)<\/style>/)[1];assert.ok(!/\bzoom\s*:/.test(stylesheet));const css=stylesheet.replace('body{background:', 'body{zoom:1.2;background:').slice(0,contract.styleLength);assert.equal(hash(css),contract.styleHash);
  assert.ok(current.includes(fs.readFileSync('lib/logic.js','utf8').trim()));
+ assert.ok(current.includes(fs.readFileSync('lib/account-client.js','utf8').trim()));
  const data=current.match(/const SCHEDULE = (.*);/)[1];assert.deepEqual(JSON.parse(JSON.stringify(vm.runInNewContext('('+data+')'))),schedule);
 });
 test('home-screen install metadata and icon files are complete',()=>{
