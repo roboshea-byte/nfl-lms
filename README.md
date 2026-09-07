@@ -1,3 +1,9 @@
+# Automatic rounds and archive (7 September 2026)
+
+When the deciding NFL week is fully final and the winner has been calculated, the app records the completed round and begins a six-hour review window. The following round then opens automatically from the next NFL week on the next normal app refresh or 45-second live poll. An owner or admin can use **Start Round N now** in Settings during the review window; this uses the same transition and does not change the automatic timing of any later round. A new round starts empty, so members decide whether to enter and each new entry needs payment approval.
+
+Results and Standings now include a round archive. Members can return to every completed round to see its entrants, winner, eliminated players, team picks, match results and event feed. The compact weekly-picks page also works with archived rounds and retains its CSV and shareable PNG exports. Competition-rule controls in Settings use larger labelled fields, clearer descriptions and a phone-friendly single-column layout.
+
 # Dashboard, announcements and privacy update (6 September 2026)
 
 The member Dashboard now presents the hero, 32-team grid and weekly fixtures first. The separate Account hub shows the member’s name, active/payment status, current pick and make/change action, personal history, weekly team availability and every unused team remaining. Prize-pot and weekly-status detail, the complete active-player list and the live competition feed are together on Standings. Fixture dates stay contained in a fixed right-hand column on Mac, PC and phone layouts. Owner and admin settings include a shared member announcement for payment reminders, deadline changes, important notices and general updates. A public `/privacy` page explains how names, emails, passwords and competition records are handled.

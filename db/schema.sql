@@ -7,8 +7,10 @@ CREATE TABLE IF NOT EXISTS rounds (
   n int PRIMARY KEY,
   start_week int NOT NULL,
   end_week int,
-  winner_ids jsonb
+  winner_ids jsonb,
+  completed_at timestamptz
 );
+ALTER TABLE rounds ADD COLUMN IF NOT EXISTS completed_at timestamptz;
 CREATE TABLE IF NOT EXISTS entries (
   id text PRIMARY KEY,
   code text UNIQUE NOT NULL,

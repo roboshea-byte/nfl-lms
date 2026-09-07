@@ -1,4 +1,15 @@
-# Verification — 6 September 2026
+# Verification — 7 September 2026
+
+## Automatic round transition, archive and Settings controls
+
+- A deciding settled week records its winner and completion time, then waits exactly six hours before the next round can open automatically. The transition runs through the normal state endpoint, so an open app checks it on its 45-second live poll and a closed app checks it on the next visit or refresh.
+- The admin **Start Round N now** control uses the same transition during the review window. Automated coverage confirms an early Round 2 start does not disable the independent six-hour transition for Round 3.
+- A new round starts from the following NFL week with no carried-over entries. The completed round retains its paid entrants, picks, match results, winner and elimination history.
+- Member Results and Standings include round selectors. Dashboard links to previous rounds, and the compact surname-ordered weekly picks page retains its CSV and PNG exports for an archived round.
+- Competition-rule inputs are 50px high, grouped in labelled panels with explanatory text and responsive single-column behaviour on small screens.
+- All 30 automated tests pass. An isolated Chromium flow verified completion, the six-hour pending state, the early admin transition, an empty Round 2, member deep-linking into Round 1, all 16 archived results, and no page overflow at 320, 390, 768 and 1,440px. No production data was used.
+
+## Earlier verification — 6 September 2026
 
 ## Dashboard order, Standings summary, announcements, privacy and fixture containment
 

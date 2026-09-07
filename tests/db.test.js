@@ -10,6 +10,7 @@ test('Postgres schema, bootstrap, upserts, deletion cascade and read-back throug
  response=await call(handlers.adminState,{method:'POST',key:'test-admin',body:read});assert.equal(response.status,200);
  assert.deepEqual((await db.read()).entries.find(e=>e.id==='alice').rolloverPayments,{2:true,5:false});
  assert.equal((await db.read()).settings.announcementType,'deadline');
+ await db.mutate(S=>{S.rounds[0].completedAt='2026-09-14T04:30:00.000Z';});assert.equal((await db.read()).rounds[0].completedAt,'2026-09-14T04:30:00.000Z');
  response=await call(handlers.adminState,{method:'POST',key:'test-admin',body:{...read,entries:read.entries.filter(e=>e.id!=='alice')}});assert.equal(response.status,200,JSON.stringify(response.body));assert.equal((await db.read()).picks.alice,undefined);
  await pool.end();
 });

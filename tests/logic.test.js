@@ -35,6 +35,20 @@ test('tie settings, season split, and new round reset',()=>{
  S.settings.missedPick='survive';for(let w=1;w<=18;w++)settle(S,w);S.picks={};assert.equal(L.computeRound(S).winnerIds.length,3);
  S.rounds.push({n:2,startWeek:2,endWeek:null,winnerIds:null});S.results={};S.picks={alice:{1:g.home}};assert.equal(L.computeRound(S).alive.size,0);S.entries.push({id:'round2',name:'Round Two',paid:true,round:2,rolloverPayments:{}});assert.deepEqual([...L.computeRound(S).alive],['round2']);assert.deepEqual(L.usedTeams(S,'alice',S.rounds[1],L.computeRound(S),2),{});
 });
+test('a completed round starts the next round automatically and preserves its archive',()=>{
+ const S=defaults(),g=L.gamesByWeek(1)[0];S.picks={alice:{1:g.home},bob:{1:g.away},charlie:{1:g.away}};settle(S,1);
+ const finished=L.computeRound(S);assert.equal(finished.complete,true);assert.deepEqual(finished.winnerIds,['alice']);
+ const completed=Date.parse('2026-09-14T04:30:00Z'),pending=L.advanceRound(S,completed);assert.equal(pending.pending,true);assert.equal(pending.newRound,null);assert.equal(pending.advanceAt,completed+6*60*60*1000);assert.equal(S.rounds.length,1);
+ assert.equal(L.advanceRound(S,pending.advanceAt-1).newRound,null);const transition=L.advanceRound(S,pending.advanceAt);assert.equal(transition.completedRound.n,1);assert.equal(transition.newRound.n,2);assert.equal(transition.newRound.startWeek,2);
+ assert.deepEqual(S.rounds[0],{n:1,startWeek:1,endWeek:1,winnerIds:['alice'],completedAt:'2026-09-14T04:30:00.000Z'});assert.equal(S.rounds.length,2);assert.equal(L.currentRound(S).n,2);assert.equal(L.entriesForRound(S,S.rounds[0]).length,3);assert.equal(L.entriesForRound(S,S.rounds[1]).length,0);
+ assert.equal(L.computeRound(S,S.rounds[0]).complete,true);assert.equal(L.advanceRound(S),null);assert.equal(S.rounds.length,2);
+});
+test('an admin can start within the review window without disabling later automatic starts',()=>{
+ const S=defaults(),g1=L.gamesByWeek(1)[0],firstTime=Date.parse('2026-09-14T04:30:00Z');S.picks={alice:{1:g1.home},bob:{1:g1.away},charlie:{1:g1.away}};settle(S,1);
+ assert.equal(L.advanceRound(S,firstTime).pending,true);assert.equal(L.advanceRound(S,firstTime+1000,true).newRound.n,2);
+ const g2=L.gamesByWeek(2)[0];S.entries.push({id:'dave',name:'Dave',paid:true,round:2},{id:'erin',name:'Erin',paid:true,round:2});S.picks.dave={2:g2.home};S.picks.erin={2:g2.away};settle(S,2);
+ const secondTime=firstTime+2*60*60*1000,pending=L.advanceRound(S,secondTime);assert.equal(pending.pending,true);assert.equal(S.rounds.length,2);assert.equal(L.advanceRound(S,pending.advanceAt-1).newRound,null);assert.equal(L.advanceRound(S,pending.advanceAt).newRound.n,3);
+});
 test('future weeks open only after every earlier week is finalised',()=>{
  const S=defaults(),r=L.currentRound(S);assert.equal(L.previousWeeksFinalised(S,r,1),true);assert.equal(L.previousWeeksFinalised(S,r,2),false);
  settle(S,1);assert.equal(L.previousWeeksFinalised(S,r,2),true);assert.equal(L.previousWeeksFinalised(S,r,3),false);settle(S,2);assert.equal(L.previousWeeksFinalised(S,r,3),true);
@@ -58,6 +72,9 @@ test('mobile navigation, refresh, help, privacy and announcements stay wired',()
   assert.match(current,/function renderPrivacyPage\(/);assert.match(current,/function announcementBanner\(featured=false,preview=false\)/);assert.match(current,/Member announcement/);
   assert.match(current,/announcement-editor-grid/);assert.match(current,/id="announcementMessage"/);assert.match(current,/function updateAnnouncementDraft\(/);assert.match(current,/Dashboard preview/);assert.match(current,/announcement-editor-status \$\{s\.announcementEnabled\?'live':'off'\}/);
   assert.match(current,/announcementBanner\(true\)\+renderDashboard/);assert.match(current,/announcement\.featured/);assert.match(current,/Show on member pages/);
+  assert.match(current,/function roundArchiveBar\(/);assert.match(current,/Round archive/);assert.match(current,/Previous rounds/);assert.match(current,/advanceRoundAfterResults/);assert.match(current,/Rounds advance automatically after six hours/);assert.match(current,/function forceStartNextRound\(/);assert.match(current,/Start Round \$\{r\.n\+1\} now/);assert.match(current,/six-hour review window/);
+  assert.match(current,/competition-setting-grid/);assert.match(current,/competition-setting full/);
+  assert.match(current,/location\.pathname==='\/'\|\|accountPage==='\/dashboard'/);
   assert.match(current,/function renderDashboard\(r,comp,afterHero=''\)\{return renderHome\(r,comp,afterHero\);\}/);
   assert.match(current,/function renderAccountPage\(/);assert.doesNotMatch(current,/dash:\(\)=>memberTools\(\)\+deadlineBanner/);
   const header=current.match(/function renderHeader\(r,comp\)\{[\s\S]*?\n\}/)[0];assert.match(header,/>Round<\/div>/);assert.match(header,/>Week<\/div>/);assert.match(header,/>Entries<\/div>/);assert.match(header,/>Still In<\/div>/);assert.doesNotMatch(header,/>Prize Pot<\/div>|>Paid<\/div>|>Unpaid<\/div>|>Still to pick<\/div>/);

@@ -108,3 +108,13 @@ test('admin announcements are validated, saved and included in public state',asy
  state.settings.announcementType='unsafe';assert.equal((await post(c.handlers.adminState,state,'test-admin')).body.error,'bad_state');
  state.settings.announcementType='update';state.settings.announcement='x'.repeat(1001);assert.equal((await post(c.handlers.adminState,state,'test-admin')).body.error,'bad_state');
 });
+test('saving deciding results starts a six-hour review window, then the next visit opens the round',async()=>{
+ const S=defaults(),g=L.gamesByWeek(1)[0];S.picks={alice:{1:g.home},bob:{1:g.away},charlie:{1:g.away}};
+ for(const game of L.gamesByWeek(1))S.results[game.id]={hs:24,as:10,final:true};
+ const completedAt=Date.parse('2026-09-14T04:30:00Z'),c=setup(defaults(),completedAt),beforeState=(await call(c.handlers.state,{key:'test-admin'})).body;
+ const saved=await post(c.handlers.adminState,{...S,replacePicks:S.picks,baseRevision:beforeState.revision},'test-admin');assert.equal(saved.status,200);
+ assert.equal(saved.body.rounds.length,1);assert.deepEqual(saved.body.rounds[0],{n:1,startWeek:1,endWeek:1,winnerIds:['alice'],completedAt:'2026-09-14T04:30:00.000Z'});
+ c.clock(completedAt+L.ROUND_ADVANCE_DELAY-1);assert.equal((await call(c.handlers.state,{key:'test-admin'})).body.rounds.length,1);
+ c.clock(completedAt+L.ROUND_ADVANCE_DELAY);const advanced=await call(c.handlers.state,{key:'test-admin'});assert.equal(advanced.body.rounds.length,2);assert.deepEqual(advanced.body.rounds[1],{n:2,startWeek:2,endWeek:null,winnerIds:null});
+ const stored=await c.db.read();assert.equal(L.computeRound(stored,stored.rounds[0]).complete,true);assert.equal(L.entriesForRound(stored,stored.rounds[0]).length,3);assert.equal(L.entriesForRound(stored,stored.rounds[1]).length,0);
+});

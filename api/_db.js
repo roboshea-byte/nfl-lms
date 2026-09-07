@@ -29,7 +29,7 @@ function createStore(pool) {
     const entries = (await client.query('SELECT * FROM entries ORDER BY id')).rows.map(e => ({
       accountId:e.account_id||null, id:e.id, code:e.code, name:e.name, label:e.label, email:e.email, paid:e.paid, round:e.round_n||1, rolloverPayments:e.rollover_payments||{}, created:new Date(e.created_at).getTime()
     }));
-    const rounds = (await client.query('SELECT * FROM rounds ORDER BY n')).rows.map(r => ({n:r.n,startWeek:r.start_week,endWeek:r.end_week,winnerIds:r.winner_ids}));
+    const rounds = (await client.query('SELECT * FROM rounds ORDER BY n')).rows.map(r => ({n:r.n,startWeek:r.start_week,endWeek:r.end_week,winnerIds:r.winner_ids,...(r.completed_at?{completedAt:new Date(r.completed_at).toISOString()}:{})}));
     const picks = {};
     for (const p of (await client.query('SELECT * FROM picks ORDER BY entry_id, week')).rows) (picks[p.entry_id] ||= {})[p.week] = p.team;
     const results = {};
@@ -42,8 +42,8 @@ function createStore(pool) {
     for (const e of before.entries) if (!after.entries.some(x=>x.id===e.id)) await client.query('DELETE FROM entries WHERE id=$1',[e.id]);
     // Create or update rounds before inserting their entries. Removed rounds are
     // deleted afterwards so their entries can be removed first.
-    for (const r of after.rounds) if (!same(r,before.rounds.find(x=>x.n===r.n))) await client.query(`INSERT INTO rounds(n,start_week,end_week,winner_ids) VALUES($1,$2,$3,$4)
-      ON CONFLICT(n) DO UPDATE SET start_week=EXCLUDED.start_week,end_week=EXCLUDED.end_week,winner_ids=EXCLUDED.winner_ids`,[r.n,r.startWeek,r.endWeek,r.winnerIds===null?null:JSON.stringify(r.winnerIds)]);
+    for (const r of after.rounds) if (!same(r,before.rounds.find(x=>x.n===r.n))) await client.query(`INSERT INTO rounds(n,start_week,end_week,winner_ids,completed_at) VALUES($1,$2,$3,$4,$5)
+      ON CONFLICT(n) DO UPDATE SET start_week=EXCLUDED.start_week,end_week=EXCLUDED.end_week,winner_ids=EXCLUDED.winner_ids,completed_at=EXCLUDED.completed_at`,[r.n,r.startWeek,r.endWeek,r.winnerIds===null?null:JSON.stringify(r.winnerIds),r.completedAt?new Date(r.completedAt):null]);
     for (const e of after.entries) {
       if (same(e,before.entries.find(x=>x.id===e.id))) continue;
       await client.query(`INSERT INTO entries(id,code,name,label,email,paid,created_at,rollover_payments,account_id,round_n) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
