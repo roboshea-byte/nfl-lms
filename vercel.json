@@ -37,6 +37,10 @@
     {
       "source": "/privacy",
       "destination": "/index.html"
+    },
+    {
+      "source": "/weekly-picks",
+      "destination": "/index.html"
     }
   ],
   "headers": [
