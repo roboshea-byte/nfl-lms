@@ -13,6 +13,7 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  assert.equal((await post('remove-entry',{entryId:spectatorEntry},spectator.cookie)).status,200);assert.equal((await request(auth.handler,'me',undefined,spectator.cookie)).data.entries.length,0);
  assert.equal((await post('signup',{email:'owner@example.test',firstName:'Test',lastName:'Owner',password:pw})).status,400);
  const owner=await post('signup',{email:'owner@example.test',firstName:'Test',lastName:'Owner',password:pw,setupToken:'private-setup'});assert.equal(owner.status,200,JSON.stringify(owner.data));assert.equal(owner.data.user.role,'owner');assert.equal(owner.data.user.name,'Test Owner');assert.match(owner.headers['Set-Cookie'],/HttpOnly/);
+ await db.withClient(c=>c.query("UPDATE accounts SET role='member' WHERE id=$1",[owner.data.user.id]));const repairedOwner=await request(auth.handler,'me',undefined,owner.cookie);assert.equal(repairedOwner.data.user.role,'owner');
  const member=await post('signup',{email:'player@example.test',firstName:'Test',lastName:'Player',password:pw,role:'owner'});assert.equal(member.status,200,JSON.stringify(member.data));assert.equal(member.data.user.role,'member');assert.equal(member.data.user.name,'Test Player');
  assert.equal((await post('name',{userId:member.data.user.id,firstName:'Changed',lastName:'Member'},member.cookie)).status,403);
  await db.mutate(S=>S.entries.push({id:'manual-entry',code:'manual-code',name:'Manual member',email:'stranger@example.test',label:'',paid:false,created:time}));
@@ -59,7 +60,7 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  assert.equal((await post('role',{userId:member.data.user.id,role:'admin'},member.cookie)).status,403);
  assert.equal((await post('role',{userId:member.data.user.id,role:'admin'},owner.cookie)).status,200);
  assert.equal((await request(auth.handler,'me',undefined,member.cookie)).data.user,null);
- const admin=await post('login',{email:'player@example.test',password:pw});assert.equal(admin.status,200);
+ const admin=await post('login',{email:'player@example.test',password:pw});assert.equal(admin.status,200);assert.equal(admin.data.user.role,'admin');
  const adminLateTeam=L.gamesByWeek(1).flatMap(g=>[g.home,g.away]).find(team=>L.teamGame(team,2));const adminLatePick=await request(h.adminPick,{}, {entryId:'manual-entry',week:1,team:adminLateTeam},admin.cookie);assert.equal(adminLatePick.status,200);assert.equal((await db.read()).picks['manual-entry'][1],adminLateTeam);
  assert.equal((await request(h.adminPick,{}, {entryId:'manual-entry',week:2,team:adminLateTeam},admin.cookie)).data.error,'used');
  const allTeams=[...new Set(L.GAMES.flatMap(g=>[g.home,g.away]))],byeTeam=allTeams.find(team=>!L.teamGame(team,5));assert.ok(byeTeam);assert.equal((await request(h.adminPick,{}, {entryId:'manual-entry',week:5,team:byeTeam},admin.cookie)).data.error,'bye');
