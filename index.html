@@ -258,6 +258,7 @@ body.player .season{display:flex;flex-wrap:wrap;gap:10px}
 .hero-actions{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
 .dashboard-utilities{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin:18px 0 4px}.dashboard-utilities .btn{text-decoration:none;background:rgba(36,66,127,.55)}.dashboard-utilities .admin-link{border-color:var(--green);background:rgba(31,191,106,.14)}
 .bigpot:before{content:none}
+.weeks button:disabled{opacity:.38;cursor:not-allowed;border-color:#334d82;color:#7584aa}.tcard.used{opacity:.55;background:rgba(111,24,42,.5);border-color:#783447;filter:grayscale(.72)}.tcard.used:hover{border-color:#783447}
 .member-week-status{position:absolute;z-index:2;top:18px;right:18px;min-width:104px;border:1px solid currentColor;border-radius:10px;padding:9px 12px;color:#fff;text-align:center;cursor:pointer;box-shadow:0 5px 18px rgba(0,0,0,.28)}
 .member-week-status span,.member-week-status strong{display:block}.member-week-status span{font:600 13px var(--font-head);letter-spacing:.08em;text-transform:uppercase}.member-week-status strong{margin-top:3px;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
 .member-week-status.paid{background:#08783d;border-color:var(--green)}.member-week-status.unpaid{background:#a80f27;border-color:var(--red-2)}.member-week-status.sitting{background:var(--gold);border-color:var(--gold);color:#1a1200}
@@ -417,6 +418,11 @@ function createLMSLogic(SCHEDULE){
     for(let w=r.startWeek; w<=roundEndWeek(r); w++){ if(!weekSettled(S,w)) return w; }
     return roundEndWeek(r);
   }
+  function previousWeeksFinalised(S,r,w){
+    if(!Number.isInteger(w)||w<r.startWeek||w>roundEndWeek(r))return false;
+    for(let prior=r.startWeek;prior<w;prior++)if(!weekSettled(S,prior))return false;
+    return true;
+  }
   const isPickLost = (S,code) => code==='L' || code==='BYE' || (code==='T' && S.settings.tieRule==='loss');
   const paidForReset = (entry,r,resetWeek) => resetWeek===r.startWeek ? !!entry.paid : entry.rolloverPayments?.[resetWeek]===true;
   function paymentWeek(r,comp,w){
@@ -483,7 +489,7 @@ function createLMSLogic(SCHEDULE){
   const weekFirstKickoff = w => { const gs=gamesByWeek(w); return gs.length? new Date(gs[0].date).getTime() : null; };
 
   const weekDeadline = w => {const first=weekFirstKickoff(w);return first===null?null:first-3600000;};
-  return {weekDeadline, WEEKS, GAMES, gamesByWeek, teamGame, teamResult, weekSettled, weekHasResults, currentRound,entriesForRound, roundEndWeek, defaultWeek, isPickLost, computeRound, usedTeams, aliveAtWeek, isAliveForWeek, kickoff, weekFirstKickoff, paymentWeek, isPaid, prizePot};
+  return {weekDeadline, WEEKS, GAMES, gamesByWeek, teamGame, teamResult, weekSettled, weekHasResults, currentRound,entriesForRound, roundEndWeek, defaultWeek, previousWeeksFinalised, isPickLost, computeRound, usedTeams, aliveAtWeek, isAliveForWeek, kickoff, weekFirstKickoff, paymentWeek, isPaid, prizePot};
 }
 if(typeof module!=='undefined' && module.exports) module.exports = { createLMSLogic };
 if(typeof window!=='undefined') window.createLMSLogic = createLMSLogic;
@@ -586,6 +592,7 @@ const weekHasResults = w => L.weekHasResults(S,w);
 const currentRound = () => L.currentRound(S);
 const roundEndWeek = r => L.roundEndWeek(r);
 const defaultWeek = () => L.defaultWeek(S);
+const previousWeeksFinalised = (r,w) => L.previousWeeksFinalised(S,r,w);
 const isPickLost = code => L.isPickLost(S,code);
 const computeRound = r => L.computeRound(S,r);
 const roundEntries = (r=currentRound()) => L.entriesForRound(S,r);
@@ -634,10 +641,11 @@ function memberHelpItems(){
     ['Getting started','How do I sit out or remove an entry?',`<p>If you are not playing this round, press <strong>I’m not participating</strong> on Dashboard. You stay in the Members list but are not counted as an entry.</p><p>You can remove an individual unpaid entry from Dashboard. Once an entry is paid, an administrator must mark it unpaid before it can be removed or before you can sit out the round.</p>`],
     ['Picks','How do I make my weekly selection?',`<ol><li>Sign in and open <strong>Account</strong>. If you have more than one entry, select the numbered entry you want to manage.</li><li>Check that it is Active and choose <strong>Make your pick</strong>, or open <strong>Picks</strong> from the navigation.</li><li>Check that the correct week is selected.</li><li>Tap the team you want. The team card shows its opponent and game day.</li><li>Review the selected team and press <strong>Confirm pick</strong>.</li></ol><div class="help-callout">Your selection is saved only after you press Confirm pick. Repeat this separately for every paid entry. The Account and Picks pages then show the team badge in that entry’s history.</div>`],
     ['Picks','How do I change a pick?',`<p>Open <strong>Picks</strong>, choose the week and press <strong>Change pick</strong>. Select a different team, review it, then press <strong>Confirm pick</strong>.</p><p>You can change a selection as often as you like until that week’s deadline. The newest confirmed selection replaces the old one.</p>`],
+    ['Picks','When can I pick for the next week?',`<p>The next week opens only after every game in the current NFL week has been marked final. Until then, future week buttons stay locked.</p><p>Once the current week is finalised, refresh the app. The next week will open automatically for entries that are still active and paid.</p>`],
     ['Picks','What if I cannot sign in before the deadline?',`<p>Contact Connor, Havo or another administrator immediately. Tell them your full numbered entry name, the week and the team you want.</p><p>An administrator can record or update the pick for you, including after the normal member deadline when there is a genuine access problem. Ask them to confirm that it has been saved. The normal team-use and bye-week rules still apply.</p>`],
     ['Picks','Can I remove a pick completely?',`<p>Before the deadline, open that week in Picks, press <strong>Change pick</strong>, then use <strong>Clear pick</strong>. Make a new selection and confirm it before the deadline or you will have no pick for the week.</p>`],
     ['Picks','When is the weekly deadline?',`<p>The deadline is <strong>one hour before the first NFL kick-off of that week</strong>. The exact UK date and time appears on your Dashboard and at the top of Picks.</p><p>When the deadline passes, selections are locked. Later games in the same week do not extend the deadline.</p>`],
-    ['Picks','Why can’t I select a team?',`<p>A team may be unavailable because you already used it since the last reset, it has a bye, its game is no longer available, the weekly deadline has passed, your entry is unpaid, or your entry has been eliminated.</p><p>The team picker labels unavailable teams where possible. Check your status and deadline at the top of the page.</p>`],
+    ['Picks','Why can’t I select a team?',`<p>A team may be unavailable because the previous week is not finalised, you already used it since the last reset, it has a bye, its game is no longer available, the weekly deadline has passed, your entry is unpaid, or your entry has been eliminated.</p><p>The team picker labels unavailable teams where possible. Previously used teams have a muted red tint; future weeks remain locked until the competition is ready to move on.</p>`],
     ['Picks','Can I use the same team twice?',`<p>No. Each team can be used once between resets. After you confirm a team, it remains unavailable in later weeks.</p><p>A rollover or a new round resets the list, so all 32 teams become available again.</p>`],
     ['Picks','Can other members see my current pick?',`<p>Your own pick is visible in your account. Other members’ current-week picks stay hidden until the relevant kick-off, so nobody can copy a selection before play begins.</p>`],
     ['Results and standings','Where can I see scores and results?',`<p>Open <strong>Results</strong> to see that week’s fixtures, scores and final results. Results appear after an administrator fetches or enters them.</p><p>A win keeps the entry in. A loss eliminates it. Under the current rules, a tie also counts as a loss.</p>`],
@@ -674,7 +682,7 @@ function adminHelpItems(){
     ['Picks','How do I add or change a member’s pick?',`<ol><li>Open <strong>Manage picks</strong>.</li><li>Choose the correct week.</li><li>Find the member’s complete numbered entry, including unpaid or eliminated entries when relevant.</li><li>If the entry is unpaid and payment has been received, press <strong>Mark paid</strong>.</li><li>Open its team picker and choose the requested team.</li><li>Review the entry, week, old pick and new pick on the confirmation screen.</li><li>Press <strong>Save admin pick</strong>.</li></ol><p>The change is immediate and appears in that entry’s pick history. Use the same steps for your own owner/admin entry.</p>`],
     ['Picks','How do I clear an incorrect pick?',`<p>In Manage picks, find the entry and week, then use the clear control beside its current selection. Add the correct selection straight away if one is required.</p>`],
     ['Picks','Why is a team unavailable in the picker?',`<p>The entry may already have used it since the last reset, the team may have a bye, or the game may have finished. The picker labels used and unavailable teams.</p><p>During an exceptional correction, check the competition rules before overriding a normal restriction.</p>`],
-    ['Picks','When are members locked out?',`<p>Member picks and changes close one hour before the first kick-off of the NFL week. The exact UK deadline is shown on the Dashboard and Picks page.</p><p><strong>Manage picks remains available to owners and admins after that time.</strong> The confirmation screen clearly says when the deadline is being overridden, and the action is recorded internally. Use it when a member cannot log in or a genuine correction is required.</p><p>The override does not make bye teams or teams already used since the last reset valid.</p>`],
+    ['Picks','When are members locked out?',`<p>Members can select only the first unresolved week. A future week opens after every fixture in the preceding week has been marked final. Picks and changes then close one hour before the first kick-off of the open week.</p><p><strong>Manage picks remains available to owners and admins for genuine corrections and competition management.</strong> A deadline override is recorded internally.</p><p>The override does not make bye teams or teams already used since the last reset valid.</p>`],
     ['Results','How do I fetch live scores?',`<p>Open <strong>Results</strong>, select the week and use the fetch scores button. The app retrieves available NFL scores and updates completed games.</p><p>Check the imported scores against a trusted source before treating the week as settled.</p>`],
     ['Results','How do I enter a result manually?',`<p>Open Results, select the correct week, enter the away and home scores for the fixture and mark the game final when it has finished. Save the changes.</p><p>Final results drive wins, losses, eliminations, rollovers and winners, so verify the teams and scores first.</p>`],
     ['Results','How do I correct a score or final status?',`<p>Return to the fixture in Results, correct the score or clear its final status, then save. The standings recalculate from the corrected data.</p><p>Check the Dashboard and Standings afterwards to confirm the expected entries are active or eliminated.</p>`],
@@ -1457,14 +1465,14 @@ window.addEventListener('beforeunload',event=>{if(REMOTE && (remoteDirty||remote
 
 /* ===================== PERSONAL PLAYER VIEW ===================== */
 function acceptMe(data){const ui=S.ui;playerMe=data;S=hydrate(data.state);S.ui=ui;S.picks[data.entry.id]={...data.picks};ADMIN=false;playerError='';}
-function choosePlayerWeek(w){S.ui.week=w;playerSelected=null;playerChanging=false;renderPlayer();}
+function choosePlayerWeek(w){const r=currentRound();if(!previousWeeksFinalised(r,w)){toast(`Week ${w} opens after Week ${w-1} has been finalised.`);return;}S.ui.week=w;playerSelected=null;playerChanging=false;renderPlayer();}
 function playerLock(w){return L.weekDeadline(w)===null||L.weekDeadline(w)<=serverNow();}
 function playerStatus(comp,e){if(!entryPaid(e,currentRound(),comp))return '<span class="pill pending">Inactive</span>';const out=comp.events.filter(x=>x.type==='out'&&x.id===e.id).at(-1);return comp.winnerIds?.includes(e.id)?'<span class="pill win">Winner</span>':comp.alive.has(e.id)?'<span class="pill alive">In</span>':`<span class="pill out">Out wk ${out?.week||'?'}</span>`;}
 function renderMemberPicks(e,r,comp){
   const first=defaultWeek(),end=roundEndWeek(r),w=S.ui.week,p=playerMe.picks[w],g=p?teamGame(p,w):null,locked=playerLock(w),used=usedTeams(e.id,r,comp,w),eligible=isAliveForWeek(comp,w,e.id)&&!comp.complete;
   const entrySwitcher=memberEntrySwitcher();let html=(entrySwitcher?`<div class="card"><div class="row">${entrySwitcher}</div></div>`:'')+deadlineBanner(w);
   if(!entryPaid(e,r,comp))return html+`<div class="card"><h2>${comp.resetWeek>r.startWeek?'Rollover payment required':'Payment pending'}</h2><p>${comp.resetWeek>r.startWeek?`You must pay ${gbp(S.settings.fee)} again after rollover. You are eliminated until the organiser confirms your new payment. Pay and submit your pick before the next deadline.`:`You're not marked as paid yet. Contact the organiser and you can pick once payment is confirmed.`}</p></div>`+renderHistory(r,comp);
-  html+=`<div class="card"><h2>Choose your week <span class="tag">Round ${r.n}</span></h2><div class="weeks">${Array.from({length:end-first+1},(_,i)=>i+first).map(week=>`<button class="${week===w?'active':''}" onclick="choosePlayerWeek(${week})" title="Week ${week}${L.weekDeadline(week)<=serverNow()?' · picks locked':''}">${week}${L.weekDeadline(week)<=serverNow()?' 🔒':''}</button>`).join('')}</div></div>`;
+  html+=`<div class="card"><h2>Choose your week <span class="tag">Round ${r.n}</span></h2><p class="muted small">Future weeks open after the previous week has been finalised.</p><div class="weeks">${Array.from({length:end-first+1},(_,i)=>i+first).map(week=>{const future=!previousWeeksFinalised(r,week),deadline=L.weekDeadline(week)<=serverNow(),locked=future||deadline;return `<button class="${week===w?'active':''}" onclick="choosePlayerWeek(${week})" title="${future?`Week ${week} opens after Week ${week-1} is finalised`:`Week ${week}${deadline?' · picks locked':''}`}" ${future?'disabled':''}>${week}${locked?' 🔒':''}</button>`;}).join('')}</div></div>`;
   html+=`<div class="card"><h2>Your pick <span class="tag">Week ${w}</span></h2>${p?`<div class="row">${teamChip(p,'logo lg')}</div><p class="muted">${g?`${TEAMS[g.away].name} @ ${TEAMS[g.home].name}<br>${fmtDate(g.date)} (UK time)`:'No fixture this week'}</p>`:'<p class="muted">No team selected yet.</p>'}<p id="playerCountdown" class="small" role="status"></p>${locked?'<span class="pill pending">Locked</span>':!eligible?'<p class="muted">'+(comp.complete?'This round is complete.':'You are out for this week.')+'</p>':p&&!playerChanging?'<button class="btn" onclick="playerChanging=true;renderPlayer()">Change pick</button>':''}</div>`;
   if(!locked&&eligible&&(!p||playerChanging))html+=`<div class="card"><h2>Pick a team</h2><p class="muted small">Tap a team, then confirm your pick.</p><div class="teamgrid">${TEAM_LIST.map(t=>{
     const game=teamGame(t.abbr,w),bye=!game,isUsed=used[t.abbr]!=null,started=game&&(new Date(game.date).getTime()<=serverNow()||S.results[game.id]?.final),disabled=bye||isUsed||started||playerSending;
@@ -1479,7 +1487,7 @@ function renderPlayer(){
   const main=document.getElementById('main');document.getElementById('foot').textContent='Your account. All deadlines and kick-off times are UK time.';
   if(!playerMe){document.getElementById('nav').classList.add('hidden');document.getElementById('hdrStats').innerHTML='';main.innerHTML=`<div class="card"><h2>Your competition</h2><p>${esc(playerError||'Loading your personal link…')}</p><a href="/">Dashboard</a></div>`;return;}
   const e=playerMe.entry,r=currentRound(),comp=computeRound(r),first=defaultWeek(),end=roundEndWeek(r);
-  if(!S.ui.week||S.ui.week<first||S.ui.week>end)S.ui.week=first;
+  if(!S.ui.week||S.ui.week<first||S.ui.week>end||!previousWeeksFinalised(r,S.ui.week))S.ui.week=first;
   if(S.ui.view==='home')S.ui.view='dash';if(S.ui.view==='history')S.ui.view='picks';if(!['dash','picks','results','standings'].includes(S.ui.view))S.ui.view='dash';
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===S.ui.view));
   renderHeader(r,comp);

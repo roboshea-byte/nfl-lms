@@ -35,6 +35,10 @@ test('tie settings, season split, and new round reset',()=>{
  S.settings.missedPick='survive';for(let w=1;w<=18;w++)settle(S,w);S.picks={};assert.equal(L.computeRound(S).winnerIds.length,3);
  S.rounds.push({n:2,startWeek:2,endWeek:null,winnerIds:null});S.results={};S.picks={alice:{1:g.home}};assert.equal(L.computeRound(S).alive.size,0);S.entries.push({id:'round2',name:'Round Two',paid:true,round:2,rolloverPayments:{}});assert.deepEqual([...L.computeRound(S).alive],['round2']);assert.deepEqual(L.usedTeams(S,'alice',S.rounds[1],L.computeRound(S),2),{});
 });
+test('future weeks open only after every earlier week is finalised',()=>{
+ const S=defaults(),r=L.currentRound(S);assert.equal(L.previousWeeksFinalised(S,r,1),true);assert.equal(L.previousWeeksFinalised(S,r,2),false);
+ settle(S,1);assert.equal(L.previousWeeksFinalised(S,r,2),true);assert.equal(L.previousWeeksFinalised(S,r,3),false);settle(S,2);assert.equal(L.previousWeeksFinalised(S,r,3),true);
+});
 test('original stylesheet retained except removed body zoom; committed HTML has inline shared sources',()=>{
  const current=fs.readFileSync('index.html','utf8');const stylesheet=current.match(/<style>([\s\S]*?)<\/style>/)[1];assert.ok(!/\bzoom\s*:/.test(stylesheet));const css=stylesheet.replace('body{background:', 'body{zoom:1.2;background:').slice(0,contract.styleLength);assert.equal(hash(css),contract.styleHash);
  assert.ok(current.includes(fs.readFileSync('lib/logic.js','utf8').trim()));
@@ -58,6 +62,7 @@ test('mobile navigation, refresh, help, privacy and announcements stay wired',()
   const standings=current.match(/function renderStandings\(r,comp\)\{[\s\S]*?\/\* ---- Picks ---- \*\//)[0];assert.doesNotMatch(standings,/Awaiting payment|paid, .* unpaid/);
   assert.match(current,/accountUser\?\.name/);assert.match(current,/Add another entry/);assert.match(current,/Choose an entry/);assert.match(current,/must be approved and marked paid/);
   assert.match(current,/function memberWeekStatus\(r,comp\)/);assert.match(current,/Week \$\{week\}/);assert.match(current,/Sitting Out/);assert.match(current,/Not Paid/);assert.match(current,/member-week-status\.paid/);assert.match(current,/member-week-status\.unpaid/);assert.match(current,/member-week-status\.sitting/);
+  assert.match(current,/function choosePlayerWeek\(w\).*previousWeeksFinalised/);assert.match(current,/Future weeks open after the previous week has been finalised/);assert.match(current,/\.tcard\.used\{opacity:\.55;background:rgba\(111,24,42,\.5\)/);
   assert.match(current,/\.bigpot:before\{content:none\}/);assert.doesNotMatch(current,/Picks and history/);
   assert.match(current,/Rob O’Shea 1/);assert.match(current,/function entryName\(id\)/);assert.match(current,/accountPage==='\/account'\)return renderAccountPage/);
   assert.match(current,/New player\?/);assert.match(current,/Register before you sign in/);assert.match(current,/Register and create account/);assert.match(current,/href="\/signup"/);
