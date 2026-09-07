@@ -51,6 +51,7 @@ test('home-screen install metadata and icon files are complete',()=>{
 });
 test('mobile navigation, refresh, help, privacy and announcements stay wired',()=>{
  const current=fs.readFileSync('index.html','utf8');
+  assert.match(current,/main\{max-width:1650px\}\s*body\.player main\{max-width:1650px\}/);assert.doesNotMatch(current,/body\.player main\{max-width:1125px\}/);
  assert.match(current,/body\.player nav\{display:grid\}/);assert.match(current,/id="refreshApp"/);assert.match(current,/function refreshApp\(/);
  assert.match(current,/<a class="brand" id="homeBrand" href="\/"/);assert.match(current,/\.refresh-app\{position:absolute/);assert.doesNotMatch(current,/\.refresh-app\{position:fixed/);
   assert.match(current,/How to use NFL LMS/);assert.match(current,/Admin how-to guide/);assert.match(current,/Connor or Havo/);assert.match(current,/function filterHelp\(/);
