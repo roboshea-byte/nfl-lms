@@ -59,6 +59,8 @@ Each entry receives a server-generated 10-character URL-safe code. Existing code
 
 Players select a team and explicitly confirm before anything is saved. Validation follows the brief's order: unknown code, unpaid, wrong round/week, eliminated, locked, bye, used team. An entry's first pick must be made before the week's first game. An existing pick can change to another unstarted game until the existing selection's game starts. Clearing a pick after the week begins prevents a fresh pick. Organisers can override deadlines, eligibility, used-team restrictions and byes, while IDs, weeks and teams must still exist.
 
+Signed-in members can see every submitted pick belonging to a paid entry, including current-week selections, through Standings and the compact weekly picks list. Signed-out public state continues to mask protected selections until kick-off.
+
 Personal links are bearer credentials: anyone with one can act for that entry. Share them privately. API responses disable caching, and the page uses `Referrer-Policy: no-referrer` so ESPN logos and fonts do not receive the personal URL. Full organiser JSON backups contain private entry details and codes; store them privately. “Download live page” in remote mode strips codes/emails and masks unstarted picks before embedding public state. Masked picks in a downloaded static snapshot require a new export to reveal them later.
 
 ## Data and API

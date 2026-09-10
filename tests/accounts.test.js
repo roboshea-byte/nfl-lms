@@ -49,7 +49,11 @@ test('accounts: immediate signup, owner protection, permissions, payment, picks,
  assert.equal((await post('view-as',{userId:member.data.user.id},owner.cookie)).status,200);assert.equal((await post('password',{currentPassword:pw,password:'should not replace member password'},owner.cookie)).status,403);const takeoverTeam=L.gamesByWeek(1)[0].home;assert.equal((await request(h.pick,{}, {entryId:id,week:1,team:takeoverTeam},owner.cookie)).status,200);assert.equal((await post('view-as-stop',{},owner.cookie)).status,200);
  assert.equal((await pick(L.gamesByWeek(1)[0].home)).status,200);
  const latestPick=L.gamesByWeek(1).at(-1).home;assert.equal((await pick(latestPick)).status,200);
- const memberPickView=await request(h.me,{entryId:id},undefined,member.cookie);assert.equal(memberPickView.data.picks[1],latestPick);assert.equal(memberPickView.data.state.picks[id][1],'HIDDEN');
+ await db.mutate(S=>{const peer=S.entries.find(e=>e.id==='manual-entry');peer.paid=true;S.picks['manual-entry']={1:L.gamesByWeek(1)[0].away};});
+ const memberPickView=await request(h.me,{entryId:id},undefined,member.cookie);assert.equal(memberPickView.data.picks[1],latestPick);assert.equal(memberPickView.data.state.picks[id][1],latestPick);assert.equal(memberPickView.data.state.picks['manual-entry'][1],L.gamesByWeek(1)[0].away);
+ const signedInMemberState=await request(h.state,{},undefined,member.cookie);assert.equal(signedInMemberState.data.admin,false);assert.equal(signedInMemberState.data.picks[id][1],latestPick);assert.equal(signedInMemberState.data.picks['manual-entry'][1],L.gamesByWeek(1)[0].away);
+ const signedOutState=await request(h.state,{},undefined,'');assert.equal(signedOutState.data.picks[id][1],'HIDDEN');assert.equal(signedOutState.data.picks['manual-entry'][1],'HIDDEN');
+ await db.mutate(S=>{S.entries.find(e=>e.id==='manual-entry').paid=false;delete S.picks['manual-entry'];});
  const memberId=member.data.user.id,memberEntryIds=[id];assert.equal((await post('name',{userId:memberId,firstName:'Taylor',lastName:'Player'},owner.cookie)).status,200);
  const renamedMember=(await request(auth.handler,'me',undefined,member.cookie)).data;assert.equal(renamedMember.user.id,memberId);assert.equal(renamedMember.user.name,'Taylor Player');assert.deepEqual(renamedMember.entries.map(e=>e.id),memberEntryIds);
  const afterRename=await db.read();assert.ok(afterRename.entries.filter(e=>e.accountId===memberId).every(e=>e.name==='Taylor Player'));assert.equal(afterRename.picks[id][1],latestPick);assert.equal(afterRename.entries.find(e=>e.id===id).paid,true);
