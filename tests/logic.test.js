@@ -19,6 +19,13 @@ test('a loss eliminates immediately; no picks wait for week settlement; winner o
  const S=defaults(),g=L.gamesByWeek(1)[0];S.picks={alice:{1:g.home},bob:{1:g.away}};S.results[g.id]={hs:21,as:10,final:true};let c=L.computeRound(S);assert.equal(c.alive.has('bob'),false);assert.equal(c.alive.has('charlie'),true);assert.equal(c.complete,false);
  settle(S,1);c=L.computeRound(S);assert.deepEqual(c.winnerIds,['alice']);assert.equal(c.complete,true);
 });
+test('an owner week override opens only the next settled week and later automatic timing remains intact',()=>{
+ const S=defaults(),r=S.rounds[0],week1Finalised=Date.parse('2026-09-15T04:30:00Z');S.settings.missedPick='survive';for(const g of L.gamesByWeek(1))S.results[g.id]={hs:24,as:10,final:true,finalisedAt:new Date(week1Finalised).toISOString()};
+ assert.equal(L.defaultWeek(S,week1Finalised+1000),1);assert.equal(L.previousWeeksFinalised(S,r,2,week1Finalised+1000),false);
+ S.settings.weekAdvanceOverrides={1:new Date(week1Finalised).toISOString()};assert.equal(L.defaultWeek(S,week1Finalised+1000),2);assert.equal(L.previousWeeksFinalised(S,r,2,week1Finalised+1000),true);
+ const week2Finalised=Date.parse('2026-09-22T04:30:00Z');for(const g of L.gamesByWeek(2))S.results[g.id]={hs:24,as:10,final:true,finalisedAt:new Date(week2Finalised).toISOString()};assert.equal(L.defaultWeek(S,week2Finalised+1000),2);assert.equal(L.previousWeeksFinalised(S,r,3,week2Finalised+1000),false);assert.equal(L.defaultWeek(S,week2Finalised+L.WEEK_ADVANCE_DELAY),3);
+ S.results[L.gamesByWeek(1)[0].id].finalisedAt=new Date(week1Finalised+5000).toISOString();assert.equal(L.previousWeeksFinalised(S,r,2,week1Finalised+6000),false);
+});
 test('rollover excludes unpaid players, retains prior fees and cannot award an immediate winner',()=>{
  const S=defaults(),g1=L.gamesByWeek(1)[0];S.picks=Object.fromEntries(S.entries.map(e=>[e.id,{1:g1.away}]));
  settle(S,1);let comp=L.computeRound(S);assert.equal(comp.alive.size,0);assert.equal(comp.complete,false);assert.equal(comp.events.filter(e=>e.type==='wipeout').length,1);assert.equal(L.prizePot(S,S.rounds[0],comp),60);
@@ -89,6 +96,7 @@ test('mobile navigation, refresh, help, privacy and announcements stay wired',()
   assert.match(current,/accountUser\?\.name/);assert.match(current,/Add another entry/);assert.match(current,/Choose an entry/);assert.match(current,/must be approved and marked paid/);
   assert.match(current,/function memberWeekStatus\(r,comp\)/);assert.match(current,/Week \$\{week\}/);assert.match(current,/Sitting Out/);assert.match(current,/Not Paid/);assert.match(current,/member-week-status\.paid/);assert.match(current,/member-week-status\.unpaid/);assert.match(current,/member-week-status\.sitting/);
   assert.match(current,/function choosePlayerWeek\(w\).*previousWeeksFinalised/);assert.match(current,/Future weeks open six hours after the previous week has been finalised/);assert.match(current,/\.tcard\.used\{opacity:\.55;background:rgba\(111,24,42,\.5\)/);
+  assert.match(current,/Start Week \$\{currentWeek\+1\} now/);assert.match(current,/weekAdvanceAction/);assert.match(current,/function forceStartNextWeek\(week\)/);assert.match(current,/weekAdvanceOverrides/);assert.match(current,/Only the owner can start the next week early/);
   assert.match(current,/\.bigpot:before\{content:none\}/);assert.doesNotMatch(current,/Picks and history/);
   assert.match(current,/Rob O’Shea 1/);assert.match(current,/function entryName\(id\)/);assert.match(current,/accountPage==='\/account'\)return renderAccountPage/);
   assert.match(current,/New player\?/);assert.match(current,/Register before you sign in/);assert.match(current,/Register and create account/);assert.match(current,/href="\/signup"/);

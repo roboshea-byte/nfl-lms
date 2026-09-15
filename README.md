@@ -61,6 +61,8 @@ Players select a team and explicitly confirm before anything is saved. Validatio
 
 Signed-in members can see every submitted pick belonging to a paid entry, including current-week selections, through Standings and the compact weekly picks list. Signed-out public state continues to mask protected selections until kick-off.
 
+After every game in a week is final, the next week normally opens after a six-hour review window. The owner can open it immediately from Settings; the saved override is tied to that week's exact finalisation time and does not alter later automatic week or round starts.
+
 Personal links are bearer credentials: anyone with one can act for that entry. Share them privately. API responses disable caching, and the page uses `Referrer-Policy: no-referrer` so ESPN logos and fonts do not receive the personal URL. Full organiser JSON backups contain private entry details and codes; store them privately. “Download live page” in remote mode strips codes/emails and masks unstarted picks before embedding public state. Masked picks in a downloaded static snapshot require a new export to reveal them later.
 
 ## Data and API

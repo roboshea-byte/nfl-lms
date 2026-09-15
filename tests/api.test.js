@@ -124,3 +124,8 @@ test('the next NFL week stays locked for six hours after the final result',async
  const team=L.gamesByWeek(2)[0].home;c.clock(finalised+L.WEEK_ADVANCE_DELAY-1);const waiting=await call(c.handlers.state);assert.equal((await pick(c,2,team)).body.error,'future_week');
  c.clock(finalised+L.WEEK_ADVANCE_DELAY);const opened=await call(c.handlers.state);assert.notEqual(opened.body.updatedAt,waiting.body.updatedAt);assert.equal((await pick(c,2,team)).status,200);
 });
+test('a saved owner week override opens the next week without changing later automatic starts',async()=>{
+ const finalised=Date.parse('2026-09-15T04:30:00Z'),S=defaults();S.settings.missedPick='survive';for(const game of L.gamesByWeek(1))S.results[game.id]={hs:24,as:10,final:true,finalisedAt:new Date(finalised).toISOString()};const c=setup(S,finalised+1000),state=(await call(c.handlers.state,{key:'test-admin'})).body;
+ state.settings.weekAdvanceOverrides={1:new Date(finalised).toISOString()};const saved=await post(c.handlers.adminState,{...state,baseRevision:state.revision},'test-admin');assert.equal(saved.status,200);assert.equal(L.defaultWeek(saved.body,finalised+1000),2);assert.deepEqual(saved.body.settings.weekAdvanceOverrides,{1:new Date(finalised).toISOString()});
+ const invalid=structuredClone(saved.body);invalid.settings.weekAdvanceOverrides={18:new Date(finalised).toISOString()};assert.equal((await post(c.handlers.adminState,{...invalid,baseRevision:saved.body.revision},'test-admin')).body.error,'bad_state');
+});
