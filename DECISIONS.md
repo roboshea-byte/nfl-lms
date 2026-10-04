@@ -1,5 +1,8 @@
 # Account decisions
 
+- 4 October 2026: Rob explicitly authorised reopening Round 1 Week 4 until 18:00 UK time for the outstanding entry. A fixed, dated exception in the shared rules runs in both browser and server, expires by the server clock and applies only to that round and week. Started teams cannot be selected, and an existing selection whose game has started cannot be changed or cleared. Subsequent weeks and rounds retain their existing deadlines. Accepted submissions record the temporary deadline in the audit log.
+- Durable development source and validated deliverables for this change are saved under `/Users/Rob/Developer/NFL-LMS-live`, with an Obsidian mirror in `WIKI/30 Projects/NFL Last Man Standing/2026-10-04-pick-deadline`.
+
 - Retain the existing Node, standalone HTML and Neon Postgres architecture.
 - Signup has no email confirmation. Email alone never claims an existing entry.
 - Signup requires separate first-name and last-name fields. The combined full name becomes the account and initial entry name.

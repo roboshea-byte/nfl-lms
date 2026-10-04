@@ -2,6 +2,8 @@
 
 Live at https://nfl-lms.vercel.app.
 
+4 October 2026: Round 1 Week 4 picks reopened by Rob's explicit instruction until 18:00 Europe/London (17:00 UTC). Production deployment `dpl_D5DgoxaqN4mroFmN3Dr7sV8Wzt8j` is Ready. Live API confirms the window is open and the Dashboard shows Sunday 4 October, 18:00. All 37 tests and the production build pass. The server rejects submissions, changes and clears at the exact deadline without requiring a scheduled task. The durable source is `/Users/Rob/Developer/NFL-LMS-live`.
+
 The current production application includes feature commit `5e01922`. Vercel production deployment `dpl_ELjHsGpyQFjmLXCLZhtfVzsdQbfC` is Ready.
 
 - Immediate email/password signup, owner/admin/member roles and server permissions implemented.
